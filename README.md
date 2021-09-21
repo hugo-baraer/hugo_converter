@@ -11,5 +11,17 @@ Another model called 21cm Fast is in the middle between fully hydrodynamical mod
 
 The goal of this project is to link the statistical parameters of Battaglia and al. to the model of 21cm fast. This way, initial values of those parameters can be establish, hence faciliting the usage of the model. 
 
-To do so, 
+the model proposed by Battaglia et al. starts from a P³M N-body code to generate the over-density field. The fourrier transform is then taken for a particular redshift, and the statistical parameter acting as a N-body simulation with radiative transfer and hydrodynamic is multiplied to that over-density field in momentum space, giving the over-redshift in momentum space. An inverse Fourier transform is then performed, and the over redshift is shifted back to the redshift field. The following diagram presents the Battaglia model and its steps towards plotting reionization redshift field.
+
+Since 21cmFast have an option to generate density field
+
+
+## directory content
+### over density
+
+This module takes out 
+
+### standard driver 
+
+This is the driver to run to exectute the different modules. This is where all the different components of the project are launched. 
 
