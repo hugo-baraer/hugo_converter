@@ -13,10 +13,12 @@ This project aims to link the statistical parameters of Battaglia and al. to the
 
 The model proposed by Battaglia et al. starts from a P³M N-body code to generate the over-density field. The Fourier transform is then taken for a particular redshift. Next, the statistical parameter acting as an N-body simulation with radiative transfer and hydrodynamic is multiplied to that over-density field in momentum space, giving the over-redshift in momentum space. An inverse Fourier transform is then performed, and the over redshift is shifted back to the redshift field. The following diagram presents the Battaglia model and its steps towards plotting the reionization redshift field.
 
-![241468409_457949906006586_5301099429280127917_n](https://user-images.githubusercontent.com/59851566/134114580-0f89fb22-307d-4a1e-a9b4-d22853eb8747.jpg)
+![241304522_910240059614563_3735758871671457030_n](https://user-images.githubusercontent.com/59851566/134124825-f2cfbc8c-ab26-47d9-8936-32162a0efc77.jpg)
 
 21cmFast has an option to generate density field and cosmic redshift field through different simulation processes. By generating both fields and reverse engineering the process shown in the figure below , it is possible to get a value for the parameters from Battaglia et al. 
 
+
+![242255987_542953373452112_4215330667399275861_n](https://user-images.githubusercontent.com/59851566/134124808-a0744094-dd5b-419c-a7b0-794975260a3e.jpg)
 
 ## directory content
 
