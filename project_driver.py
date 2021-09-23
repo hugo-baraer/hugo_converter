@@ -1,11 +1,11 @@
 """
-  FFT_overdensity.py
+  EoR_research/project_driver.py
 
   Author : Hugo Baraer
   Affiliation : McGill University
   Date of creation : 2021-09-21
 
-  This module is the driver and interacts between 21cmFast and the modules
+  This module is the driver and interacts between 21cmFast and the modules computing the require fields and parameters.
 """
 
 import py21cmfast as p21c
@@ -13,43 +13,39 @@ from py21cmfast import plotting
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+import z_re_field as zre
 from tqdm import tqdm
 
-#intialize the coeval cube at several redshift
-coeval = p21c.run_coeval(redshift=5.0,user_params={'HII_DIM': 100, "USE_INTERPOLATION_TABLES": False})
+#intialize a coeval cube at red shift z = z\bar
+coeval = p21c.run_coeval(redshift=8.0,user_params={'HII_DIM': 150, "USE_INTERPOLATION_TABLES": False})
+
 
 #plot dark_matter density for testing purposes
 plotting.coeval_sliceplot(coeval, kind = 'density')
 plt.tight_layout()
-plt.title('over-density at a redshfit of {}'.format(coeval.redshift))
+plt.title('slice of dark matter over-density at a redshfit of {} and a pixel dimension of {}³'.format(coeval.redshift,100)) #coeval.user_params(HII_DIM)
 plt.show()
 
-#plot the reionization redshift
+#plot the reionization redshift (test pursposes)
 plotting.coeval_sliceplot(coeval, kind = 'z_re_box', cmap = 'jet')
 plt.tight_layout()
 plt.title('reionization redshift ')
 plt.show()
 
 """
-it appears coeval has a Z_re component, which shows either the redshift entered as a parameter of the
-coeval, or -1 if it's a smaller redshift. With these information, I could plot z_re as function of time
+it appears coeval has a Z_re component, which shows if yes or not, the pixel was ionized at that reshift. This means that the pixel value is either
+the redshift parameter entred in coeval, or -1 if it wasn't ionized at that redshift. 
+With these information, I could plot z_re as function of time, by looking at a bunch of redshifts.
 """
 
+#Compute the reionization redshift from the module z_re
+coeval.z_re_box = zre.generate_zre_field(15, 4, 1, coeval.z_re_box.shape[0])
 
-
-def generate_zre_field(max_z, min_z, z_shift, HII_Dim):
-    """
-    This function generate a z_re field with coeval at different reionization redshift
-    :param max_z: [float] the maximum redshift of the plot
-    :param min_z: [float] the minimum redshift of the plot
-    :param z_shift [float] the desired amount different redshift computed for the plot (redshift resolution)
-    :param HII_Dim: [float] the minimum redshift of the plot
-    :return: a 3D array of the reionization field
-    """
-    z_re = np.full(50, -1)
-    redshift_range = np.linspace(max_z, min_z, z_shift)
-    for redshift in redshift_range:
-        coeval = p21c.run_coeval(redshift=redshift,user_params={'HII_DIM': HII_Dim, "USE_INTERPOLATION_TABLES": False})
+#plot a slice of this new redshift field, saved as the new z_re_box
+plotting.coeval_sliceplot(coeval, kind = 'z_re_box', cmap = 'jet')
+plt.tight_layout()
+plt.title('reionization redshift field ')
+plt.show()
 
 
 
