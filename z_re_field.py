@@ -23,7 +23,7 @@ def generate_zre_field(max_z, min_z, z_shift, HII_Dim):
     """
     #creating a new cube where reionization vener occured (-1)
     final_cube = np.full((HII_Dim, HII_Dim, HII_Dim), -1)
-    for redshift in tqdm(range(min_z, max_z, z_shift)):
+    for redshift in tqdm(np.arange(min_z, max_z, z_shift)):
         new_cube = p21c.run_coeval(redshift=redshift,user_params={'HII_DIM': HII_Dim, "USE_INTERPOLATION_TABLES":False}).z_re_box
         final_cube[new_cube > -1] = new_cube[new_cube > -1]
     return final_cube
