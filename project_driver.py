@@ -17,7 +17,7 @@ import z_re_field as zre
 from tqdm import tqdm
 
 #intialize a coeval cube at red shift z = z\bar
-coeval = p21c.run_coeval(redshift=8.0,user_params={'HII_DIM': 110, "USE_INTERPOLATION_TABLES": False})
+coeval = p21c.run_coeval(redshift=8.0,user_params={'HII_DIM': 50, "USE_INTERPOLATION_TABLES": False})
 
 
 #plot dark_matter density for testing purposes
@@ -39,7 +39,8 @@ With these information, I could plot z_re as function of time, by looking at a b
 """
 
 #Compute the reionization redshift from the module z_re
-coeval.z_re_box = zre.generate_zre_field(16, 1, 0.25, coeval.z_re_box.shape[0])
+coeval.z_re_box = zre.generate_zre_field(16, 1, 1, coeval.z_re_box.shape[0])
+overzre = zre.over_zre_field(coeval.z_re_box)
 
 #plot a slice of this new redshift field, saved as the new z_re_box
 plotting.coeval_sliceplot(coeval, kind = 'z_re_box', cmap = 'jet')
@@ -47,5 +48,6 @@ plt.tight_layout()
 plt.title('reionization redshift field ')
 plt.show()
 
+#plot a slice of the over redshift field, saved as the new z_re_box
 
 

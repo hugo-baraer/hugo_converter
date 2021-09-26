@@ -28,3 +28,23 @@ def generate_zre_field(max_z, min_z, z_shift, HII_Dim):
         final_cube[new_cube > -1] = new_cube[new_cube > -1]
     return final_cube
 
+def over_zre_equation(zre_x,zre_mean):
+    '''
+
+    :param zre_x: the reionization redshift field
+    :type zre_x: 3D array
+    :param zre_mean: the mean redshift of reionization
+    :type zre_mean:  float
+    :return:
+    :rtype:
+    '''
+    return((1+zre_x)-(1+zre_mean))/(1+zre_mean)
+
+def over_zre_field(zre_field):
+    """
+    This function generate the over z_re field with the original z_re field. from the equation defined in Battaglia et al.
+    :param zre_field: [arr] 3D array of the reionization redshift field
+    :return: a 3D array of the reionization field
+    """
+    zre_mean = np.mean(zre_field)
+    return over_zre_equation(zre_field,zre_mean)
