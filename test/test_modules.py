@@ -14,7 +14,7 @@ import nose.tools as nt
 import numpy as np
 
 
-import z_re_field../project_driver as p_d
+import ../project_driver as p_d
 import ../z_re_field as zre
 
 class test_modules():
@@ -22,23 +22,29 @@ class test_modules():
     def setUp(self):
         # Create a random ionization field with 1 or 10 value
         self.dim = 50
-        self.rand_field = np.random.randint(1,3,size=(self.dim,self.dim,self.dim))
-        self.rand_field[self.rand_field == 1]=-1
-        self.rand_field[self.rand_field == 2] = 10
+        # self.rand_field = np.random.randint(1,3,size=(self.dim,self.dim,self.dim))
+        # self.rand_field[self.rand_field == 1]=-1
+        # self.rand_field[self.rand_field == 2] = 10
 
     def tearDown(self):
         pass
 
     def test_zre(self):
-        print(self.rand_array.shape)
+        print(self.dim)
         # Test the function to see if it
         # returns an array of the right size
         output_arr = z_re.generate_zre_field(10,5,1,self.dim) #random parameters
         nt.assert_equal(output_arr.shape, (self.dim,self.dim,self.dim))
 
-        # Test the zre_generation function for a known input/output
-        test_arr = b = np.array([[[-1,12],[-1,-1]],[[-1,12],[-1,-1]]])
-        output_arr = z_re.generate_zre_field(10,0,1,2)
-        nt.assert_equal(output_arr[0], 1)
-        nt.assert_equal(output_arr[1], 4)
+        # Test the zre_generation function for a known input/output (extremes)
+
+        # at those redhsift, everything should be ionized, so the array should be full of z_max (2)
+        test_arr1 = np.full((self.dim,self.dim,self.dim), 2)
+        output_arr = z_re.generate_zre_field(2,0,1)
+        nt.assert_equal(output_arr[:,:,0], test_arr1)
+
+        # at those redhsift, nothing should be ionized, so the array should be full of -1
+        test_arr2 = np.full((self.dim, self.dim, self.dim), -1)
+        output_arr = z_re.generate_zre_field(20, 17, 1)
+        nt.assert_equal(output_arr[:,:,0], test_arr2)
 

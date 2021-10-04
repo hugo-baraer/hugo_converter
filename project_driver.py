@@ -16,15 +16,37 @@ import matplotlib.pyplot as plt
 import z_re_field as zre
 from tqdm import tqdm
 
+#adjustable parameters to look out before running the driver
+
+box_dim = 50 #the desired spatial resolution of the box
+z_mean = 8.0 #the redshift z_bar at which the over-density is computed
+
+
 #intialize a coeval cube at red shift z = z\bar
-coeval = p21c.run_coeval(redshift=8.0,user_params={'HII_DIM': 50, "USE_INTERPOLATION_TABLES": False})
+coeval = p21c.run_coeval(redshift=z_mean,user_params={'HII_DIM': box_dim, "USE_INTERPOLATION_TABLES": False})
 
-
-#plot dark_matter density for testing purposes
-plotting.coeval_sliceplot(coeval, kind = 'density')
-plt.tight_layout()
-plt.title('slice of dark matter over-density at a redshfit of {} and a pixel dimension of {}³'.format(coeval.redshift,150)) #coeval.user_params(HII_DIM)
+#generate a sliced plot of the over-density the same way as we did for over-redshift
+fig, ax = plt.subplots()
+plt.contourf(coeval.density[:,:,0], cmap = 'jet')
+plt.colorbar()
+plt.title('slice of dark matter over-density at a redshfit of {} and a pixel dimension of {}³'.format(coeval.redshift,box_dim))
 plt.show()
+
+#Take the Fourrier transform of the over density
+overdensity_FFT = np.fft.fft(coeval.density)
+fig, ax = plt.subplots()
+plt.contourf(overdensity_FFT[:,:,0])
+#plt.contourf(np.absolute(overdensity_FFT[:,:,0])**2)
+plt.colorbar()
+plt.title(r'F($\delta_m$ (x)) at a redshift of {} and a pixel dimension of {}³'.format(coeval.redshift,box_dim))
+plt.show()
+
+
+# #plot dark_matter density for testing purposes
+# plotting.coeval_sliceplot(coeval, kind = 'density')
+# plt.tight_layout()
+# plt.title('slice of dark matter over-density at a redshfit of {} and a pixel dimension of {}³'.format(coeval.redshift,150)) #coeval.user_params(HII_DIM)
+# plt.show()
 
 #plot the reionization redshift (test pursposes)
 plotting.coeval_sliceplot(coeval, kind = 'z_re_box', cmap = 'jet')
@@ -39,7 +61,7 @@ With these information, I could plot z_re as function of time, by looking at a b
 """
 
 #Compute the reionization redshift from the module z_re
-coeval.z_re_box = zre.generate_zre_field(16, 1, 1, coeval.z_re_box.shape[0])
+coeval.z_re_box = zre.generate_zre_field(16, 1, 0.1, coeval.z_re_box.shape[0])
 overzre = zre.over_zre_field(coeval.z_re_box)
 
 #plot a slice of this new redshift field, saved as the new z_re_box
@@ -48,6 +70,20 @@ plt.tight_layout()
 plt.title('reionization redshift field ')
 plt.show()
 
-#plot a slice of the over redshift field, saved as the new z_re_box
+#plot a slice of this new over redshift
+fig, ax = plt.subplots()
+plt.contourf(overzre[:,:,0], cmap = 'jet')
+plt.colorbar()
+plt.title('over-redshift of reionization')
+plt.show()
 
 
+#Take the Fourrier transform of the over-redshift
+overzre_FFT = np.fft.fft(overzre)
+fig, ax = plt.subplots()
+plt.contourf(overzre_FFT[:,:,0])
+plt.colorbar()
+plt.title(r'F($\delta_m$ (x)) at a redshift of {} and a pixel dimension of {}³'.format(coeval.redshift,box_dim))
+plt.show()
+
+division = np.divide(overzre_FFT,overdensity_FFT)

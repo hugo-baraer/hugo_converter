@@ -35,8 +35,8 @@ def over_zre_equation(zre_x,zre_mean):
     :type zre_x: 3D array
     :param zre_mean: the mean redshift of reionization
     :type zre_mean:  float
-    :return:
-    :rtype:
+    :return: over-redshift field
+    :rtype: 3D array
     '''
     return((1+zre_x)-(1+zre_mean))/(1+zre_mean)
 
