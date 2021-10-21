@@ -11,6 +11,8 @@
 import numpy as np
 import py21cmfast as p21c
 from tqdm import tqdm
+from scipy.stats import multivariate_normal
+
 
 def generate_zre_field(max_z, min_z, z_shift, HII_Dim):
     """
@@ -47,4 +49,24 @@ def over_zre_field(zre_field):
     :return: a 3D array of the reionization field
     """
     zre_mean = np.mean(zre_field)
-    return over_zre_equation(zre_field,zre_mean)
+    return over_zre_equation(zre_field,zre_mean), zre_mean
+
+def generate_gaussian_field(dim):
+    '''
+    This function creates a 3d Gaussian field to test np.FFT. This functions is inspired by :
+    https://stackoverflow.com/questions/25720600/generating-3d-gaussian-distribution-in-python
+    :param dim: the dimension of the desired Gaussian field
+    :type dim: int
+    :return: the 3d Gaussian field
+    :rtype: 3D array
+    '''
+    x, y, z = np.mgrid[-1.0:1.0:int(dim)*1j, -1.0:1.0:int(dim)*1j, -1.0:1.0:int(dim)*1j]
+    # Need an (N, 2) array of (x, y) pairs.
+    xyz = np.column_stack([x.flat, y.flat, z.flat])
+    mu = np.array([0.0, 0.0, 0.0])
+    sigma = np.array([.50, .50, .50])
+    covariance = np.diag(sigma ** 2)
+    zi = multivariate_normal.pdf(xyz, mean=mu, cov=covariance)
+    zi2 = np.reshape(zi, (x.shape))
+    # Reshape back to a (30, 30) grid.
+    return zi2, mu[0], sigma[0]
