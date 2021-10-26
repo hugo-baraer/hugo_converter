@@ -96,18 +96,23 @@ plt.show()
 
 #Gaussian_FFT for the 3D field, shift the field and plots with frquencies
 gaussian_FFT = np.fft.fftn(gaussian_field)
-delta = gaussian_field[0,0,1]-gaussian_field[0,0,0]
-freqs = np.fft.fftfreq(len(gaussian_field[0,0]), delta)
+delta = 0.1
+freqs = np.fft.fftshift(np.fft.fftfreq(box_dim, d=delta))
 gaussian_shifted = np.fft.fftshift(np.fft.fftn(np.fft.fftshift(gaussian_field)))
 
 
 
 fig, ax = plt.subplots()
-plt.contourf(abs(gaussian_shifted[int(box_dim//2.0)]))
+X, Y = np.meshgrid(freqs, freqs)
+plt.contourf(X,Y,abs(gaussian_shifted[int(box_dim//2.0)]))
+#plt.plot_trisurf(abs(gaussian_shifted))
 plt.colorbar()
+# ax.set_xticks(freqs)
+# ax.set_yticks(freqs)
 plt.title(r'F($Gaussian$) centered in z with the mean at {}, and a standard deviation of {}'.format(mu,std))
 plt.show()
 
+#Axes3D.contourf(gaussian_shifted[0],gaussian_shifted[1], gaussian_shifted[2])
 
 #gif the field through the z dimension
 # filename = []
@@ -130,10 +135,15 @@ plt.show()
 coeval.z_re_box = zre.generate_zre_field(16, 1, 1, coeval.z_re_box.shape[0])
 overzre, zre_mean = zre.over_zre_field(coeval.z_re_box)
 
-#Take and plot the Fourrier transform of the over-redshift
+#Take and plot the Fourrier transform of the over-redshift along with it's frequnecy
 overzre_shifted_fft = abs(np.fft.fftshift(np.fft.fftn(np.fft.fftshift(overzre))))
+delta_overzre = coeval.user_params.BOX_LEN / coeval.user_params.DIM
+overzre_freqs = np.fft.fftshift(np.fft.fftfreq(box_dim, d=delta_overzre))
+Xz, Yz = np.meshgrid(overzre_freqs, overzre_freqs)
+
+
 fig, ax = plt.subplots()
-plt.contourf(overzre_shifted_fft[:,:,25])
+plt.contourf(Xz, Yz, overzre_shifted_fft[:,:,25])
 plt.colorbar()
 plt.title(r'F($\delta_z$ (x)) at a pixel dimension of {}³'.format(box_dim))
 plt.show()
@@ -156,8 +166,13 @@ plt.show()
 
 coeval = p21c.run_coeval(redshift=z_mean,user_params={'HII_DIM': box_dim, "USE_INTERPOLATION_TABLES": False})
 overdensity_shifted_fft = abs(np.fft.fftshift(np.fft.fftn(np.fft.fftshift(coeval.density))))
+delta_overd = coeval.user_params.BOX_LEN / coeval.user_params.DIM
+overdensity_freqs = np.fft.fftshift(np.fft.fftfreq(box_dim, d=delta_overd))
+
+Xd, Yd = np.meshgrid(overdensity_freqs, overdensity_freqs)
+
 fig, ax = plt.subplots()
-plt.contourf(overdensity_shifted_fft[:,:,25])
+plt.contourf(Xd, Yd, overdensity_shifted_fft[:,:,25])
 plt.colorbar()
 plt.title(r'F($\delta_m$ (x)) at a redshift of {} and a pixel dimension of {}³'.format(coeval.redshift,box_dim))
 plt.show()
@@ -168,4 +183,4 @@ plt.contourf(division[:,:,25])
 plt.colorbar()
 plt.title(r'F($\delta_zre$ (x))/F($\delta_m$ (x)) at a redshift of {} and a pixel dimension of {}³'.format(coeval.redshift,box_dim))
 plt.show()
-a =1
+
