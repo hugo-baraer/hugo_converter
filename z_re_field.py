@@ -64,9 +64,10 @@ def generate_gaussian_field(dim):
     # Need an (N, 2) array of (x, y) pairs.
     xyz = np.column_stack([x.flat, y.flat, z.flat])
     mu = np.array([0.0, 0.0, 0.0])
-    sigma = np.array([.50, .50, .50])
+    sigma = np.array([.050, .050, .050])
     covariance = np.diag(sigma ** 2)
     zi = multivariate_normal.pdf(xyz, mean=mu, cov=covariance)
     zi2 = np.reshape(zi, (x.shape))
     # Reshape back to a (30, 30) grid.
     return zi2, mu[0], sigma[0]
+

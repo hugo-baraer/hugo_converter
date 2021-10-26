@@ -17,6 +17,9 @@ import z_re_field as zre
 from tqdm import tqdm
 from scipy import signal
 import imageio
+from mpl_toolkits.mplot3d import Axes3D
+
+
 #adjustable parameters to look out before running the driver
 
 box_dim = 50 #the desired spatial resolution of the box
@@ -97,6 +100,8 @@ delta = gaussian_field[0,0,1]-gaussian_field[0,0,0]
 freqs = np.fft.fftfreq(len(gaussian_field[0,0]), delta)
 gaussian_shifted = np.fft.fftshift(np.fft.fftn(np.fft.fftshift(gaussian_field)))
 
+
+
 fig, ax = plt.subplots()
 plt.contourf(abs(gaussian_shifted[int(box_dim//2.0)]))
 plt.colorbar()
@@ -130,7 +135,7 @@ overzre_shifted_fft = abs(np.fft.fftshift(np.fft.fftn(np.fft.fftshift(overzre)))
 fig, ax = plt.subplots()
 plt.contourf(overzre_shifted_fft[:,:,25])
 plt.colorbar()
-plt.title(r'F($\delta_z$ (x)) at a pixel dimension of {}³'.format(coeval.redshift,box_dim))
+plt.title(r'F($\delta_z$ (x)) at a pixel dimension of {}³'.format(box_dim))
 plt.show()
 
 """
@@ -147,24 +152,20 @@ plt.colorbar()
 plt.title('over-redshift of reionization')
 plt.show()
 
-
-#Take the Fourrier transform of the over-redshift
+"""
 
 coeval = p21c.run_coeval(redshift=z_mean,user_params={'HII_DIM': box_dim, "USE_INTERPOLATION_TABLES": False})
-
-overdensity_FFT = np.fft.fft(coeval.density)
-# fig, ax = plt.subplots()
-# plt.contourf(overdensity_FFT[:,:,0])
-# #plt.contourf(np.absolute(overdensity_FFT[:,:,0])**2)
-# plt.colorbar()
-# plt.title(r'F($\delta_m$ (x)) at a redshift of {} and a pixel dimension of {}³'.format(coeval.redshift,box_dim))
-# plt.show()
-
-division = np.divide(overzre_FFT,overdensity_FFT)
+overdensity_shifted_fft = abs(np.fft.fftshift(np.fft.fftn(np.fft.fftshift(coeval.density))))
 fig, ax = plt.subplots()
-plt.contourf(division[:,:,0])
+plt.contourf(overdensity_shifted_fft[:,:,25])
+plt.colorbar()
+plt.title(r'F($\delta_m$ (x)) at a redshift of {} and a pixel dimension of {}³'.format(coeval.redshift,box_dim))
+plt.show()
+
+division = np.divide(overzre_shifted_fft,overdensity_shifted_fft)
+fig, ax = plt.subplots()
+plt.contourf(division[:,:,25])
 plt.colorbar()
 plt.title(r'F($\delta_zre$ (x))/F($\delta_m$ (x)) at a redshift of {} and a pixel dimension of {}³'.format(coeval.redshift,box_dim))
 plt.show()
 a =1
-"""
