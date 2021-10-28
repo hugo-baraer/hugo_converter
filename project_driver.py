@@ -2,23 +2,28 @@
   EoR_research/project_driver.py
 
   Author : Hugo Baraer
-  Affiliation : McGill University
+  Supervision by : Prof. Adrian Liu
+  Affiliation : Cosmid dawn group at McGill University
   Date of creation : 2021-09-21
 
   This module is the driver and interacts between 21cmFast and the modules computing the require fields and parameters.
 """
-
+#import classic python librairies
 import py21cmfast as p21c
 from py21cmfast import plotting
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-import z_re_field as zre
 from tqdm import tqdm
 from scipy import signal
 import imageio
 from mpl_toolkits.mplot3d import Axes3D
 
+#import this project's modules
+import z_re_field as zre
+import Gaussian_testing as gauss
+import FFT
+import statistical_analysis as sa
 
 #adjustable parameters to look out before running the driver
 
@@ -87,30 +92,14 @@ With these information, I could plot z_re as function of time, by looking at a b
 """Test the FFT function for a 3D Gaussian field"""
 
 #start by generating a 3d gaussian field and plotting a slice of it
-gaussian_field, mu, std = zre.generate_gaussian_field(box_dim)
-fig, ax = plt.subplots()
-plt.contourf(gaussian_field[int(box_dim//2.0)])
-plt.colorbar()
-plt.title(r'slice of a 3D Gaussian centered in z with the mean at {}, and a standard deviation of {}'.format(mu,std))
-plt.show()
+gaussian_field, mu, std = gauss.generate_gaussian_field(box_dim)
+gauss.plot_field(gaussian_field,int(box_dim//2), mu, std)
 
 #Gaussian_FFT for the 3D field, shift the field and plots with frquencies
-gaussian_FFT = np.fft.fftn(gaussian_field)
-delta = 0.1
-freqs = np.fft.fftshift(np.fft.fftfreq(box_dim, d=delta))
-gaussian_shifted = np.fft.fftshift(np.fft.fftn(np.fft.fftshift(gaussian_field)))
+delta = 0.1 #an arbitrary desired time interval for the Gaussian
+X, Y, fft_gaussian_shifted = gauss.gaussian_fft(gaussian_field,delta,box_dim)
+gauss.plot_ftt_field(fft_gaussian_shifted,int(box_dim//2), mu, std, X,Y)
 
-
-
-fig, ax = plt.subplots()
-X, Y = np.meshgrid(freqs, freqs)
-plt.contourf(X,Y,abs(gaussian_shifted[int(box_dim//2.0)]))
-#plt.plot_trisurf(abs(gaussian_shifted))
-plt.colorbar()
-# ax.set_xticks(freqs)
-# ax.set_yticks(freqs)
-plt.title(r'F($Gaussian$) centered in z with the mean at {}, and a standard deviation of {}'.format(mu,std))
-plt.show()
 
 #Axes3D.contourf(gaussian_shifted[0],gaussian_shifted[1], gaussian_shifted[2])
 
@@ -136,17 +125,12 @@ coeval.z_re_box = zre.generate_zre_field(16, 1, 1, coeval.z_re_box.shape[0])
 overzre, zre_mean = zre.over_zre_field(coeval.z_re_box)
 
 #Take and plot the Fourrier transform of the over-redshift along with it's frequnecy
-overzre_shifted_fft = abs(np.fft.fftshift(np.fft.fftn(np.fft.fftshift(overzre))))
-delta_overzre = coeval.user_params.BOX_LEN / coeval.user_params.DIM
-overzre_freqs = np.fft.fftshift(np.fft.fftfreq(box_dim, d=delta_overzre))
-Xz, Yz = np.meshgrid(overzre_freqs, overzre_freqs)
+delta = coeval.user_params.BOX_LEN / coeval.user_params.DIM
+Xz, Yz, overzre_fft= FFT.compute_fft(overzre, delta, box_dim)
 
+#plot this F(over_zre(x))
+FFT.plot_ftt_field(overzre_fft, int(box_dim//2), Xz, Yz, title = r'F($\delta_z$ (x)) at a pixel dimension of {}³'.format(box_dim))
 
-fig, ax = plt.subplots()
-plt.contourf(Xz, Yz, overzre_shifted_fft[:,:,25])
-plt.colorbar()
-plt.title(r'F($\delta_z$ (x)) at a pixel dimension of {}³'.format(box_dim))
-plt.show()
 
 """
 #plot a slice of this new redshift field, saved as the new z_re_box
@@ -165,22 +149,29 @@ plt.show()
 """
 
 coeval = p21c.run_coeval(redshift=z_mean,user_params={'HII_DIM': box_dim, "USE_INTERPOLATION_TABLES": False})
-overdensity_shifted_fft = abs(np.fft.fftshift(np.fft.fftn(np.fft.fftshift(coeval.density))))
-delta_overd = coeval.user_params.BOX_LEN / coeval.user_params.DIM
-overdensity_freqs = np.fft.fftshift(np.fft.fftfreq(box_dim, d=delta_overd))
 
-Xd, Yd = np.meshgrid(overdensity_freqs, overdensity_freqs)
+Xd, Yd, overd_fft= FFT.compute_fft(coeval.density, delta, box_dim)
+FFT.plot_ftt_field(overd_fft, int(box_dim//2), Xd, Yd, title = r'F($\delta_m$ (x)) at a redshift of {} and a pixel dimension of {}³'.format(coeval.redshift,box_dim))
 
+freqs = np.fft.fftshift(np.fft.fftfreq(box_dim, d=delta))
+
+#test the division process
+division = np.divide(overzre_fft[:,25,25], overd_fft[:,25,25])
 fig, ax = plt.subplots()
-plt.contourf(Xd, Yd, overdensity_shifted_fft[:,:,25])
-plt.colorbar()
-plt.title(r'F($\delta_m$ (x)) at a redshift of {} and a pixel dimension of {}³'.format(coeval.redshift,box_dim))
-plt.show()
-
-division = np.divide(overzre_shifted_fft,overdensity_shifted_fft)
-fig, ax = plt.subplots()
-plt.contourf(division[:,:,25])
-plt.colorbar()
+plt.scatter(freqs, division)
+#plt.contourf(division[:,:,25])
+#plt.colorbar()
 plt.title(r'F($\delta_zre$ (x))/F($\delta_m$ (x)) at a redshift of {} and a pixel dimension of {}³'.format(coeval.redshift,box_dim))
 plt.show()
-
+print(freqs[25:], division[25:])
+a, b = sa.get_param_value(freqs[25:], division[25:])
+a,b0,k0 = a[0:]
+print(a, b0, k0)
+y_plot_fit = sa.lin_bias(freqs[25:], a,b0,k0)
+fig, ax = plt.subplots()
+plt.plot(freqs[25:], y_plot_fit)
+plt.scatter(freqs[25:], division[25:])
+#plt.contourf(division[:,:,25])
+#plt.colorbar()
+plt.title(r'F($\delta_zre$ (x))/F($\delta_m$ (x)) at a redshift of {} and a pixel dimension of {}³'.format(coeval.redshift,box_dim))
+plt.show()
