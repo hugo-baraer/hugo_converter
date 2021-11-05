@@ -17,6 +17,7 @@ import matplotlib.pyplot as plt
 import z_re_field as zre
 from tqdm import tqdm
 from scipy.optimize import curve_fit
+import math as m
 
 def lin_bias(x, a,b0,k0):
     '''
@@ -46,6 +47,29 @@ def get_param_value(x,y):
     '''
     a=1
     return curve_fit(lin_bias, np.asarray(x), np.asarray(y))
+
+def cart2pol(x, y, z):
+    '''
+    convert cartesian values to polar coordinates.
+    inspired by https://stackoverflow.com/questions/20924085/python-conversion-between-coordinates
+    :param x: values in x of the polar coordinates
+    :type x: arr
+    :param y: values in y of the polar coordinates
+    :type y: arr
+    :param z: values in z of the polar coordinates
+    :type z: arr
+    :return: the polar coordinates values of the array
+    :rtype:
+    '''
+    XsqPlusYsq = x ** 2 + y ** 2
+    r = m.sqrt(XsqPlusYsq + z ** 2)  # r
+    elev = m.atan2(z, m.sqrt(XsqPlusYsq))  # theta
+    az = m.atan2(y, x)  # phi
+    return r, elev, az
+
+def cart2sphA(pts):
+    return np.array([cart2pol(x,y,z) for x,y,z in pts])
+
 def plot_bestfit(x,y):
     '''
     This function computes the best-fit value for

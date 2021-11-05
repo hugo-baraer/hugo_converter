@@ -32,7 +32,7 @@ def compute_fft(field,delta,box_dim):
     '''
 
     freqs = np.fft.fftshift(np.fft.fftfreq(box_dim, d=delta))
-    fft_shifted = abs(np.fft.fftshift(np.fft.fftn(np.fft.fftshift(field))))
+    fft_shifted = np.fft.fftshift(np.fft.fftn(np.fft.fftshift(field)))
     X, Y = np.meshgrid(freqs, freqs)
 
     return X, Y, fft_shifted
