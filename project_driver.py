@@ -27,7 +27,7 @@ import statistical_analysis as sa
 
 #adjustable parameters to look out before running the driver
 
-box_dim = 80 #the desired spatial resolution of the box #the redshift z_bar at which the over-density is computed
+box_dim = 60 #the desired spatial resolution of the box #the redshift z_bar at which the over-density is computed
 radius_thick = 1. # the radii thickness (will affect the number of bins
 
 
@@ -180,7 +180,7 @@ cy = int(box_dim//2)
 
 cx = int(box_dim//2)
 cy = int(box_dim//2)
-radii = np.linspace(0,np.sqrt(2*(cx)**2),num = int(np.sqrt(2*(cx)**2)/int(radius_thick)))
+radii = np.linspace(0,np.sqrt(3*(cx)**2),num = int(np.sqrt(3*(cx)**2)/int(radius_thick)))
 values = np.zeros(len(radii))
 count = np.zeros(len(radii))
 values_overd = np.zeros(len(radii))
@@ -188,16 +188,16 @@ count_overd= np.zeros(len(radii))
 
 for i in tqdm(range(box_dim), 'transfering fields into k 1D array'):
      for j in range(box_dim):
-        k_radius = np.sqrt((i-cx)**2 + (j-cy)**2)
-        print(k_radius)
-        for step, radius in enumerate(radii):
-            if k_radius < radius:
-                count[(step)]+=1
-                count_overd[(step)]+=1
-                values[(step)] += overzre_fft[i,j,int(box_dim//2)]
-                values_overd[(step)] += overd_fft[i, j, int(box_dim // 2)]
-                break
-                #print(step)
+         for z in range(box_dim):
+            k_radius = np.sqrt((i-cx)**2 + (j-cy)**2 +(z-cy)**2)
+            for step, radius in enumerate(radii):
+                if k_radius < radius:
+                    count[(step)]+=1
+                    count_overd[(step)]+=1
+                    values[(step)] += overzre_fft[i,j,z]
+                    values_overd[(step)] += overd_fft[i, j, z]
+                    break
+                    #print(step)
 
             # if step == len(radii)-1:
             #     values[step] += overzre_fft[i, j, 25]

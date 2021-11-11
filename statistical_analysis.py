@@ -80,3 +80,13 @@ def plot_bestfit(x,y):
     :return:
     :rtype:
     '''
+
+def likelihood(theta, x, y, ):
+    a, b0, k_0 = theta
+    model = a * x + b
+
+def log_likelihood(theta, x, y, yerr):
+    a, b = theta
+    model = a * x + b
+    sigma2 = yerr ** 2
+    return -0.5 * np.sum((y - model) ** 2 / sigma2 + np.log(sigma2)) # the 2pi factor doesn't affect the shape
