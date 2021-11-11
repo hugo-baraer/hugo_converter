@@ -27,7 +27,7 @@ import statistical_analysis as sa
 
 #adjustable parameters to look out before running the driver
 
-box_dim = 50 #the desired spatial resolution of the box #the redshift z_bar at which the over-density is computed
+box_dim = 80 #the desired spatial resolution of the box #the redshift z_bar at which the over-density is computed
 radius_thick = 1. # the radii thickness (will affect the number of bins
 
 
@@ -130,7 +130,7 @@ delta = coeval.user_params.BOX_LEN / coeval.user_params.DIM
 Xz, Yz, overzre_fft= FFT.compute_fft(overzre, delta, box_dim)
 
 #plot this F(over_zre(x))
-#FFT.plot_ftt_field(overzre_fft, int(box_dim//2), Xz, Yz, title = r'F($\delta_z$ (x)) at a pixel dimension of {}³'.format(box_dim))
+FFT.plot_ftt_field(overzre_fft, int(box_dim//2), Xz, Yz, title = r'F($\delta_z$ (x)) at a pixel dimension of {}³'.format(box_dim))
 
 
 """
@@ -252,19 +252,23 @@ plt.scatter(radii, overzre_fft_k)
 plt.legend()
 ax.set_xlabel(r'$k [Mpc^{-1}]$')
 ax.set_ylabel(r'$\delta_zre$ (k)')
-plt.title(r'$\delta_zre$ (k) as a function of k '.format(coeval.redshift,box_dim))
+plt.title(r'$\delta_zre$ (k) as a function of k ')
 plt.show()
 
 
+
+
+
 # print(freqs[25:], division[25:])
-a1, b = sa.get_param_value(xx[int(len(oneD_div)//2):], oneD_div[int(len(oneD_div)//2):])
+a1, b = sa.get_param_value(overd_fft_k[1:], overzre_fft_k[1:])
 a0,b0,k0 = a1[0:]
+a0 = 0.0
 print(a0, b0, k0)
-y_plot_fit = sa.lin_bias(xx[int(len(oneD_div)//2):], a0,b0,k0)
+y_plot_fit = sa.lin_bias(overd_fft_k[1:], a0,b0,k0)
 
 fig, ax = plt.subplots()
-plt.plot(xx[int(len(oneD_div)//2):], y_plot_fit)
-plt.scatter(xx[int(len(oneD_div)//2):], oneD_div[int(len(oneD_div)//2):], label = 'data fitting for')
+plt.plot(overd_fft_k[1:], y_plot_fit)
+plt.scatter(overd_fft_k[1:], overzre_fft_k[1:], label = 'data fitting for')
 # #plt.contourf(division[:,:,25])
 # #plt.colorbar()
 plt.title(r'best curve fitting for the linear bias')
