@@ -60,3 +60,18 @@ def plot_ftt_field(field,slice,X,Y, title = ''):
     ax.set_ylabel(r'$k_y [Mpc^{-1}]$')
     plt.title(title)
     plt.show()
+
+#gif the field through the z dimension
+# filename = []
+# levels = np.linspace(0, 16000, 51)
+# for i in tqdm(range(box_dim)):
+#     fig, ax = plt.subplots()
+#     plt.contourf(abs(gaussian_shifted[i]),levels=levels)
+#     plt.colorbar()
+#     plt.savefig(f'F()_{i}.png')
+#     plt.close()
+#     filename.append(f'F()_{i}.png')
+# images = []
+# for filename in filename:
+#     images.append(imageio.imread(filename))
+# imageio.mimsave('fft_gaussian_through_.gif', images)

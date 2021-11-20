@@ -38,6 +38,7 @@ def generate_gaussian_field(dim):
     covariance = np.diag(sigma ** 2)
     zi = multivariate_normal.pdf(xyz, mean=mu, cov=covariance)
     zi2 = np.reshape(zi, (x.shape))
+    print(zi2)
     # Reshape back to a (30, 30) grid.
     return zi2, mu[0], sigma[0]
 
@@ -96,9 +97,28 @@ def plot_ftt_field(field,slice, mu, std, X,Y):
     :rtype: 2D array
     '''
     fig, ax = plt.subplots()
-    plt.contourf(X, Y, abs(field[slice]))
+    plt.contourf(X, Y, field[slice])
     plt.colorbar()
     ax.set_xlabel(r'$k_x [Mpc^{-1}]$')
     ax.set_ylabel(r'$k_y [Mpc^{-1}]$')
     plt.title(r'F($Gaussian$) centered in z with the mean at {}, and a standard deviation of {}'.format(mu, std))
     plt.show()
+
+#test the fft module with a perfect Gaussian field. This will later be moved in it's own module
+
+#test fft with 1d gaussian
+
+# window = signal.gaussian(51, std=7)
+#
+# fig, ax = plt.subplots()
+# plt.plot(window)
+# plt.title(r'1D Gaussian centered in z with the mean at {}, and a standard deviation of {}'.format(51,7))
+# plt.show()
+#
+# gaussian1d_FFT = np.fft.fft(window)
+# gaussian1d_shifted = np.fft.fftshift(np.fft.fft(window))
+#
+# fig, ax = plt.subplots()
+# plt.plot(gaussian1d_FFT)
+# plt.title(r'1D Gaussian centered in z with the mean at {}, and a standard deviation of {}'.format(51,7))
+# plt.show()

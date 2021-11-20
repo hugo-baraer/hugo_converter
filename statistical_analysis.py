@@ -18,6 +18,7 @@ import z_re_field as zre
 from tqdm import tqdm
 from scipy.optimize import curve_fit
 import math as m
+#import pymks
 
 def lin_bias(x, a,b0,k0):
     '''
@@ -45,7 +46,6 @@ def get_param_value(x,y):
     :return:
     :rtype:
     '''
-    a=1
     return curve_fit(lin_bias, np.asarray(x), np.asarray(y))
 
 def cart2pol(x, y, z):
@@ -81,12 +81,91 @@ def plot_bestfit(x,y):
     :rtype:
     '''
 
-def likelihood(theta, x, y, ):
-    a, b0, k_0 = theta
-    model = a * x + b
-
-def log_likelihood(theta, x, y, yerr):
+def log_prior_lin(theta):
     a, b = theta
-    model = a * x + b
+    if -20 < a < 20. and -50< b < 50:
+        return 0.0
+    return -np.inf
+
+def log_likelihood_lin(theta, x, y, yerr):
+    '''
+    this functions evaluates the likelihood, to test on the data we have
+    :param theta:
+    :type theta:
+    :param x:
+    :type x:
+    :param y:
+    :type y:
+    :param yerr:
+    :type yerr:
+    :return:
+    :rtype:
+    '''
+    a, b = theta
     sigma2 = yerr ** 2
-    return -0.5 * np.sum((y - model) ** 2 / sigma2 + np.log(sigma2)) # the 2pi factor doesn't affect the shape
+    model = a*x +b
+    return -0.5 * np.sum((y - model) ** 2 / sigma2 + np.log(sigma2))  # the 2pi factor doesn't affect the shape
+
+
+def log_post_lin(theta, x, y, yerr):
+    lp = log_prior_lin(theta)
+    if not np.isfinite(lp):
+        return -np.inf
+    return lp + log_likelihood_lin(theta, x, y, yerr)
+
+
+def log_prior_bmz(theta):
+    a, b0, k0 = theta
+    if -10 < a < 10. and -20 < b0 < 20 and -40 < k0 < 20 :
+        return 0.0
+    return -np.inf
+
+def log_likelihood_bmz(theta, x, y, yerr):
+    '''
+    this functions evaluates the likelihood, to test on the data we have
+    :param theta:
+    :type theta:
+    :param x:
+    :type x:
+    :param y:
+    :type y:
+    :param yerr:
+    :type yerr:
+    :return:
+    :rtype:
+    '''
+    a, b0, k0 = theta
+    sigma2 = yerr ** 2
+    try:
+        model = b0/(1+x/k0)**a
+        likelihood = -0.5 * np.sum((y - model) ** 2 / sigma2 + np.log(sigma2))
+        return likelihood
+    except:
+        return -np.inf
+
+
+
+def log_post_bmz(theta, x, y, yerr):
+    lp = log_prior_bmz(theta)
+    if not np.isfinite(lp):
+        return -np.inf
+    return lp + log_likelihood_bmz(theta, x, y, yerr)
+
+
+def compute_bmz(overzre_k,overd_k):
+    '''
+    this module computes the bmz factor as it should be according to the equation in Battaglia et al.
+    :param overzre_k: the over-redshift of reionization in momentum space
+    :type overzre_k: 1d array
+    :param overd_k: the over density in momentum space
+    :type overd_k: 1d array
+    :return: the linear bias factor
+    :rtype: 1d array
+    '''
+    #prim_basis = pymks.PrimitiveBasis(n_states =2)
+    #X_ = prim_basis.discretize(X)
+    inner_product_dzre = np.correlate(overzre_k,overzre_k, "full")
+    inner_product_dzre = inner_product_dzre[inner_product_dzre.size//2:]
+    inner_product_dm = np.correlate(overd_k,overd_k, "full")
+    inner_product_dm = inner_product_dm[inner_product_dm.size // 2:]
+    return np.sqrt(np.divide(inner_product_dzre,inner_product_dm))

@@ -3,7 +3,7 @@
 
   Author : Hugo Baraer
   Supervision by : Prof. Adrian Liu
-  Affiliation : Cosmid dawn group at McGill University
+  Affiliation : Cosmic dawn group at McGill University
   Date of creation : 2021-09-21
 
   This module is the driver and interacts between 21cmFast and the modules computing the require fields and parameters.
@@ -15,48 +15,28 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+import emcee
 from scipy import signal
 import imageio
 from mpl_toolkits.mplot3d import Axes3D
-
+import corner
 #import this project's modules
 import z_re_field as zre
 import Gaussian_testing as gauss
 import FFT
 import statistical_analysis as sa
+#import pymks
 
 #adjustable parameters to look out before running the driver
-
-box_dim = 60 #the desired spatial resolution of the box #the redshift z_bar at which the over-density is computed
-radius_thick = 1. # the radii thickness (will affect the number of bins
+box_dim = 51 #the desired spatial resolution of the box #the redshift z_bar at which the over-density is computed
+radius_thick = 3. #the radii thickness (will affect the number of bins
 
 
 
 #intialize a coeval cube at red shift z = z\bar
 coeval = p21c.run_coeval(redshift=8.0,user_params={'HII_DIM': box_dim, "USE_INTERPOLATION_TABLES": False})
 
-#generate a sliced plot of the over-density the same way as we did for over-redshift
-# fig, ax = plt.subplots()
-# plt.contourf(coeval.density[:,:,0], cmap = 'jet')
-# plt.colorbar()
-# plt.title('slice of dark matter over-density at a redshfit of {} and a pixel dimension of {}³'.format(coeval.redshift,box_dim))
-# plt.show()
 
-#Take the Fourrier transform of the over density
-# overdensity_FFT = np.fft.fft(coeval.density)
-# fig, ax = plt.subplots()
-# plt.contourf(overdensity_FFT[:,:,0])
-# #plt.contourf(np.absolute(overdensity_FFT[:,:,0])**2)
-# plt.colorbar()
-# plt.title(r'F($\delta_m$ (x)) at a redshift of {} and a pixel dimension of {}³'.format(coeval.redshift,box_dim))
-# plt.show()
-
-
-# #plot dark_matter density for testing purposes
-# plotting.coeval_sliceplot(coeval, kind = 'density')
-# plt.tight_layout()
-# plt.title('slice of dark matter over-density at a redshfit of {} and a pixel dimension of {}³'.format(coeval.redshift,150)) #coeval.user_params(HII_DIM)
-# plt.show()
 
 #plot the reionization redshift (test pursposes)
 # plotting.coeval_sliceplot(coeval, kind = 'z_re_box', cmap = 'jet')
@@ -70,24 +50,6 @@ the redshift parameter entred in coeval, or -1 if it wasn't ionized at that reds
 With these information, I could plot z_re as function of time, by looking at a bunch of redshifts.
 """
 
-#test the fft module with a perfect Gaussian field. This will later be moved in it's own module
-
-#test fft with 1d gaussian
-
-# window = signal.gaussian(51, std=7)
-#
-# fig, ax = plt.subplots()
-# plt.plot(window)
-# plt.title(r'1D Gaussian centered in z with the mean at {}, and a standard deviation of {}'.format(51,7))
-# plt.show()
-#
-# gaussian1d_FFT = np.fft.fft(window)
-# gaussian1d_shifted = np.fft.fftshift(np.fft.fft(window))
-#
-# fig, ax = plt.subplots()
-# plt.plot(gaussian1d_FFT)
-# plt.title(r'1D Gaussian centered in z with the mean at {}, and a standard deviation of {}'.format(51,7))
-# plt.show()
 
 
 """Test the FFT function for a 3D Gaussian field"""
@@ -102,25 +64,6 @@ X, Y, fft_gaussian_shifted = gauss.gaussian_fft(gaussian_field,delta,box_dim)
 #gauss.plot_ftt_field(fft_gaussian_shifted,int(box_dim//2), mu, std, X,Y)
 
 
-#Axes3D.contourf(gaussian_shifted[0],gaussian_shifted[1], gaussian_shifted[2])
-
-#gif the field through the z dimension
-# filename = []
-# levels = np.linspace(0, 16000, 51)
-# for i in tqdm(range(box_dim)):
-#     fig, ax = plt.subplots()
-#     plt.contourf(abs(gaussian_shifted[i]),levels=levels)
-#     plt.colorbar()
-#     plt.savefig(f'F()_{i}.png')
-#     plt.close()
-#     filename.append(f'F()_{i}.png')
-#
-# images = []
-# for filename in filename:
-#     images.append(imageio.imread(filename))
-# imageio.mimsave('fft_gaussian_through_.gif', images)
-
-
 #Compute the reionization redshift from the module z_re
 coeval.z_re_box = zre.generate_zre_field(16, 1, 1, coeval.z_re_box.shape[0])
 overzre, zre_mean = zre.over_zre_field(coeval.z_re_box)
@@ -133,59 +76,34 @@ Xz, Yz, overzre_fft= FFT.compute_fft(overzre, delta, box_dim)
 FFT.plot_ftt_field(overzre_fft, int(box_dim//2), Xz, Yz, title = r'F($\delta_z$ (x)) at a pixel dimension of {}³'.format(box_dim))
 
 
-"""
-#plot a slice of this new redshift field, saved as the new z_re_box
-plotting.coeval_sliceplot(coeval, kind = 'z_re_box', cmap = 'jet')
-plt.tight_layout()
-plt.title('reionization redshift field ')
-plt.show()
-
-#plot a slice of the over redshift
-fig, ax = plt.subplots()
-plt.contourf(overzre[:,:,0], cmap = 'jet')
-plt.colorbar()
-plt.title('over-redshift of reionization')
-plt.show()
-
-"""
-
 coeval = p21c.run_coeval(redshift=zre_mean,user_params={'HII_DIM': box_dim, "USE_INTERPOLATION_TABLES": False})
 
 Xd, Yd, overd_fft= FFT.compute_fft(coeval.density, delta, box_dim)
 #FFT.plot_ftt_field(overd_fft, int(box_dim//2), Xd, Yd, title = r'F($\delta_m$ (x)) at a redshift of {} and a pixel dimension of {}³'.format(coeval.redshift,box_dim))
 freqs = np.fft.fftshift(np.fft.fftfreq(box_dim, d=delta))
 
-
-#division = np.divide(overzre_fft[int(box_dim//2)], overd_fft[int(box_dim//2)])
-
 #polar_div = np.ones((box_dim,box_dim,box_dim))
 #polar_div = sa.cart2sphA(division)
-# fig, ax = plt.subplots()
-# plt.contourf(Xd, Yd, division)
-# plt.colorbar()
-# plt.show()
 
-values = np.arange(0, box_dim)
-count = np.arange(0, box_dim)
+
+
 cx = int(box_dim//2)
 cy = int(box_dim//2)
 
 #wanted radius for plotting
 
-
-# The two lines below could be merged, but I stored the mask
-# for code clarity.
 #mask = (x[np.newaxis,:]-cx)**2 + (y[:,np.newaxis]-cy)**2 == r**2
-#oneD_div = []
+
 
 cx = int(box_dim//2)
 cy = int(box_dim//2)
 radii = np.linspace(0,np.sqrt(3*(cx)**2),num = int(np.sqrt(3*(cx)**2)/int(radius_thick)))
-values = np.zeros(len(radii))
+values = np.zeros(len(radii), dtype = 'complex')
 count = np.zeros(len(radii))
-values_overd = np.zeros(len(radii))
+values_overd = np.zeros(len(radii), dtype = 'complex')
 count_overd= np.zeros(len(radii))
 
+#loop through each point and seperate them in
 for i in tqdm(range(box_dim), 'transfering fields into k 1D array'):
      for j in range(box_dim):
          for z in range(box_dim):
@@ -199,11 +117,28 @@ for i in tqdm(range(box_dim), 'transfering fields into k 1D array'):
                     break
                     #print(step)
 
+sigmad = np.zeros(len(values))
+sigmazre = np.zeros(len(values))
+#compute the error (standard deviation of each point)
+for i in tqdm(range(box_dim), 'co'):
+    for j in range(box_dim):
+        for z in range(box_dim):
+            k_radius = np.sqrt((i - cx) ** 2 + (j - cy) ** 2 + (z - cy) ** 2)
+            for step, radius in enumerate(radii):
+                if k_radius < radius:
+                    average = values_overd[step]/count_overd[step]
+                    sigmad[step] += abs((overd_fft[i, j, z] - average))**2
+                    sigmazre[step] += abs((overzre_fft[i, j, z] - (values[step]/count[step])))**2
+                    break
+
             # if step == len(radii)-1:
             #     values[step] += overzre_fft[i, j, 25]
             #     count[step] += 1
 
+sigmad = np.sqrt(np.divide(sigmad,count_overd))
+sigmazre = np.sqrt(np.divide(sigmazre,count))
 
+#print(sigmad, sigmazre)
 
 print(values)
 print(count)
@@ -226,15 +161,17 @@ overd_fft_k = np.divide(values_overd,count_overd)
 #print(a[6,2], overzre_fft[6,2,int(box_dim//2)], overd_fft[6,2,int(box_dim//2)],int(box_dim//2))
 #xx=np.arange(0,len(oneD_div))
 #division = np.divide(overzre_fft[:,int(box_dim//2),int(box_dim//2)], overd_fft[:,int(box_dim//2),int(box_dim//2)])
+
+
 fig, ax = plt.subplots()
-plt.scatter(radii, overd_fft_k)
+plt.errorbar(radii, overd_fft_k, yerr = sigmad, linestyle = 'None',capsize=4, marker ='o')
 
 #plt.scatter(freqs, a[25], label = '25')
 # plt.scatter(freqs, a[50], label = '50')
 # plt.scatter(freqs, a[95], label = '95')
 #plt.contourf(Xd,Yd,a)
 #plt.colorbar()
-plt.legend()
+#plt.legend()
 ax.set_xlabel(r'$k [Mpc^{-1}]$')
 ax.set_ylabel(r'$\delta_m$ (k)')
 plt.title(r'$\delta_m$ (k)) as a function of k '.format(coeval.redshift,box_dim))
@@ -242,34 +179,82 @@ plt.show()
 
 
 fig, ax = plt.subplots()
-plt.scatter(radii, overzre_fft_k)
+plt.errorbar(radii, overzre_fft_k, yerr = sigmazre, linestyle = 'None',capsize=4, marker ='o')
+#plt.scatter(radii, overzre_fft_k, )
 
 #plt.scatter(freqs, a[25], label = '25')
 # plt.scatter(freqs, a[50], label = '50')
 # plt.scatter(freqs, a[95], label = '95')
 #plt.contourf(Xd,Yd,a)
 #plt.colorbar()
-plt.legend()
+#plt.legend()
 ax.set_xlabel(r'$k [Mpc^{-1}]$')
 ax.set_ylabel(r'$\delta_zre$ (k)')
 plt.title(r'$\delta_zre$ (k) as a function of k ')
 plt.show()
 
+overzre_fft_k = overzre_fft_k[1:]
+overd_fft_k = overd_fft_k[1:]
+#prim_basis = pymks.PrimitiveBasis(n_states=2)
+#X_ = prim_basis.discretize(overzre_fft_k)
+P_zz = abs(overzre_fft_k)**2
+P_mm = abs(overd_fft_k)**2
+b_mz = np.sqrt(np.divide(overzre_fft_k,overd_fft_k))
+#bmz = sa.compute_bmz(overzre_fft_k[1:],overd_fft_k[1:])
+radii = radii[1:]
+print(b_mz)
 
+#take out nan values in radii
+radii= radii[:len(b_mz)]
+nan_array = np.isnan(b_mz)
+not_nan_array = ~ nan_array
+bmz = b_mz[not_nan_array]
+radii = radii[not_nan_array]
 
+fig, ax = plt.subplots()
+#plt.plot(overd_fft_k[1:], y_plot_fit)
+plt.errorbar(radii, b_mz, label = 'data fitting for',linestyle = 'None',capsize=4, marker ='o') #xerr = sigmad[2:], yerr = sigmazre[2:],
+plt.title(r'$b_{zm}$ as a function of k ')
+ax.set_ylabel(r'$b_{mz}$ ')
+ax.set_xlabel(r'k')
+plt.show()
 
+errs = np.ones_like(b_mz)*0.2
+#initialize the MCMC
+num_iter = 5000
+ndim = 3 # number of parameters
+nwalkers = 32
+initial_pos = np.array((-0.5, 0.9, -14.8) + 2 * np.random.randn(nwalkers, ndim))
 
+sampler = emcee.EnsembleSampler(nwalkers, ndim, sa.log_post_bmz, args=(radii, b_mz, errs))
+sampler.run_mcmc(initial_pos, num_iter, progress=True);
+
+flat_samples = sampler.get_chain(discard=100, thin=15, flat=True)
+fig = corner.corner(flat_samples, quantiles=[0.16, 0.5, 0.84])
+inds = np.random.randint(len(flat_samples), size=100)
+
+x0 = np.linspace(0, 25, 13)
+f, ax = plt.subplots(figsize=(6,4))
+for ind in inds:
+    sample = flat_samples[ind]
+    ax.plot(x0, sample[0] * x0 + sample[1], alpha=0.05, color='red')
+ax.scatter(radii[:len(bmz)], bmz, marker ='o')
+#ax.set_xlim(0, 10.)
+ax.set_ylabel(r'$\delta_zre$ (k) ')
+ax.set_xlabel(r'$\delta_m$ (k)')
+plt.show()
+
+#these lines represents curve fitting with scipy's weird algorithm
+"""
 # print(freqs[25:], division[25:])
 a1, b = sa.get_param_value(overd_fft_k[1:], overzre_fft_k[1:])
 a0,b0,k0 = a1[0:]
-a0 = 0.0
 print(a0, b0, k0)
 y_plot_fit = sa.lin_bias(overd_fft_k[1:], a0,b0,k0)
 
 fig, ax = plt.subplots()
-plt.plot(overd_fft_k[1:], y_plot_fit)
-plt.scatter(overd_fft_k[1:], overzre_fft_k[1:], label = 'data fitting for')
-# #plt.contourf(division[:,:,25])
-# #plt.colorbar()
+#plt.plot(overd_fft_k[1:], y_plot_fit)
+plt.errorbar(overd_fft_k[1:], overzre_fft_k[1:], xerr = sigmad[1:], yerr = errs[1:], label = 'data fitting for',linestyle = 'None',capsize=4, marker ='o')
 plt.title(r'best curve fitting for the linear bias')
 plt.show()
+"""
