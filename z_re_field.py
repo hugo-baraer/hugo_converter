@@ -14,7 +14,7 @@ from tqdm import tqdm
 from scipy.stats import multivariate_normal
 
 
-def generate_zre_field(max_z, min_z, z_shift, HII_Dim):
+def generate_zre_field(max_z, min_z, z_shift, HII_Dim, box_len):
     """
     This function generate a z_re field with coeval cubes at different reionization redshift.
     :param max_z: [float] the maximum redshift of the plot
@@ -26,7 +26,7 @@ def generate_zre_field(max_z, min_z, z_shift, HII_Dim):
     #creating a new cube where reionization vener occured (-1)
     final_cube = np.full((HII_Dim, HII_Dim, HII_Dim), -1)
     for redshift in tqdm(np.arange(min_z, max_z, z_shift), 'computing the redshift of reionization'):
-        new_cube = p21c.run_coeval(redshift=redshift,user_params={'HII_DIM': HII_Dim, "USE_INTERPOLATION_TABLES":False}).z_re_box
+        new_cube = p21c.run_coeval(redshift=redshift,user_params={'HII_DIM': HII_Dim, 'BOX_LEN': box_len, "USE_INTERPOLATION_TABLES":False}).z_re_box
         final_cube[new_cube > -1] = new_cube[new_cube > -1]
     return final_cube
 

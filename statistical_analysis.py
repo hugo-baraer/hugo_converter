@@ -20,6 +20,53 @@ from scipy.optimize import curve_fit
 import math as m
 #import pymks
 
+def average_overk(box_dim,field, radius_thick):
+    '''
+
+    :param box_dim:
+    :type box_dim:
+    :param field:
+    :type field:
+    :param radius_thick:
+    :type radius_thick:
+    :return:
+    :rtype:
+    '''
+
+    for i in tqdm(range(box_dim), 'transfering fields into k 1D array'):
+        for j in range(box_dim):
+            for z in range(box_dim):
+                k_radius = np.sqrt((i - cx) ** 2 + (j - cy) ** 2 + (z - cy) ** 2)
+                for step, radius in enumerate(radii):
+                    if k_radius < radius:
+                        count[(step)] += 1
+                        count_overd[(step)] += 1
+                        values[(step)] += overzre_fft[i, j, z]
+                        values_overd[(step)] += overd_fft[i, j, z]
+                        break
+
+
+def compute_bmz_error(b_mz, overzre_fft_k,overd_fft_k, sigmad, sigmazre):
+    '''
+    This module computes the errors in the bm_z error with error propagation from the average std
+    :param b_mz: the linear bias factor
+    :type b_mz: 1d array
+    :param overzre_fft_k: the average over phi and theta of the over_density field
+    :type overzre_fft_k: 1d array
+    :param overd_fft_k: the average over phi and theta of the over_redshift of reionization field
+    :type overd_fft_k: 1d array
+    :param sigmad: the std of the averaged over-density values
+    :type sigmad: 1d array
+    :param sigmazre: the std of the averaged over-redshift values
+    :type sigmazre: 1d array
+    :return: the errors bars for the bmz factor
+    :rtype: 1d array
+    '''
+    term1 = np.divide((0.5*sigmad),overd_fft_k)**2
+    term2 = np.divide((0.5*sigmazre),overzre_fft_k)**2
+    return np.multiply(b_mz,(np.sqrt(term1 + term2)))
+
+
 def lin_bias(x, a,b0,k0):
     '''
     This function represents the linear bias equation that will be fitted.
@@ -115,8 +162,8 @@ def log_post_lin(theta, x, y, yerr):
 
 
 def log_prior_bmz(theta):
-    a, b0, k0 = theta
-    if -10 < a < 10. and -20 < b0 < 20 and -40 < k0 < 20 :
+    a, b0, k0, h = theta
+    if 1 < a < 25. and 0.1 < b0 < 20 and 0.01 < k0 < 2 and h>0.2:
         return 0.0
     return -np.inf
 
@@ -134,10 +181,10 @@ def log_likelihood_bmz(theta, x, y, yerr):
     :return:
     :rtype:
     '''
-    a, b0, k0 = theta
+    a, b0, k0, h = theta
     sigma2 = yerr ** 2
     try:
-        model = b0/(1+x/k0)**a
+        model = (b0/(1+(x/k0))**a)+h
         likelihood = -0.5 * np.sum((y - model) ** 2 / sigma2 + np.log(sigma2))
         return likelihood
     except:

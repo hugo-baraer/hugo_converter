@@ -35,7 +35,7 @@ def compute_fft(field,delta,box_dim):
     fft_shifted = np.fft.fftshift(np.fft.fftn(np.fft.fftshift(field)))
     X, Y = np.meshgrid(freqs, freqs)
 
-    return X, Y, fft_shifted
+    return X, Y, fft_shifted, min(freqs)*-1
 
 def plot_ftt_field(field,slice,X,Y, title = ''):
     '''

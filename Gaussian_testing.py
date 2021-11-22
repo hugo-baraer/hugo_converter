@@ -38,7 +38,7 @@ def generate_gaussian_field(dim):
     covariance = np.diag(sigma ** 2)
     zi = multivariate_normal.pdf(xyz, mean=mu, cov=covariance)
     zi2 = np.reshape(zi, (x.shape))
-    print(zi2)
+    #print(zi2)
     # Reshape back to a (30, 30) grid.
     return zi2, mu[0], sigma[0]
 
