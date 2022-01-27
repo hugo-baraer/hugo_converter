@@ -56,8 +56,8 @@ def plot_ftt_field(field,slice,X,Y, title = ''):
     fig, ax = plt.subplots()
     plt.contourf(X, Y, field[:,:,slice])
     plt.colorbar()
-    ax.set_xlabel(r'$k_x [Mpc^{-1}]$')
-    ax.set_ylabel(r'$k_y [Mpc^{-1}]$')
+    ax.set_xlabel(r'$k_x [Mpc^{-1} h]$')
+    ax.set_ylabel(r'$k_y [Mpc^{-1} h]$')
     plt.title(title)
     plt.show()
 

@@ -1,5 +1,5 @@
 """
-  /path/to/my/file/%(dir_id)s/is/here/%(file_id)s
+  EoR_research/statistical_analysis.py
  
   Author : Hugo Baraer
   Affiliation : McGill University
@@ -18,20 +18,32 @@ import z_re_field as zre
 from tqdm import tqdm
 from scipy.optimize import curve_fit
 import math as m
+
 #import pymks
 
-def average_overk(box_dim,field, radius_thick):
+def average_overk(box_dim,overzre_fft, overd_fft, radius_thick):
     '''
+    this modules compute the average of 3d fields over theta and phi to make it only k dependant
+    :param box_dim: the number of pixels in the box
+    :type box_dim: int
+    :param fields (overzre and overd): the averaged fields
+    :type field: 3D array
+    :param radius_thick: the thickness of the averaged shells
+    :type radius_thick: float (or int)
+    :return: the average over theta and phi of the 2 selected fields
+    :rtype: 1D array
+    '''
+    cx = int(box_dim // 2)
+    cy = int(box_dim // 2)
 
-    :param box_dim:
-    :type box_dim:
-    :param field:
-    :type field:
-    :param radius_thick:
-    :type radius_thick:
-    :return:
-    :rtype:
-    '''
+    radii1 = np.linspace(0, np.sqrt((cx/2) ** 2), num=int(3*np.sqrt((cx) ** 2) / int(radius_thick)))
+    radii2 = np.linspace(np.sqrt((cx/2) ** 2), np.sqrt(3 * (cx) ** 2), num=int(0.5*np.sqrt((cx) ** 2) / int(radius_thick)))
+    radii = np.concatenate((radii1[1:-1],radii2))
+    values = np.zeros(len(radii))
+    count = np.zeros(len(radii))
+    values_overd = np.zeros(len(radii))
+    count_overd = np.zeros(len(radii))
+
 
     for i in tqdm(range(box_dim), 'transfering fields into k 1D array'):
         for j in range(box_dim):
@@ -44,7 +56,56 @@ def average_overk(box_dim,field, radius_thick):
                         values[(step)] += overzre_fft[i, j, z]
                         values_overd[(step)] += overd_fft[i, j, z]
                         break
+    return values, values_overd, count, count_overd
 
+
+def average_std(box_dim,overzre_fft, overd_fft, radius_thick, averagezre, averaged, countzre, countd):
+    '''
+    This function computes the standard devitation of the averaged field
+    :param box_dim: the number of pixels in the array (size)
+    :type box_dim: float or int
+    :param overzre_fft: the averaged on over redshift fields
+    :type overzre_fft: 3d array
+    :param overd_fft: the averaged on over density fields
+    :type overd_fft: 3d array
+    :param radius_thick: the size of the radius range of the averaged shells
+    :type radius_thick: float or int
+    :param averagezre: the average of the values for each rings
+    :type averagezre: 1D array
+    :param averaged: the average of the values for the each ring (density)
+    :type averaged: 1d array
+    :param countzre: the number of points per ring (over-redshift)
+    :type countzre: 1d array
+    :param countd: the number of points per ring(dnesity)
+    :type countd: 1d array
+    :return: the standard deviation of the ring (werves as statistical error)
+    :rtype:  1d array
+    '''
+    cx = int(box_dim // 2)
+    cy = int(box_dim // 2)
+
+    radii1 = np.linspace(0, np.sqrt((cx/2) ** 2), num=int(3*np.sqrt((cx) ** 2) / int(radius_thick)))
+    radii2 = np.linspace(np.sqrt((cx/2) ** 2), np.sqrt(3 * (cx) ** 2), num=int(0.5*np.sqrt((cx) ** 2) / int(radius_thick)))
+    radii = np.concatenate((radii1[1:-1],radii2))
+
+    # radii = np.linspace(0, np.sqrt(3 * (cx) ** 2), num=int(np.sqrt(3 * (cx) ** 2) / int(radius_thick)))
+    # radii = radii[1:] #exlude the radii 0 to avoid divison by 0
+
+    sigmad = np.zeros(len(countd))
+    sigmazre = np.zeros(len(countzre))
+    # compute the error (standard deviation of each point)
+    for i in tqdm(range(box_dim), 'computing the standard deviation for the averaged field'):
+        for j in range(box_dim):
+            for z in range(box_dim):
+                k_radius = np.sqrt((i - cx) ** 2 + (j - cy) ** 2 + (z - cy) ** 2) #the radius of the point
+                for step, radius in enumerate(radii):
+                    if k_radius < radius:
+                        sigmad[step] += (overd_fft[i, j, z] - averaged[step]) ** 2
+                        sigmazre[step] += (overzre_fft[i, j, z] - averagezre[step]) ** 2
+                        break
+    std_d = np.sqrt(np.divide(sigmad,countd)) #get the sqrt of each ring for the overdensity
+    std_zre = np.sqrt(np.divide(sigmazre,countzre)) #get the sqrt of each ring for the over-redshift of reionization
+    return np.divide(std_d,np.sqrt(countd)), np.divide(std_zre,np.sqrt(countzre)) #divide the sqrt by their number of points to get the confidence in the mean.
 
 def compute_bmz_error(b_mz, overzre_fft_k,overd_fft_k, sigmad, sigmazre):
     '''
@@ -162,8 +223,8 @@ def log_post_lin(theta, x, y, yerr):
 
 
 def log_prior_bmz(theta):
-    a, b0, k0, h = theta
-    if 1 < a < 25. and 0.1 < b0 < 20 and 0.01 < k0 < 2 and h>0.2:
+    a, b0, k0 = theta
+    if 0 < a < 3. and 0 < b0 < 15 and 0 < k0 < 0.3:
         return 0.0
     return -np.inf
 
@@ -181,10 +242,10 @@ def log_likelihood_bmz(theta, x, y, yerr):
     :return:
     :rtype:
     '''
-    a, b0, k0, h = theta
+    a, b0, k0= theta
     sigma2 = yerr ** 2
     try:
-        model = (b0/(1+(x/k0))**a)+h
+        model = (b0/(1+(x/k0)))**a
         likelihood = -0.5 * np.sum((y - model) ** 2 / sigma2 + np.log(sigma2))
         return likelihood
     except:
@@ -199,6 +260,43 @@ def log_post_bmz(theta, x, y, yerr):
     return lp + log_likelihood_bmz(theta, x, y, yerr)
 
 
+def log_prior_bmz_nob(theta):
+    a, k0 = theta
+    if 0.4 < a < 2.5 and 0. < k0 < 0.3:
+        return 0.0
+    return -np.inf
+
+def log_likelihood_bmz_nob(theta, x, y, yerr):
+    '''
+    this functions evaluates the likelihood, to test on the data we have
+    :param theta:
+    :type theta:
+    :param x:
+    :type x:
+    :param y:
+    :type y:
+    :param yerr:
+    :type yerr:
+    :return:
+    :rtype:
+    '''
+    a, k0= theta
+    sigma2 = (2*yerr) ** 2
+    try:
+
+        model = 0.9/((1+((x)/k0))**(a))
+        likelihood = -0.5 * np.sum((y - model) ** 2 / sigma2 + np.log(sigma2))
+        return likelihood
+    except:
+        return -np.inf
+
+
+
+def log_post_bmz_nob(theta, x, y, yerr):
+    lp = log_prior_bmz_nob(theta)
+    if not np.isfinite(lp):
+        return -np.inf
+    return lp + log_likelihood_bmz_nob(theta, x, y, yerr)
 def compute_bmz(overzre_k,overd_k):
     '''
     this module computes the bmz factor as it should be according to the equation in Battaglia et al.
