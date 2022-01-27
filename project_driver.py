@@ -85,13 +85,13 @@ overzre, zre_mean = zre.over_zre_field(z_re_box)
 print(zre_mean)
 position_vec = np.linspace(-49,50,143)
 X, Y = np.meshgrid(position_vec, position_vec)
-fig, ax = plt.subplots()
-plt.contourf(X,Y,overzre[int(box_dim//2)])
-plt.colorbar()
-ax.set_xlabel(r'[Mpc h⁻¹]')
-ax.set_ylabel(r'[Mpc h⁻¹]')
-plt.title(r'slice of a the over-redshift of reionization at the center with a pixel resolution of {} Mpc h⁻¹'.format('1'))
-plt.show()
+# fig, ax = plt.subplots()
+# plt.contourf(X,Y,overzre[int(box_dim//2)])
+# plt.colorbar()
+# ax.set_xlabel(r'[Mpc h⁻¹]')
+# ax.set_ylabel(r'[Mpc h⁻¹]')
+# plt.title(r'slice of a the over-redshift of reionization at the center with a pixel resolution of {} Mpc h⁻¹'.format('1'))
+# plt.show()
 
 
 #Take and plot the Fourrier transform of the over-redshift along with it's frequnecy
@@ -99,20 +99,20 @@ delta = 1 / (box_len / box_dim)
 Xz, Yz, overzre_fft, freqzre= FFT.compute_fft(overzre, delta, box_dim)
 
 #plot this F(over_zre(x))
-FFT.plot_ftt_field(overzre_fft, int(box_dim//2), Xz, Yz, title = r'F($\delta_z$ (x)) at a pixel dimension of {}³'.format(box_dim))
+#FFT.plot_ftt_field(overzre_fft, int(box_dim//2), Xz, Yz, title = r'F($\delta_z$ (x)) at a pixel dimension of {}³'.format(box_dim))
 
 perturbed_field = p21c.perturb_field(redshift=zre_mean, init_boxes = initial_conditions)
 #coeval = p21c.run_coeval(redshift=zre_mean,user_params={'HII_DIM': box_dim, 'BOX_LEN': box_len, "USE_INTERPOLATION_TABLES": False})
 
 position_vec = np.linspace(-49,50,143)
 X, Y = np.meshgrid(position_vec, position_vec)
-fig, ax = plt.subplots()
-plt.contourf(X,Y,perturbed_field.density[int(box_dim//2)])
-plt.colorbar()
-ax.set_xlabel(r'[Mpc h⁻¹]')
-ax.set_ylabel(r'[Mpc h⁻¹]')
-plt.title(r'slice of a the over-redshift of reionization at the center with a pixel resolution of {} Mpc h⁻¹'.format('1'))
-plt.show()
+# fig, ax = plt.subplots()
+# plt.contourf(X,Y,perturbed_field.density[int(box_dim//2)])
+# plt.colorbar()
+# ax.set_xlabel(r'[Mpc h⁻¹]')
+# ax.set_ylabel(r'[Mpc h⁻¹]')
+# plt.title(r'slice of a the over-redshift of reionization at the center with a pixel resolution of {} Mpc h⁻¹'.format('1'))
+# plt.show()
 
 Xd, Yd, overd_fft, freqd = FFT.compute_fft(perturbed_field.density, delta, box_dim)
 #FFT.plot_ftt_field(overd_fft, int(box_dim//2), Xd, Yd, title = r'F($\delta_m$ (x)) at a redshift of {} and a pixel dimension of {}³'.format(coeval.redshift,box_dim))
@@ -125,7 +125,7 @@ overzre_fft = np.square(abs(overzre_fft))
 
 
 #plot the power of the field
-FFT.plot_ftt_field(overzre_fft, int(box_dim//2), Xz, Yz, title = r'$|F(\delta_z (x))|^2$ at a pixel dimension of {}³'.format(box_dim))
+#FFT.plot_ftt_field(overzre_fft, int(box_dim//2), Xz, Yz, title = r'$|F(\delta_z (x))|^2$ at a pixel dimension of {}³'.format(box_dim))
 #wanted radius for plotting
 
 cx = int(box_dim // 2)
@@ -154,22 +154,22 @@ sigmad, sigmazre = sa.average_std(box_dim,overzre_fft, overd_fft, radius_thick, 
 #division = np.divide(overzre_fft[:,int(box_dim//2),int(box_dim//2)], overd_fft[:,int(box_dim//2),int(box_dim//2)])
 
 
-fig, ax = plt.subplots()
-plt.errorbar(kvalues, overd_fft_k, yerr = sigmad, linestyle = 'None',capsize=4, marker ='o')
-#plt.legend()
-ax.set_xlabel(r'$k [Mpc^{-1} h]$')
-ax.set_ylabel(r'$\delta_m$ (k)')
-plt.title(r'$\delta_m$ (k)) as a function of k ')
-plt.show()
+# fig, ax = plt.subplots()
+# plt.errorbar(kvalues, overd_fft_k, yerr = sigmad, linestyle = 'None',capsize=4, marker ='o')
+# #plt.legend()
+# ax.set_xlabel(r'$k [Mpc^{-1} h]$')
+# ax.set_ylabel(r'$\delta_m$ (k)')
+# plt.title(r'$\delta_m$ (k)) as a function of k ')
+# plt.show()
 
 
-fig, ax = plt.subplots()
-plt.errorbar(kvalues, overzre_fft_k, yerr = sigmazre, linestyle = 'None',capsize=4, marker ='o')
-#plt.legend()
-ax.set_xlabel(r'$k [Mpc^{-1}h]$')
-ax.set_ylabel(r'$\delta_zre$ (k)')
-plt.title(r'$\delta_zre$ (k) as a function of k ')
-plt.show()
+# fig, ax = plt.subplots()
+# plt.errorbar(kvalues, overzre_fft_k, yerr = sigmazre, linestyle = 'None',capsize=4, marker ='o')
+# #plt.legend()
+# ax.set_xlabel(r'$k [Mpc^{-1}h]$')
+# ax.set_ylabel(r'$\delta_zre$ (k)')
+# plt.title(r'$\delta_zre$ (k) as a function of k ')
+# plt.show()
 
 
 #prim_basis = pymks.PrimitiveBasis(n_states=2)
@@ -190,25 +190,25 @@ kvalues=kvalues[1:]
 #bmz = b_mz[not_nan_array]
 #radii = radii[not_nan_array]
 
-fig, ax = plt.subplots()
-#plt.plot(overd_fft_k[1:], y_plot_fit)
-plt.errorbar(kvalues, b_mz, label = 'data fitting for',yerr = bmz_errors, linestyle = 'None',capsize=4, marker ='o') #xerr = sigmad[2:], yerr = sigmazre[2:], yerr = np.sqrt(bmz_errors)
-#plt.title(r'$b_{zm}$ as a function of k ')
-ax.set_ylabel(r'$b_{mz}$ ')
-ax.set_xlabel(r'k [$Mpc^{-1} h$]')
-plt.show()
+# fig, ax = plt.subplots()
+# #plt.plot(overd_fft_k[1:], y_plot_fit)
+# plt.errorbar(kvalues, b_mz, label = 'data fitting for',yerr = bmz_errors, linestyle = 'None',capsize=4, marker ='o') #xerr = sigmad[2:], yerr = sigmazre[2:], yerr = np.sqrt(bmz_errors)
+# #plt.title(r'$b_{zm}$ as a function of k ')
+# ax.set_ylabel(r'$b_{mz}$ ')
+# ax.set_xlabel(r'k [$Mpc^{-1} h$]')
+# plt.show()
 
 #plot the log version of this graph
-fig, ax = plt.subplots()
-#plt.plot(overd_fft_k[1:], y_plot_fit)
-plt.errorbar(kvalues, b_mz, label = 'data fitting for',yerr = bmz_errors, linestyle = 'None',capsize=4, marker ='o') #xerr = sigmad[2:], yerr = sigmazre[2:], yerr = np.sqrt(bmz_errors)
-plt.title(r'$b_{zm}$ as a function of k ')
-ax.set_ylabel(r'$b_{mz}$')
-plt.xscale('log')
-plt.yscale('log')
-#ax.set_ylim(bottom=0,top=1)
-ax.set_xlabel(r'k')
-plt.show()
+# fig, ax = plt.subplots()
+# #plt.plot(overd_fft_k[1:], y_plot_fit)
+# plt.errorbar(kvalues, b_mz, label = 'data fitting for',yerr = bmz_errors, linestyle = 'None',capsize=4, marker ='o') #xerr = sigmad[2:], yerr = sigmazre[2:], yerr = np.sqrt(bmz_errors)
+# plt.title(r'$b_{zm}$ as a function of k ')
+# ax.set_ylabel(r'$b_{mz}$')
+# plt.xscale('log')
+# plt.yscale('log')
+# #ax.set_ylim(bottom=0,top=1)
+# ax.set_xlabel(r'k')
+# plt.show()
 
 
 
@@ -224,7 +224,7 @@ initial_pos = np.array((0.55, 0.025) + 0.02 * np.random.randn(nwalkers, ndim))
 #initial_pos[0] = np.array((0.5) + 0.1 * np.random.randn(nwalkers))
 #initial_pos[1] = np.array((0.1) + 0.02 * np.random.randn(nwalkers))
 #initial_pos = np.array((0.5, 1.7, 0.15) + 0.1 * np.random.randn(nwalkers, ndim))
-bmz_errors = np.ones_like(b_mz)*0.03
+#bmz_errors = np.ones_like(b_mz)*0.03
 
 
 sampler = emcee.EnsembleSampler(nwalkers, ndim, sa.log_post_bmz_nob, args=(kvalues, b_mz, bmz_errors))
@@ -290,7 +290,8 @@ plt.legend()
 plt.show()
 
 sample = flat_samples[50]
-plt.scatter(kvalues, (b_mz-(1./(1+(x0/sample[1]))**sample[0])), alpha=0.05, color='red')
+plt.scatter(kvalues, (b_mz-(1./(1+(kvalues/sample[1]))**sample[0])), color='red')
+plt.axhline()
 plt.show()
 #these lines represents curve fitting with scipy's weird algorithm
 """
