@@ -3,7 +3,7 @@ This repository is used for Hugo Baraër's research with the cosmic dawn group a
 
 ## Motivation
 
-Reionization is the period of the universe following the dark ages, where gas reionized, leading to the birth of the first start. This period plays a crucial role in our understanding of the structure of our universe. Before a model proposed by Battaglia et al. in 2013, direct simulations of the evolution of the ionization field in large volumes ( approximately bigger than (Gpch^-1)^3) were not attainable. Using previous precise short-scale models (Trac and Pen 2004) (Trac and Chen 2007), they quantify the correlation between reionization redshift and density using two points statistics in Fourier space. This way, an N-body simulation can be converted into statistical parameters. Therefore, the model can compute the evolution of the 3D ionization field in large volumes with a low computational time. On the downside, the parameters computed in this model are purely statistical, with initial values that are not well defined. 
+Reionization is the period of the universe following the dark ages, where the hydrogen composing the intergalactic medium reionized, following the birth of the first start. This period plays a crucial role in our understanding of the structure of our universe. Before a model proposed by Battaglia et al. in 2013, direct simulations of the evolution of the ionization field in large volumes ( approximately bigger than (Gpch^-1)^3) were not attainable. Using previous precise short-scale models (Trac and Pen 2004) (Trac and Chen 2007), they quantify the correlation between reionization redshift and density using two points statistics in Fourier space. This way, an N-body simulation can be converted into statistical parameters. Therefore, the model can compute the evolution of the 3D ionization field in large volumes with a low computational time. On the downside, the parameters computed in this model are purely statistical, with initial values that are not well defined. 
 
 Another model called 21cm Fast is in the middle between fully hydrodynamical and semi-analytical models like Battaglia et al. This model incorporates physical parameters but has more considerable computational speed.
 
@@ -22,21 +22,21 @@ The model proposed by Battaglia et al. starts from a P³M N-body code to generat
 
 ## directory content
 
-### FTT_overdensity
+### FTT
 
-This module takes the Fourrier transform of the over-density. (details to come)
+This module takes the Fourrier transforms of both fields, and contains the necesseray functions for plotting and computing.
 
-### FTT_overredshift
+### Gaussian testing
 
-This module takes the Fourrier transform of the over-redsfhit. (details to come)
+This module is made for testing the fft process with 3D gaussian testing
 
-### compute_W
+### z_re_field
 
-This module computes the parameter acting between the two transorm (What acts as  W factor in Battaglia). (details to come)
+This module computes the redshift of reionization field (as well as the overredshift of rieonization)with 21cmFAST data
 
-### find_params
+### statistical analysis
 
-This module computes the MCMC algorithm necessary to generate posterior distributions of the wanted parameters. (details to come)
+This module computes the MCMC algorithm necessary to generate posterior distributions of the wanted parameters, as well as the shell average to transform the 3D field into 1D field
 
 
 ### standard driver 
