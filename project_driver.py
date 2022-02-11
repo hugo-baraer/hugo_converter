@@ -30,9 +30,9 @@ import statistical_analysis as sa
 #change the dimension of the box and see effect
 
 
-use_cache = True
-box_dim = 143 #the desired spatial resolution of the box #the redshift z_bar at which the over-density is computed
-radius_thick = 4. #the radii thickness (will affect the number of bins
+use_cache = True #uncomment this lu
+box_dim = 143 #the desired spatial resolution of the box (corrected for Mpc/h instead of MPC to get the deried 100Mpc/h box size
+radius_thick = 2. #the radii thickness (will affect the number of bins and therefore points)
 box_len = 143 #int(143) #default value of 300
 user_params = {"HII_DIM": box_dim, "BOX_LEN": box_len, "DIM":box_len}
 cosmo_params = p21c.CosmoParams(SIGMA_8=0.8, hlittle=0.7, OMm= 0.27,
