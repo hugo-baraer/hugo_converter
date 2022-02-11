@@ -36,9 +36,14 @@ def average_overk(box_dim,overzre_fft, overd_fft, radius_thick):
     cx = int(box_dim // 2)
     cy = int(box_dim // 2)
 
-    radii1 = np.linspace(0, np.sqrt((cx/2) ** 2), num=int(3*np.sqrt((cx) ** 2) / int(radius_thick)))
-    radii2 = np.linspace(np.sqrt((cx/2) ** 2), np.sqrt(3 * (cx) ** 2), num=int(0.5*np.sqrt((cx) ** 2) / int(radius_thick)))
-    radii = np.concatenate((radii1[1:-1],radii2))
+    #uncomment these lines for an uneven distribution of points
+    # radii1 = np.linspace(0, np.sqrt((cx/2) ** 2), num=int(3*np.sqrt((cx) ** 2) / int(radius_thick)))
+    # radii2 = np.linspace(np.sqrt((cx/2) ** 2), np.sqrt(3 * (cx) ** 2), num=int(0.5*np.sqrt((cx) ** 2) / int(radius_thick)))
+    # radii = np.concatenate((radii1[1:-1],radii2))
+
+    radii = np.linspace(0, np.sqrt(3 * (cx) ** 2), num=int(np.sqrt(3 * (cx) ** 2) / int(radius_thick)))
+    radii = radii[1:]  # exlude the radii 0 to avoid divison by 0
+
     values = np.zeros(len(radii))
     count = np.zeros(len(radii))
     values_overd = np.zeros(len(radii))
@@ -84,12 +89,12 @@ def average_std(box_dim,overzre_fft, overd_fft, radius_thick, averagezre, averag
     cx = int(box_dim // 2)
     cy = int(box_dim // 2)
 
-    radii1 = np.linspace(0, np.sqrt((cx/2) ** 2), num=int(3*np.sqrt((cx) ** 2) / int(radius_thick)))
-    radii2 = np.linspace(np.sqrt((cx/2) ** 2), np.sqrt(3 * (cx) ** 2), num=int(0.5*np.sqrt((cx) ** 2) / int(radius_thick)))
-    radii = np.concatenate((radii1[1:-1],radii2))
+    # radii1 = np.linspace(0, np.sqrt((cx/2) ** 2), num=int(3*np.sqrt((cx) ** 2) / int(radius_thick)))
+    # radii2 = np.linspace(np.sqrt((cx/2) ** 2), np.sqrt(3 * (cx) ** 2), num=int(0.5*np.sqrt((cx) ** 2) / int(radius_thick)))
+    # radii = np.concatenate((radii1[1:-1],radii2))
 
-    # radii = np.linspace(0, np.sqrt(3 * (cx) ** 2), num=int(np.sqrt(3 * (cx) ** 2) / int(radius_thick)))
-    # radii = radii[1:] #exlude the radii 0 to avoid divison by 0
+    radii = np.linspace(0, np.sqrt(3 * (cx) ** 2), num=int(np.sqrt(3 * (cx) ** 2) / int(radius_thick)))
+    radii = radii[1:] #exlude the radii 0 to avoid divison by 0
 
     sigmad = np.zeros(len(countd))
     sigmazre = np.zeros(len(countzre))
@@ -261,6 +266,7 @@ def log_post_bmz(theta, x, y, yerr):
 
 
 def log_prior_bmz_nob(theta):
+
     a, k0 = theta
     if 0.4 < a < 2.5 and 0. < k0 < 0.3:
         return 0.0
@@ -268,10 +274,10 @@ def log_prior_bmz_nob(theta):
 
 def log_likelihood_bmz_nob(theta, x, y, yerr):
     '''
-    this functions evaluates the likelihood, to test on the data we have
-    :param theta:
-    :type theta:
-    :param x:
+    this functions evaluates the likelihood of the b_mz parameter, to test on the data we have
+    :param theta: the a and k0 parameter we are fitting for
+    :type theta: 2d array
+    :param x: the x values fitting for
     :type x:
     :param y:
     :type y:
@@ -280,11 +286,14 @@ def log_likelihood_bmz_nob(theta, x, y, yerr):
     :return:
     :rtype:
     '''
+    #sigma2 = -np.exp(1.2*x-1)+1.35
     a, k0= theta
-    sigma2 = (2*yerr) ** 2
-    try:
+    #sigma2 = (yerr ) ** 2
+    sigma2 = (yerr
+              /(-np.exp((0.7*x)+0.1)+2.2)) ** 2
 
-        model = 0.9/((1+((x)/k0))**(a))
+    try:
+        model = 0.93/((1+((x)/k0))**(a))
         likelihood = -0.5 * np.sum((y - model) ** 2 / sigma2 + np.log(sigma2))
         return likelihood
     except:
@@ -297,6 +306,56 @@ def log_post_bmz_nob(theta, x, y, yerr):
     if not np.isfinite(lp):
         return -np.inf
     return lp + log_likelihood_bmz_nob(theta, x, y, yerr)
+
+
+'''
+The next functions is when fitting the MCMC with error weighting
+'''
+
+def log_prior_bmz_errs(theta):
+
+    a, k0, p = theta
+    if 0.4 < a < 75 and 0. < k0 < 25 and 0<p<15:
+        return 0.0
+    return -np.inf
+
+def log_likelihood_bmz_errs(theta, x, y, yerr):
+    '''
+    this functions evaluates the likelihood of the b_mz parameter, to test on the data we have
+    :param theta: the a and k0 and p parameter we are fitting for
+    :type theta: 3d array
+    :param x: the x values fitting for
+    :type x:
+    :param y:
+    :type y:
+    :param yerr:
+    :type yerr:
+    :return:
+    :rtype:
+    '''
+
+    #sigma2 = -np.exp(1.2*x-1)+1.35
+    a, k0, p = theta
+    #sigma2 = (yerr ) ** 2
+    sigma2 = ((p)
+              /(-np.exp((0.7*x)+0.1)+2.2)) ** 2
+
+    try:
+        model = 0.593/((1+((x)/k0))**(a))
+        likelihood = -0.5 * np.sum((y - model) ** 2 / sigma2 + np.log(sigma2))
+        return likelihood
+    except:
+        return -np.inf
+
+
+
+def log_post_bmz_errs(theta, x, y, yerr):
+    lp = log_prior_bmz_errs(theta)
+    if not np.isfinite(lp):
+        return -np.inf
+    return lp + log_likelihood_bmz_errs(theta, x, y, yerr)
+
+
 def compute_bmz(overzre_k,overd_k):
     '''
     this module computes the bmz factor as it should be according to the equation in Battaglia et al.
@@ -314,3 +373,45 @@ def compute_bmz(overzre_k,overd_k):
     inner_product_dm = np.correlate(overd_k,overd_k, "full")
     inner_product_dm = inner_product_dm[inner_product_dm.size // 2:]
     return np.sqrt(np.divide(inner_product_dzre,inner_product_dm))
+
+
+"""
+One last test of probability function MCMC, with b_mz and erros scaling
+"""
+
+def log_likelihood_bmz_b_errs(theta, x, y):
+    '''
+    this functions evaluates the likelihood, to test on the data we have
+    :param theta:
+    :type theta:
+    :param x:
+    :type x:
+    :param y:
+    :type y:
+    :param yerr:
+    :type yerr:
+    :return:
+    :rtype:
+    '''
+    a, b0, k0, p = theta
+    sigma2 = ((p)
+              / (-np.exp((0.8 * x) + 0.1) + 2.2)) ** 2
+    try:
+        model = (b0/(1+(x/k0)))**a
+        likelihood = -0.5 * np.sum((y - model) ** 2 / sigma2 + np.log(sigma2))
+        return likelihood
+    except:
+        return -np.inf
+
+def log_prior_bmz_b_errs(theta):
+
+    a, b0, k0, p = theta
+    if 0.4 < a < 1.5 and 0. < k0 < 0.4 and 0 < b0 < 2.5 and 0 < p < 0.4:
+        return 0.0
+    return -np.inf
+
+def log_post_bmz_b_errs(theta, x, y):
+    lp = log_prior_bmz_b_errs(theta)
+    if not np.isfinite(lp):
+        return -np.inf
+    return lp + log_likelihood_bmz_b_errs(theta, x, y)
