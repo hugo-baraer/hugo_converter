@@ -51,7 +51,7 @@ def generate_quick_zre_field(max_z, min_z, z_shift, initial_conditions):
     return
 
 
-def generate_zre_field(max_z, min_z, z_shift,initial_conditions,box_dim):
+def generate_zre_field(max_z, min_z, z_shift,initial_conditions,box_dim, astro_params, flag_options):
     """
     This function generate a z_re field with coeval cubes at different reionization redshift.
     :param max_z: [float] the maximum redshift of the plot
@@ -63,7 +63,7 @@ def generate_zre_field(max_z, min_z, z_shift,initial_conditions,box_dim):
     #creating a new cube where reionization vener occured (-1)
     final_cube = np.full((box_dim, box_dim, box_dim), -1)
     for redshift in tqdm(np.arange(min_z, max_z, z_shift), 'computing the redshift of reionization'):
-        new_cube = p21c.ionize_box(redshift=redshift, init_boxes = initial_conditions).z_re_box
+        new_cube = p21c.ionize_box(redshift=redshift, init_boxes = initial_conditions, astro_params = astro_params, flag_options = flag_options, write=False).z_re_box
         final_cube[new_cube > -1] = new_cube[new_cube > -1]
     return final_cube
 
