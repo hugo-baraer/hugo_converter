@@ -31,7 +31,7 @@ data_dict = {'Z_re': [], 'Heff': [], "medians": [], "a16":[], "a50":[], "a84":[]
 for Heff in range(87, 90, 1):
     #adjustable parameters to look out before running the driver
     #change the dimension of the box and see effect
-    Heff /=10
+    Heff = 30.0
 
     use_cache = False # uncomment this line to re-use field and work only on MCMC part
     box_dim = 143 #the desired spatial resolution of the box (corrected for Mpc/h instead of MPC to get the deried 100Mpc/h box size
@@ -40,7 +40,7 @@ for Heff in range(87, 90, 1):
     user_params = {"HII_DIM": box_dim, "BOX_LEN": box_len, "DIM":box_len}
     cosmo_params = p21c.CosmoParams(SIGMA_8=0.8, hlittle=0.7, OMm= 0.27,
     OMb= 0.045)
-    astro_params = p21c.AstroParams({ "M_TURN" : Heff}) #"HII_EFF_FACTOR":Heff,
+    astro_params = p21c.AstroParams({ "HII_EFF_FACTOR": Heff }) #"HII_EFF_FACTOR":Heff, "M_TURN" : Heff
     flag_options = p21c.FlagOptions({"USE_MASS_DEPENDENT_ZETA": True})
     #add astro_params
 
@@ -94,16 +94,20 @@ for Heff in range(87, 90, 1):
 
         """Compute the over-redshfit or reionization and overdensity"""
         #Compute the reionization redshift from the module z_re
-        z_re_box= zre.generate_zre_field(16, 1, 1, initial_conditions,box_dim, astro_params, flag_options)
+        zre_range = [3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
+        #zre_range = [3,4,5,5.5,6,6.2,6.4,6.6,6.8,7.0, 7.05, 7.1,7.15,7.2,7.25, 7.3,7.35,7.4,7.45,7.5,7.55,7.6,7.65,7.7,7.75,7.8,7.85, 7.9,7.95,8.0,8.05,8.1,8.15,8.2,8.25,8.3,8.35,8.4,8.45,8.5,8.55,8.6,8.65,8.7,8.75,8.8,8.85,8.9,8.95,9.0,9.05,9.1,9.15,9.2,9.25,9.3,9.35,9.4,9.45,9.5,9.55,9.6,9.65,9.7,9.75,9.8,9.85,9.9,9.95,10.0,10.1,10.2,10.3,10.4,10.5,10.6,10.7,10.8,10.9,11.0,11.1,11.2,11.3,11.4,11.5,11.6,11.7,11.8,11.9,12.0,12.2,12.4,12.6,12.8,13,13.25,13.5,13.75,14,14.25,14.5,14.75,15,15.5,16.5,17,17.5,18,18.5,19,19.5,20,20.5]
+        z_re_box, ionization_rate = zre.generate_zre_field(zre_range, initial_conditions,box_dim, astro_params, flag_options)
         overzre, zre_mean = zre.over_zre_field(z_re_box)
+        print(np.mean(overzre))
+        print(ionization_rate)
         print(zre_mean)
         position_vec = np.linspace(-49,50,143)
         X, Y = np.meshgrid(position_vec, position_vec)
         fig, ax = plt.subplots()
-        plt.contourf(z_re_box[75])
+        plt.contourf(X,Y,overzre[75])
         plt.colorbar()
-        ax.set_xlabel(r'[Mpc]')
-        ax.set_ylabel(r'[Mpc]')
+        ax.set_xlabel(r'[Mpc/h]')
+        ax.set_ylabel(r'[Mpc/h]')
         plt.title(r'slice of a the over-redshift of reionization with 21cmFAST')
         plt.show()
 
@@ -348,7 +352,7 @@ for Heff in range(87, 90, 1):
     # ax.set_xlabel(r'$k[Mpc⁻1 h]$')
     # plt.title(r'$b_{zm}$ as a function of k ')
     # plt.legend()
-    # plt.show()
+    plt.show()
     """
     f, ax = plt.subplots(figsize=(6,4))
     for ind in inds:

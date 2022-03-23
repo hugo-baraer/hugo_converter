@@ -51,21 +51,33 @@ def generate_quick_zre_field(max_z, min_z, z_shift, initial_conditions):
     return
 
 
-def generate_zre_field(max_z, min_z, z_shift,initial_conditions,box_dim, astro_params, flag_options):
+def generate_zre_field(zre_range,initial_conditions,box_dim, astro_params, flag_options, comP_ionization_rate = True):
     """
     This function generate a z_re field with coeval cubes at different reionization redshift.
-    :param max_z: [float] the maximum redshift of the plot
-    :param min_z: [float] the minimum redshift of the plot
-    :param z_shift [float] the desired amount different redshift computed for the plot (redshift resolution)
-    :param HII_Dim: [float] the minimum redshift of the plot
+    :param zre_range: the desired redhsift to compute the redshift of reionization field on
+    :type zre_range: list
+    :param initial_conditions: the initial p21c conditions
+    :type initial_conditions: object
+    :param box_dim: the dimension (#of pixels) of the computed field
+    :type box_dim: float
+    :param astro_params: the defined astro_parameters (ex Ionization efficiency and turnover mass)
+    :type astro_params: P21C object
+    :param flag_options: the flag options of 21cmFAST (like no caching and use the turnover mass factor)
+    :type flag_options:  P21c object
     :return: a 3D array of the reionization field
+    :rtype:
     """
     #creating a new cube where reionization vener occured (-1)
     final_cube = np.full((box_dim, box_dim, box_dim), -1)
-    for redshift in tqdm(np.arange(min_z, max_z, z_shift), 'computing the redshift of reionization'):
+    if comP_ionization_rate : ionization_rate = []
+    for redshift in tqdm(zre_range, 'computing the redshift of reionization'):
         new_cube = p21c.ionize_box(redshift=redshift, init_boxes = initial_conditions, astro_params = astro_params, flag_options = flag_options, write=False).z_re_box
+        if comP_ionization_rate: ionization_rate.append((new_cube > -1).sum()/ box_dim**3)
         final_cube[new_cube > -1] = new_cube[new_cube > -1]
-    return final_cube
+    if comP_ionization_rate:
+        return final_cube, ionization_rate
+    else:
+        return final_cube
 
 def over_zre_equation(zre_x,zre_mean):
     '''
