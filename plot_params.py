@@ -15,82 +15,7 @@ import imageio
 from numpy import array
 from statistical_analysis import *
 from FFT import *
-
-
-def compute_fft(field,delta,box_dim):
-    '''
-    This function computes the discrete Fourier transform and it's frequencies
-    :param field: the Gaussian field to perform fft on
-    :type field: 3D array
-    :param delta: the delta t use for frequency calculations
-    :type delta: float
-    :param box_dim: the dimension of the box
-    :type box_dim: int
-    :return: X,Y : the mesh grid of the frequencies
-    :return: fft_field: the Fourrier transformed field
-    :rtype: 2D arrays, 3D array
-    '''
-
-    freqs = np.fft.fftshift(np.fft.fftfreq(box_dim, d=delta))
-    fft_shifted = np.fft.fftshift(np.fft.fftn(np.fft.fftshift(field)))
-    X, Y = np.meshgrid(freqs, freqs)
-
-    return X, Y, fft_shifted, min(freqs)*-1
-
-def over_zre_equation(zre_x,zre_mean):
-    '''
-
-    :param zre_x: the reionization redshift field
-    :type zre_x: 3D array
-    :param zre_mean: the mean redshift of reionization
-    :type zre_mean:  float
-    :return: over-redshift field
-    :rtype: 3D array
-    '''
-    return((1+zre_x)-(1+zre_mean))/(1+zre_mean)
-
-def over_zre_field(zre_field):
-    """
-    This function generate the over z_re field with the original z_re field. from the equation defined in Battaglia et al.
-    :param zre_field: [arr] 3D array of the reionization redshift field
-    :return: a 3D array of the reionization field
-    """
-    zre_mean = np.mean(zre_field)
-    return over_zre_equation(zre_field,zre_mean), zre_mean
-
-
-def plot_zre_slice(field,  resolution = 143):
-    '''
-    This modules plot a slice of the redshift of reionization for a given redshift of reionization 3D field. I also converts Mpc/h to Mpc units while plotting
-    :param field: (3D array) redshift of reionization field
-    :param resolution: (int) the dimension of the cub
-    :return:
-    '''
-    if resolution % 2:
-        position_vec = np.linspace(-int((resolution*(100/143))//2)-1, int(resolution*(100/143)//2), resolution)
-    else:
-        position_vec = np.linspace(-int((resolution*(100/143))//2), int(resolution*(100/143)//2), resolution)
-    X, Y = np.meshgrid(position_vec, position_vec)
-    fig, ax = plt.subplots()
-    plt.contourf(X,Y,field[int(resolution//2)])
-    plt.colorbar()
-    ax.set_xlabel(r'[Mpc h⁻¹]')
-    ax.set_ylabel(r'[Mpc h⁻¹]')
-    plt.title(
-        r'slice of a the over-redshift of reionization at the center with a pixel resolution of {} Mpc h⁻¹'.format('1'))
-    plt.show()
-
-
-def plot_zre_hist(field, nb_bins = 100):
-    '''
-    This module plots the histograms for redshift reionization field
-    :param field:  (3D array) redshift of reionization field
-    :return:
-    '''
-    fig, ax = plt.subplots()
-    plt.hist(field.flatten(), bins=nb_bins, density=True)
-    plt.show()
-
+from z_re_field import *
 
 def reionization_history(redshifts, field,  resolution = 143, plot = True):
     '''
@@ -117,25 +42,99 @@ def reionization_history(redshifts, field,  resolution = 143, plot = True):
         plt.show()
     return ionization_rate
 
-def
+def ionization_map_gen(redshift,resolution,field, plot = False):
+    '''
+    This function computes the ionization maps at a given redshift from a given redshfit of reionization field
+    :param redshift: the redshift at which to  compute the ionizaiton maps
+    :param resolution: the resolution of the fields
+    :param field: the redshift of reionization map to substract from
+    :param plot: plot if True
+    :return:  the 3D ionization map
+    '''
+    new_box1 = np.zeros((resolution, resolution, resolution))
+    new_box1[field <= redshift] = 1
+    if plot:
+        fig, ax = plt.subplots()
+        if resolution % 2:
+            position_vec = np.linspace(-int((resolution*(100/143))//2)-1, int(resolution*(100/143)//2), resolution)
+        else:
+            position_vec = np.linspace(-int((resolution*(100/143))//2), int(resolution*(100/143)//2), resolution)
+        X, Y = np.meshgrid(position_vec, position_vec)
+        plt.contourf(X, Y, new_box1[int(143 // 2)], cmap='Blues')
+        ax.set_xlabel(r'$[\frac{Mpc}{\hbar}]$')
+        ax.set_ylabel(r'$[\frac{Mpc}{\hbar}]$')
+        plt.show()
+    return new_box1
 
+
+def ionization_map_diff(redshift,resolution,field1,field2, plot = True):
+    '''
+    This functions computes the ionization map differences and plots it
+    :param redshift: the redshift at which to  compute the ionizaiton maps
+    :param resolution: the resolution of the fields
+    :param field1: the redshift of reionization map to substract from
+    :param field2: the redshift of reionization to be substracted
+    :param plot: plot if True
+    :return:  the 3D field difference
+    '''
+    #for the first field
+    new_box1 = np.zeros((resolution, resolution, resolution))
+    new_box1[field1 <= redshift ] = 1
+    #for the second field
+    new_box2 = np.zeros((resolution, resolution, resolution))
+    new_box2[field2 <= redshift ] = 1
+    diff_box = new_box1-new_box2
+    if plot:
+        fig, ax = plt.subplots()
+        if resolution % 2:
+            position_vec = np.linspace(-int((resolution*(100/143))//2)-1, int(resolution*(100/143)//2), resolution)
+        else:
+            position_vec = np.linspace(-int((resolution*(100/143))//2), int(resolution*(100/143)//2), resolution)
+        X, Y = np.meshgrid(position_vec, position_vec)
+        plt.contourf(X,Y,diff_box[int(resolution//2)], cmap =  'RdBu', vmin=-1.0, vmax=1.0)
+        ax.set_xlabel(r'$[\frac{Mpc}{\hbar}]$')
+        ax.set_ylabel(r'$[\frac{Mpc}{\hbar}]$')
+        plt.show()
+    return diff_box
+
+def ps_ion_map(map,radius_thick,resolution, delta =1,plot=False):
+    '''
+    This module computes the power spectrum of an ionization maps
+    :param map: the ionization map to compute the power spectrum of
+    :param resolution: the resolution of the fields
+    :param radius_thick: the thickness of the shells to average the field over (see average k in statistuical tools for more)
+    :param delta: (see fft description)
+    :return: the power spewctrum as a function of k (1d array)
+    '''
+    cx = int(resolution // 2)
+    Xr, Yr, field_fft, freq_field = compute_fft(map, delta, resolution)
+    field_fft = np.square(abs(field_fft))
+    freqs = np.fft.fftshift(np.fft.fftfreq(143, d=1))
+    kvalues = np.linspace(0, np.sqrt(3 * (freq_field) ** 2), num=int(np.sqrt(3 * (cx) ** 2) / int(radius_thick)))
+    kvalues = kvalues[1:]
+    #compute the  average k values in Fourier space to compute the power spectrum
+    values, count= average_overk(resolution, field_fft, radius_thick)
+    field_fft_k = np.divide(values, count)
+    if plot:
+        fig, ax = plt.subplots()
+        plt.scatter(kvalues, field_fft_k)
+        ax.set_xlabel(r'$ k [\frac{\hbar}{Mpc}]$')
+        ax.set_ylabel(r'Power spectrum')
+        plt.show()
+    return field_fft_k
 
 
 zreionmod = np.load('zreion_for_Hugo.npz')
 
 
 
+
+
 #b = np.load('zreion_for_Hugo.npy')
 a= np.load('zre.npy')
 #over_zre, zre_mean = over_zre_field(b[0])
-position_vec = np.linspace(-49,50,143)
-X, Y = np.meshgrid(position_vec, position_vec)
-# fig, ax = plt.subplots()
-# plt.contourf(over_zre[int(143//2)])
-# plt.colorbar()
-# ax.set_xlabel(r'[Mpc]')
-# ax.set_ylabel(r'[Mpc]')
-# plt.title(r'slice of a the over-redshift of reionization')
+
+
 
 # print(b[0].min())
 # print(b[0].max())
@@ -145,37 +144,19 @@ X, Y = np.meshgrid(position_vec, position_vec)
 redshifts = np.linspace(3.8,16,1000)
 
 
-position_vec = np.linspace(-49,50,143)
-X, Y = np.meshgrid(position_vec, position_vec)
-fig, ax = plt.subplots()
-# plt.contourf(X,Y,a[int(143//2)], cmap = 'jet')
-# plt.colorbar()
-# ax.set_xlabel(r'[Mpc/h]')
-# ax.set_ylabel(r'[Mpc/h]')
-# plt.title(r'slice of a the over-redshift of reionization with 21cmFAST')
-# plt.show()
+
 print(np.mean(a))
 print(np.median(a))
-plt.hist(a.flatten(),bins=100, density= True)
-plt.show()
 
-fig, ax = plt.subplots()
-plt.hist(zreionmod['zreion'].flatten(),400, density= True)
-plt.show()
+
+
 aaa = zreionmod['zreion']
 #redshifts = np.linspace(5.5,15,1000)
 redshifts = np.linspace(8.0486,16,1)
 filenames = []
 
-ionization_rate_zreion = []
-
-
 for i in tqdm(redshifts):
 
-
-    cx = int(143//2)
-    radius_thick = 1.
-    Xr, Yr, cmFastzre_fft, freqcmzre = compute_fft(a, 1, 143)
     Xd, Yd, overzre_fft, freqzre = compute_fft((new_box-new_box2), 1, 143)
     cmFastzre_fft = np.square(abs(cmFastzre_fft))
     overzre_fft = np.square(abs(overzre_fft))
@@ -183,6 +164,8 @@ for i in tqdm(redshifts):
 
     kvalues = np.linspace(0, np.sqrt(3 * (freqzre) ** 2), num=int(np.sqrt(3 * (cx) ** 2) / int(radius_thick)))
     kvalues = kvalues[1:]
+
+
     position_vec = np.linspace(-49, 50, 143)
     Xd, Yd = np.meshgrid(position_vec, position_vec)
     # xompute the average for the field
@@ -191,17 +174,10 @@ for i in tqdm(redshifts):
     #plt.contourf(overzre_fft[int(143 // 2)])
     fig, ax = plt.subplots()
     #plt.contourf(Xd,Yd,new_box[int(143 // 2)]-new_box2[int(143 // 2)], cmap =  'RdBu', vmin=-1.0, vmax=1.0)
-    #plt.contourf(Xd, Yd, new_box2[int(143 // 2)], cmap='Reds')
-    #plt.contourf(Xd, Yd, new_box[int(143 // 2)], cmap='Blues')
+
     overzre_fft_k = np.divide(values_zre, count_zre)
     cmFast_fft_k = np.divide(value_cm, count_cm)
-    plt.scatter(kvalues, np.divide(overzre_fft_k,cmFast_fft_k))
-    #plt.scatter(kvalues,  cmFast_fft_k)
-    #plt.colorbar()
-    # ax.set_xlabel(r'$[\frac{Mpc}{\hbar}]$')
-    # ax.set_ylabel(r'$[\frac{Mpc}{\hbar}]$')
-    ax.set_xlabel(r'$ k [\frac{\hbar}{Mpc}]$')
-    ax.set_ylabel(r'Power spectrum')
+
     #plt.title(r'slice of the ionization field at a redshift of {} '.format(i))
     # plt.savefig('./ionization_map/ionization_field21cm_{}.png'.format(i))
     # filenames.append('./ionization_map/ionization_field21cm_{}.png'.format(i))
