@@ -101,23 +101,35 @@ def over_zre_field(zre_field):
     zre_mean = np.mean(zre_field)
     return over_zre_equation(zre_field,zre_mean), zre_mean
 
-def generate_gaussian_field(dim):
+def plot_zre_slice(field,  resolution = 143):
     '''
-    This function creates a 3d Gaussian field to test np.FFT. This functions is inspired by :
-    https://stackoverflow.com/questions/25720600/generating-3d-gaussian-distribution-in-python
-    :param dim: the dimension of the desired Gaussian field
-    :type dim: int
-    :return: the 3d Gaussian field
-    :rtype: 3D array
+    This modules plot a slice of the redshift of reionization for a given redshift of reionization 3D field. I also converts Mpc/h to Mpc units while plotting
+    :param field: (3D array) redshift of reionization field
+    :param resolution: (int) the dimension of the cub
+    :return:
     '''
-    x, y, z = np.mgrid[-1.0:1.0:int(dim)*1j, -1.0:1.0:int(dim)*1j, -1.0:1.0:int(dim)*1j]
-    # Need an (N, 2) array of (x, y) pairs.
-    xyz = np.column_stack([x.flat, y.flat, z.flat])
-    mu = np.array([0.0, 0.0, 0.0])
-    sigma = np.array([.050, .050, .050])
-    covariance = np.diag(sigma ** 2)
-    zi = multivariate_normal.pdf(xyz, mean=mu, cov=covariance)
-    zi2 = np.reshape(zi, (x.shape))
-    # Reshape back to a (30, 30) grid.
-    return zi2, mu[0], sigma[0]
+    if resolution % 2:
+        position_vec = np.linspace(-int((resolution*(100/143))//2)-1, int(resolution*(100/143)//2), resolution)
+    else:
+        position_vec = np.linspace(-int((resolution*(100/143))//2), int(resolution*(100/143)//2), resolution)
+    X, Y = np.meshgrid(position_vec, position_vec)
+    fig, ax = plt.subplots()
+    plt.contourf(X,Y,field[int(resolution//2)])
+    plt.colorbar()
+    ax.set_xlabel(r'[Mpc h⁻¹]')
+    ax.set_ylabel(r'[Mpc h⁻¹]')
+    plt.title(
+        r'slice of a the over-redshift of reionization at the center with a pixel resolution of {} Mpc h⁻¹'.format('1'))
+    plt.show()
+
+def plot_zre_hist(field, nb_bins = 100):
+    '''
+    This module plots the histograms for redshift reionization field
+    :param field:  (3D array) redshift of reionization field
+    :return:
+    '''
+    fig, ax = plt.subplots()
+    plt.hist(field.flatten(), bins=nb_bins, density=True)
+    plt.show()
+
 

@@ -20,10 +20,45 @@ from scipy.optimize import curve_fit
 import math as m
 
 #import pymks
-
-def average_overk(box_dim,overzre_fft, overd_fft, radius_thick):
+def average_overk(box_dim,field, radius_thick):
     '''
     this modules compute the average of 3d fields over theta and phi to make it only k dependant
+    :param box_dim: the number of pixels in one side of the box
+    :type box_dim: int
+    :param field: the field to average over
+    :type field: 3D array
+    :param radius_thick: the thickness of the averaged shells
+    :type radius_thick: float (or int)
+    :return: the average over theta and phi of the 2 selected fields
+    :rtype: 1D array
+    '''
+    cx = int(box_dim // 2)
+
+    #uncomment these lines for an uneven distribution of points
+    # radii1 = np.linspace(0, np.sqrt((cx/2) ** 2), num=int(3*np.sqrt((cx) ** 2) / int(radius_thick)))
+    # radii2 = np.linspace(np.sqrt((cx/2) ** 2), np.sqrt(3 * (cx) ** 2), num=int(0.5*np.sqrt((cx) ** 2) / int(radius_thick)))
+    # radii = np.concatenate((radii1[1:-1],radii2))
+
+    radii = np.linspace(0, np.sqrt(3 * (cx) ** 2), num=int(np.sqrt(3 * (cx) ** 2) / int(radius_thick)))
+    radii = radii[1:]  # exlude the radii 0 to avoid divison by 0
+
+    values = np.zeros(len(radii))
+    count = np.zeros(len(radii))
+
+    for i in tqdm(range(box_dim), 'transfering fields into k 1D array'):
+        for j in range(box_dim):
+            for z in range(box_dim):
+                k_radius = np.sqrt((i - cx) ** 2 + (j - cx) ** 2 + (z - cx) ** 2)
+                for step, radius in enumerate(radii):
+                    if k_radius < radius:
+                        count[(step)] += 1
+                        values[(step)] += field[i, j, z]
+                        break
+    return values, count
+
+def average_overk_2fields(box_dim,overzre_fft, overd_fft, radius_thick):
+    '''
+    this modules compute the average of 3d fields over theta and phi to make it only k dependant, but with 2 fields(goes quicker than two loops)
     :param box_dim: the number of pixels in the box
     :type box_dim: int
     :param fields (overzre and overd): the averaged fields
