@@ -406,7 +406,7 @@ def log_likelihood_bmz_b_errs(theta, x, y):
 def log_prior_bmz_b_errs(theta):
 
     a, b0, k0, p = theta
-    if 0.4 < a < 1.5 and 0. < k0 < 0.4 and 0 < b0 < 2.5 and 0 < p < 0.4:
+    if 0.7 < a < 1.2 and 0. < k0 < 0.08 and 0 < b0 < 1.6 and 0 < p < 0.04:
         return 0.0
     return -np.inf
 
