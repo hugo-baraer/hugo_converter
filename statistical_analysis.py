@@ -20,15 +20,16 @@ from scipy.optimize import curve_fit
 import math as m
 
 #import pymks
-def average_overk(box_dim,field, radius_thick):
+def average_overk(box_dim,field, nb_bins, logbins = False):
     '''
     this modules compute the average of 3d fields over theta and phi to make it only k dependant
     :param box_dim: the number of pixels in one side of the box
     :type box_dim: int
     :param field: the field to average over
     :type field: 3D array
-    :param radius_thick: the thickness of the averaged shells
-    :type radius_thick: float (or int)
+    :param nb_bins: the numbver of avergaging shells (nb of data points)
+    :type nb_bins: float (or int)
+    :param logbins: if the repartition of the bin points is logarithmic (if True)
     :return: the average over theta and phi of the 2 selected fields
     :rtype: 1D array
     '''
@@ -39,8 +40,12 @@ def average_overk(box_dim,field, radius_thick):
     # radii2 = np.linspace(np.sqrt((cx/2) ** 2), np.sqrt(3 * (cx) ** 2), num=int(0.5*np.sqrt((cx) ** 2) / int(radius_thick)))
     # radii = np.concatenate((radii1[1:-1],radii2))
 
-    radii = np.linspace(0, np.sqrt(3 * (cx) ** 2), num=int(np.sqrt(3 * (cx) ** 2) / int(radius_thick)))
+    #radii = np.linspace(0, np.sqrt(3 * (cx) ** 2), num=int(np.sqrt(3 * (cx) ** 2) / int(radius_thick)))
+    radii = np.linspace(0, np.sqrt(3 * (cx) ** 2), nb_bins)
     radii = radii[1:]  # exlude the radii 0 to avoid divison by 0
+
+    if logbins :
+        radii =  np.linspace
 
     values = np.zeros(len(radii))
     count = np.zeros(len(radii))
@@ -430,7 +435,7 @@ def log_likelihood_bmz_b_errs(theta, x, y):
     '''
     a, b0, k0, p = theta
     sigma2 = ((p)
-              / (-np.exp((0.8 * x) + 0.1) + 2.2)) ** 2
+              / (0.2*(x/0.3)+1)**(0.6)) ** 2
     try:
         model = (b0/(1+(x/k0)))**a
         likelihood = -0.5 * np.sum((y - model) ** 2 / sigma2 + np.log(sigma2))
@@ -441,7 +446,7 @@ def log_likelihood_bmz_b_errs(theta, x, y):
 def log_prior_bmz_b_errs(theta):
 
     a, b0, k0, p = theta
-    if 0.7 < a < 1.2 and 0. < k0 < 0.08 and 0 < b0 < 1.6 and 0 < p < 0.04:
+    if 0.3 < a < 1. and 0. < k0 < 0.5 and 0 < b0 < 1.6 and 0 < p < 0.15:
         return 0.0
     return -np.inf
 
