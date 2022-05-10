@@ -92,6 +92,27 @@ def over_zre_equation(zre_x,zre_mean):
     '''
     return((1+zre_x)-(1+zre_mean))/(1+zre_mean)
 
+def over_p_equation(p,p_mean):
+    '''
+
+    :param p: the density field
+    :type p: 3D array
+    :param p_mean: the mean of the density field
+    :type p_mean:  float
+    :return: over-density field
+    :rtype: 3D array
+    '''
+    return(p -p_mean)/(p_mean)
+
+def over_p_field(p_field):
+    """
+    This function generate the over z_re field with the original z_re field. from the equation defined in Battaglia et al.
+    :param p_field: [arr] 3D array of the density field
+    :return: a 3D array of the reionization field
+    """
+    p_mean = np.mean(p_field)
+    return over_p_equation(p_field,p_mean), p_mean
+
 def over_zre_field(zre_field):
     """
     This function generate the over z_re field with the original z_re field. from the equation defined in Battaglia et al.

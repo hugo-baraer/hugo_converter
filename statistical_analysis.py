@@ -41,11 +41,11 @@ def average_overk(box_dim,field, nb_bins, logbins = False):
     # radii = np.concatenate((radii1[1:-1],radii2))
 
     #radii = np.linspace(0, np.sqrt(3 * (cx) ** 2), num=int(np.sqrt(3 * (cx) ** 2) / int(radius_thick)))
-    radii = np.linspace(0, np.sqrt(3 * (cx) ** 2), nb_bins)
+    radii = np.linspace(0, np.sqrt(3 * (cx) ** 2), nb_bins+1)
     radii = radii[1:]  # exlude the radii 0 to avoid divison by 0
 
     if logbins :
-        radii =  np.linspace
+        radii =  np.logspace(0, np.log10(np.sqrt(3 * (cx) ** 2)), nb_bins+1)
 
     values = np.zeros(len(radii))
     count = np.zeros(len(radii))
