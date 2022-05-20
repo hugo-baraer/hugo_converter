@@ -378,7 +378,7 @@ def log_likelihood_bmz_errs(theta, x, y, yerr):
     a, k0, p = theta
     #sigma2 = (yerr ) ** 2
     sigma2 = ((p)
-              /(-np.exp((0.7*x)+0.1)+2.2)) ** 2
+              /(yerr)) ** 2
 
     try:
         model = 0.593/((1+((x)/k0))**(a))
@@ -419,7 +419,7 @@ def compute_bmz(overzre_k,overd_k):
 One last test of probability function MCMC, with b_mz and erros scaling
 """
 
-def log_likelihood_bmz_b_errs(theta, x, y):
+def log_likelihood_bmz_b_errs(theta, x, y, yerr):
     '''
     this functions evaluates the likelihood, to test on the data we have
     :param theta:
@@ -435,7 +435,7 @@ def log_likelihood_bmz_b_errs(theta, x, y):
     '''
     a, b0, k0, p = theta
     sigma2 = ((p)
-              / (0.2*(x/0.3)+1)**(0.6)) ** 2
+              / (yerr)) ** 2
     try:
         model = (b0/(1+(x/k0)))**a
         likelihood = -0.5 * np.sum((y - model) ** 2 / sigma2 + np.log(sigma2))
@@ -446,12 +446,12 @@ def log_likelihood_bmz_b_errs(theta, x, y):
 def log_prior_bmz_b_errs(theta):
 
     a, b0, k0, p = theta
-    if 0.3 < a < 1. and 0. < k0 < 0.5 and 0 < b0 < 1.6 and 0 < p < 0.15:
+    if 0.3 < a < 3.5 and 0. < k0 < 3.5 and 0.5 < b0 < 1.6 and 0 < p < 0.15:
         return 0.0
     return -np.inf
 
-def log_post_bmz_b_errs(theta, x, y):
+def log_post_bmz_b_errs(theta, x, y, yerr):
     lp = log_prior_bmz_b_errs(theta)
     if not np.isfinite(lp):
         return -np.inf
-    return lp + log_likelihood_bmz_b_errs(theta, x, y)
+    return lp + log_likelihood_bmz_b_errs(theta, x, y, yerr)

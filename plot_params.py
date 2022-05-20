@@ -16,25 +16,48 @@ from numpy import array
 from statistical_analysis import *
 from FFT import *
 from z_re_field import *
+#{'Z_re': [8.01], 'Heff': [30.0], 'medians': [array([2.08873889, 0.97190616, 2.00851018, 0.02540628])], 'a16': [array([0.99442916])], 'a50': [array([1.41932357])], 'a84': [array([2.16887687])], 'b16': [array([0.97635207])], 'b50': [array([0.99655587])], 'b84': [array([1.03807445])], 'k16': [array([0.66037472])], 'k50': [array([1.15658818])], 'k84': [array([2.09772472])], 'p16': [array([0.02413837])], 'p50': [array([0.02966204])], 'p84': [array([0.03743525])]}
 
-def reionization_history(redshifts, field,  resolution = 143, plot = True):
+def reionization_history(redshifts, field,  resolution = 143, plot = False, comp_width= False ):
     '''
     This function computes the reionization history of a given redshift of reionization field.
     :param redshifts: the redshift range to look the history over (1D array)
-    :param field: the 3d redshfit of reionization field
+    :param field: the 3d redshift of reionization field
     :param resolution: the resolution of the observed field
     :param plot: to plot or not the histories (True default)
     :return: the ionization history at each given redshfit (1D list)
     '''
     ionization_rate = []
     dummy = 0
-    for i in tqdm(redshifts, 'computing the reionization history'):
-        new_box = np.zeros((resolution, resolution, resolution))
-        new_box[field <= i] = 1
-        ionization_rate.append((new_box == 0).sum() / (resolution) ** 3)
-        if (new_box == 0).sum() / (resolution) ** 3 < 0.5 and dummy == 0:
-            dummy += 1
-            print(i)
+    if comp_width:
+        for i in tqdm(redshifts, 'computing the reionization history'):
+            new_box = np.zeros((resolution, resolution, resolution))
+            new_box[field <= i] = 1
+            ionization_rate.append((new_box == 0).sum() / (resolution) ** 3)
+            # if (new_box == 0).sum() / (resolution) ** 3 < 0.5 and dummy == 0:
+            #     dummy += 1
+            #     print(i)
+            if ((new_box == 0).sum() / (resolution) ** 3) < 0.95 and dummy == 0:
+                dummy += 1
+                lower_bound5 = i
+            if (new_box == 0).sum() / (resolution) ** 3 < 0.75 and dummy == 1:
+                dummy += 1
+                lower_bound25 = i
+            if (new_box == 0).sum() / (resolution) ** 3 < 0.25 and dummy == 2:
+                dummy += 1
+                upper_bound25 = i
+            if (new_box == 0).sum() / (resolution) ** 3 < 0.05 and dummy == 3:
+                dummy += 1
+                upper_bound5 = i
+        width50 = upper_bound25- lower_bound25
+        width90 = upper_bound5 - lower_bound5
+
+    else:
+        for i in tqdm(redshifts, 'computing the reionization history'):
+            new_box = np.zeros((resolution, resolution, resolution))
+            new_box[field <= i] = 1
+            ionization_rate.append((new_box == 0).sum() / (resolution) ** 3)
+
     if plot:
         fig, ax = plt.subplots()
         # plt.scatter(redshifts,ionization_rate)
@@ -44,7 +67,10 @@ def reionization_history(redshifts, field,  resolution = 143, plot = True):
         plt.legend()
         plt.title(r'ionization fraction as function of redshift')
         plt.show()
-    return ionization_rate
+    if comp_width:
+        return ionization_rate, width50, width90
+
+    else: return ionization_rate
 
 def ionization_map_gen(redshift,resolution,field, plot = False):
     '''
@@ -178,6 +204,35 @@ def ionization_movie(redshifts, field, resolution, movie_name):
 #redshifts = np.linspace(6,9,4)
 #redshifts = [3,4,5,5.5,6,6.2,6.4,6.6,6.8,7.0,7.05, 7.1,7.15,7.2,7.25, 7.3,7.35,7.4,7.45,7.5,7.55,7.6,7.65,7.7,7.75,7.8,7.85, 7.9,7.95,8.0,8.05,8.1,8.15,8.2,8.25,8.3,8.35,8.4,8.45,8.5,8.55,8.6,8.65,8.7,8.75,8.8,8.85,8.9,8.95,9.0,9.05,9.1,9.15,9.2,9.25,9.3,9.35,9.4,9.45,9.5,9.55,9.6,9.65,9.7,9.75,9.8,9.85,9.9,9.95,10.0,10.1,10.2,10.3,10.4,10.5,10.6,10.7,10.8,10.9,11.0,11.1,11.2,11.3,11.4,11.5,11.6,11.7,11.8,11.9,12.0,12.2,12.4,12.6,12.8,13,13.25,13.5,13.75,14,14.25,14.5,14.75,15,15.5,16.5,17,17.5,18,18.5,19,19.5,20,20.5]
 #redshifts = np.linspace(3.8,16,1000)
+
+def plot_variational_range_1dict(dict1):
+    '''
+    This function generates the plot of the variational range for 3 parameters with 1 different input
+    :param dict1: the dictionnary of the first input
+    :type dict1: dict
+    :return:
+    :rtype:
+    '''
+    a = dict1
+    fig3, ax3 = plt.subplots(3, 1, sharex='col', sharey='row')
+    cont300 = ax3[0].errorbar(a['Heff'], np.concatenate(a['a50']), yerr=(
+    np.concatenate(a['a50']) - np.concatenate(a['a16']), np.concatenate(a['a84']) - np.concatenate(a['a50'])), ls='')
+    cont300 = ax3[0].scatter(a['Heff'], np.concatenate(a['a50']), color='r')
+
+    ax3[1].errorbar(a['Heff'], np.concatenate(a['b50']), yerr=(
+    np.concatenate(a['b50']) - np.concatenate(a['b16']), np.concatenate(a['b84']) - np.concatenate(a['b50'])), ls='')
+    ax3[1].scatter(a['Heff'], np.concatenate(a['b50']), color='r')
+
+    ax3[2].errorbar(a['Heff'], np.concatenate(a['k50']), yerr=(
+    np.concatenate(a['k50']) - np.concatenate(a['k16']), np.concatenate(a['k84']) - np.concatenate(a['k50'])), ls='')
+    ax3[2].scatter(a['Heff'], np.concatenate(a['k50']), color='r')
+
+
+    plt.setp(ax3[2], xlabel='ionization efficiency')
+    plt.setp(ax3[0], ylabel=r'$\alpha$')
+    plt.setp(ax3[1], ylabel=r'$b_0$')
+    plt.setp(ax3[2], ylabel=r'$k_0$')
+    plt.show()
 
 
 def plot_variational_range(dict1,dict2):

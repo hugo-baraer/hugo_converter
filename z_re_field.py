@@ -69,14 +69,14 @@ def generate_zre_field(zre_range,initial_conditions,box_dim, astro_params, flag_
     """
     #creating a new cube where reionization vener occured (-1)
     final_cube = np.full((box_dim, box_dim, box_dim), -1, dtype = float)
-    if comP_ionization_rate : ionization_rate = []
+    #if comP_ionization_rate : ionization_rate = []
     for redshift in tqdm(zre_range, 'computing the redshift of reionization'):
         #print(redshift)
         new_cube = p21c.ionize_box(redshift=redshift, init_boxes = initial_conditions, astro_params = astro_params, flag_options = flag_options, write=False).z_re_box
-        if comP_ionization_rate: ionization_rate.append((new_cube > -1).sum()/ box_dim**3)
+        #if comP_ionization_rate: ionization_rate.append((new_cube > -1).sum()/ box_dim**3)
         final_cube[new_cube > -1] = redshift
     if comP_ionization_rate:
-        return final_cube, ionization_rate
+        return final_cube
     else:
         return final_cube
 
@@ -119,7 +119,7 @@ def over_zre_field(zre_field):
     :param zre_field: [arr] 3D array of the reionization redshift field
     :return: a 3D array of the reionization field
     """
-    zre_mean = np.mean(zre_field)
+    zre_mean = np.mean(zre_field.flatten())
     return over_zre_equation(zre_field,zre_mean), zre_mean
 
 def plot_zre_slice(field,  resolution = 143):
