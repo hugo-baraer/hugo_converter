@@ -328,3 +328,15 @@ plt.ylabel(r'$\alpha$ best fitted value')
 plt.legend()
 plt.show()
 """
+
+def plot_multiple_ionhist(ion_rates, labels):
+    fig, ax = plt.subplots()
+    # for count, ion_rate in enumerate(ion_rates):
+    #     nplot, = plt.plot(np.linspace(5, 15, 100), ion_rate, labels ='{}'.format(labels[count]))
+    #     #label = 'M_turn {}'.format(H_eff_zre50['Heff'][count])
+    plt.plot(np.linspace(5, 12, 100), ion_rates[0], label = 'z_reion ',   linewidth=2)
+    plt.plot(np.linspace(5, 12, 100), ion_rates[1], linewidth=2, label='21cmFAST')
+    plt.legend(fontsize='x-small')
+    plt.xlabel('redshift')
+    plt.ylabel('ionization fraction')
+    plt.show()
