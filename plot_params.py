@@ -16,6 +16,8 @@ from numpy import array
 from statistical_analysis import *
 from FFT import *
 from z_re_field import *
+
+
 #{'Z_re': [8.01], 'Heff': [30.0], 'medians': [array([2.08873889, 0.97190616, 2.00851018, 0.02540628])], 'a16': [array([0.99442916])], 'a50': [array([1.41932357])], 'a84': [array([2.16887687])], 'b16': [array([0.97635207])], 'b50': [array([0.99655587])], 'b84': [array([1.03807445])], 'k16': [array([0.66037472])], 'k50': [array([1.15658818])], 'k84': [array([2.09772472])], 'p16': [array([0.02413837])], 'p50': [array([0.02966204])], 'p84': [array([0.03743525])]}
 
 def reionization_history(redshifts, field,  resolution = 143, plot = False, comp_width= False ):
@@ -205,7 +207,7 @@ def ionization_movie(redshifts, field, resolution, movie_name):
 #redshifts = [3,4,5,5.5,6,6.2,6.4,6.6,6.8,7.0,7.05, 7.1,7.15,7.2,7.25, 7.3,7.35,7.4,7.45,7.5,7.55,7.6,7.65,7.7,7.75,7.8,7.85, 7.9,7.95,8.0,8.05,8.1,8.15,8.2,8.25,8.3,8.35,8.4,8.45,8.5,8.55,8.6,8.65,8.7,8.75,8.8,8.85,8.9,8.95,9.0,9.05,9.1,9.15,9.2,9.25,9.3,9.35,9.4,9.45,9.5,9.55,9.6,9.65,9.7,9.75,9.8,9.85,9.9,9.95,10.0,10.1,10.2,10.3,10.4,10.5,10.6,10.7,10.8,10.9,11.0,11.1,11.2,11.3,11.4,11.5,11.6,11.7,11.8,11.9,12.0,12.2,12.4,12.6,12.8,13,13.25,13.5,13.75,14,14.25,14.5,14.75,15,15.5,16.5,17,17.5,18,18.5,19,19.5,20,20.5]
 #redshifts = np.linspace(3.8,16,1000)
 
-def plot_variational_range_1dict(dict1):
+def plot_variational_range_1dict(dict1, varying_name='Heff'):
     '''
     This function generates the plot of the variational range for 3 parameters with 1 different input
     :param dict1: the dictionnary of the first input
@@ -215,20 +217,20 @@ def plot_variational_range_1dict(dict1):
     '''
     a = dict1
     fig3, ax3 = plt.subplots(3, 1, sharex='col', sharey='row')
-    cont300 = ax3[0].errorbar(a['Heff'], np.concatenate(a['a50']), yerr=(
+    cont300 = ax3[0].errorbar(a['{}'.format(varying_name)], np.concatenate(a['a50']), yerr=(
     np.concatenate(a['a50']) - np.concatenate(a['a16']), np.concatenate(a['a84']) - np.concatenate(a['a50'])), ls='')
-    cont300 = ax3[0].scatter(a['Heff'], np.concatenate(a['a50']), color='r')
+    cont300 = ax3[0].scatter(a['{}'.format(varying_name)], np.concatenate(a['a50']), color='r')
 
-    ax3[1].errorbar(a['Heff'], np.concatenate(a['b50']), yerr=(
+    ax3[1].errorbar(a['{}'.format(varying_name)], np.concatenate(a['b50']), yerr=(
     np.concatenate(a['b50']) - np.concatenate(a['b16']), np.concatenate(a['b84']) - np.concatenate(a['b50'])), ls='')
-    ax3[1].scatter(a['Heff'], np.concatenate(a['b50']), color='r')
+    ax3[1].scatter(a['{}'.format(varying_name)], np.concatenate(a['b50']), color='r')
 
-    ax3[2].errorbar(a['Heff'], np.concatenate(a['k50']), yerr=(
+    ax3[2].errorbar(a['{}'.format(varying_name)], np.concatenate(a['k50']), yerr=(
     np.concatenate(a['k50']) - np.concatenate(a['k16']), np.concatenate(a['k84']) - np.concatenate(a['k50'])), ls='')
-    ax3[2].scatter(a['Heff'], np.concatenate(a['k50']), color='r')
+    ax3[2].scatter(a['{}'.format(varying_name)], np.concatenate(a['k50']), color='r')
 
 
-    plt.setp(ax3[2], xlabel='ionization efficiency')
+    plt.setp(ax3[2], xlabel='{}'.format(varying_name))
     plt.setp(ax3[0], ylabel=r'$\alpha$')
     plt.setp(ax3[1], ylabel=r'$b_0$')
     plt.setp(ax3[2], ylabel=r'$k_0$')
@@ -329,14 +331,29 @@ plt.legend()
 plt.show()
 """
 
-def plot_multiple_ionhist(ion_rates, labels):
+def plot_multiple_ionhist(ion_rates, data_dict, varying_name, zreion = None, zreion2 = None):
     fig, ax = plt.subplots()
-    # for count, ion_rate in enumerate(ion_rates):
-    #     nplot, = plt.plot(np.linspace(5, 15, 100), ion_rate, labels ='{}'.format(labels[count]))
-    #     #label = 'M_turn {}'.format(H_eff_zre50['Heff'][count])
-    plt.plot(np.linspace(5, 12, 100), ion_rates[0], label = 'z_reion ',   linewidth=2)
-    plt.plot(np.linspace(5, 12, 100), ion_rates[1], linewidth=2, label='21cmFAST')
+    for count, ion_rate in enumerate(ion_rates):
+        nplot, = plt.plot(np.linspace(5, 15, 100), ion_rate, label ='{} = {}'.format(varying_name, data_dict['{}'.format(varying_name)][count]))
+    if zreion != None: plt.plot(np.linspace(5,15,100), zreion, label = 'zreion')
+        #label = 'M_turn {}'.format(H_eff_zre50['Heff'][count])
+    if zreion2 != None: plt.plot(np.linspace(5,15,100),zreion2, label = 'zreion b_0 = 0.593')
     plt.legend(fontsize='x-small')
     plt.xlabel('redshift')
     plt.ylabel('ionization fraction')
     plt.show()
+
+
+def plot_21zreion_ionhist(ion_rates):
+    fig, ax = plt.subplots()
+    # for count, ion_rate in enumerate(ion_rates):
+    #     nplot, = plt.plot(np.linspace(5, 15, 100), ion_rate, labels ='{}'.format(labels[count]))
+    #     #label = 'M_turn {}'.format(H_eff_zre50['Heff'][count])
+    plt.plot(np.linspace(5, 15, 100), ion_rates[0], label = 'z_reion ',   linewidth=2)
+    plt.plot(np.linspace(5, 15, 100), ion_rates[1], linewidth=2, label='21cmFAST')
+    if len(ion_rates)== 3: plt.plot(np.linspace(5,15,100), ion_rates[2], label = 'z-reion b_0 = 0.593')
+    plt.legend(fontsize='x-small')
+    plt.xlabel('redshift')
+    plt.ylabel('ionization fraction')
+    plt.show()
+

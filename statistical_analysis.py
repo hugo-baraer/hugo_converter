@@ -457,7 +457,7 @@ def log_post_bmz_b_errs(theta, x, y, yerr):
         return -np.inf
     return lp + log_likelihood_bmz_b_errs(theta, x, y, yerr)
 
-def run_MCMC_free_params(x,y,errs, num_iter = 5000, nwalkers = 32, plot_walkers = False, plot_corners = False, plot_best_fit_sample = False, data_dict= None, varying_input = 'Heff', varying_in_value = 0 ):
+def run_MCMC_free_params(x,y,errs, zre_mean, num_iter = 5000, nwalkers = 32, plot_walkers = False, plot_corners = False, plot_best_fit_sample = False, data_dict= None, varying_input = 'Heff', varying_in_value = 0 ):
     '''
     This function runs the MCMC
     :param x: the kbins fitting for
@@ -484,6 +484,94 @@ def run_MCMC_free_params(x,y,errs, num_iter = 5000, nwalkers = 32, plot_walkers 
 
 
 
+    sampler = emcee.EnsembleSampler(nwalkers, ndim, log_post_bmz_errs, args=(x, y, errs))
+    sampler.run_mcmc(initial_pos, num_iter, progress=True);
+    samples = sampler.get_chain()
+
+    flat_samples = sampler.get_chain(discard=100, thin=15, flat=True)
+    inds = np.random.randint(len(flat_samples), size=100)
+
+    #the folloing line computes the highest probable result (peak of the posterior distribution) instead of computing the mean of the distribution
+    best_walker = np.argmax(np.max(sampler.lnprobability,axis=1))
+    best_params = samples[-1][np.argmax(sampler.lnprobability.T[best_walker])]
+    if plot_walkers:
+        f, axes = plt.subplots(4, figsize=(10, 7), sharex=True)
+        samples = sampler.get_chain()
+        labels = [r"$\alpha$", r"$b_0$", r"$k_0$", r"$p$"]
+        for i in range(ndim):
+            ax = axes[i]
+            ax.plot(samples[:, :, i], alpha=0.3)
+            ax.set_xlim(0, len(samples))
+            ax.set_ylabel(labels[i])
+            # ax.yaxis.set_label_coords(-0.1, 0.5)
+
+        axes[-1].set_xlabel("Step number");
+        plt.show()
+    if plot_corners:
+        fig = corner.corner(flat_samples, labels=labels, quantiles=[0.16, 0.5, 0.84], show_titles=True)
+        plt.show()
+
+    if plot_best_fit_sample:
+        f, ax = plt.subplots(figsize=(6, 4))
+        for ind in inds:
+            sample = flat_samples[ind]
+            ax.plot(x0, (sample[1] / (1 + (x0 / sample[2])) ** sample[0]), alpha=0.05, color='red')
+        ax.errorbar(kbins_zre, b_mz, yerr=(sample[3] / (cross_cor)), linestyle='None', capsize=4,
+                    marker='o')  # yerr = bmz_errors*sample[2]
+        # plt.plot(kvalues,y_plot_fit, label = 'Battaglia fit') #this lines plots the Battaglia best fit value
+        ax.set_xlim(0, 10.)
+        ax.set_ylabel(r'$b_{mz}$ ')
+        ax.set_xlabel(r'$k[Mpc⁻1 h]$')
+        plt.title(r'$b_{zm}$ as a function of k ')
+        plt.legend()
+        plt.loglog()
+        plt.show()
+    if data_dict != None:
+        if data_dict == {}: data_dict = {'Z_re': [], '{}'.format(varying_input): [], "medians": [], "a16":[], "a50":[], "a84":[], "b16":[], "b50":[], "b84":[], "k16":[], "k50":[], "k84":[], "p16":[], "p50":[], "p84":[], "width50":[],"width90":[]}
+        data_dict['medians'].append(best_params)
+        data_dict['{}'.format(varying_input)].append(varying_in_value)
+        data_dict['a16'].append(corner.quantile(flat_samples[:, 0], [0.16]))
+        data_dict['a50'].append(corner.quantile(flat_samples[:, 0], [0.5]))
+        data_dict['a84'].append(corner.quantile(flat_samples[:, 0], [0.84]))
+        data_dict['b16'].append(corner.quantile(flat_samples[:, 1], [0.16]))
+        data_dict['b50'].append(corner.quantile(flat_samples[:, 1], [0.5]))
+        data_dict['b84'].append(corner.quantile(flat_samples[:, 1], [0.84]))
+        data_dict['k16'].append(corner.quantile(flat_samples[:, 2], [0.16]))
+        data_dict['k50'].append(corner.quantile(flat_samples[:, 2], [0.5]))
+        data_dict['k84'].append(corner.quantile(flat_samples[:, 2], [0.84]))
+        data_dict['p16'].append(corner.quantile(flat_samples[:, 3], [0.16]))
+        data_dict['p50'].append(corner.quantile(flat_samples[:, 3], [0.5]))
+        data_dict['p84'].append(corner.quantile(flat_samples[:, 3], [0.84]))
+        data_dict['Z_re'].append(zre_mean)
+        return data_dict
+    return best_params
+
+def run_MCMC_free_params_nob(x,y,errs, zre_mean, num_iter = 5000, nwalkers = 32, plot_walkers = False, plot_corners = False, plot_best_fit_sample = False, data_dict= None, varying_input = 'Heff', varying_in_value = 0 ):
+    '''
+    This function runs the MCMC
+    :param x: the kbins fitting for
+    :param y: the b_mz scatter point fitting for
+    :param errs: the error (associated with the cross corelation error weighting)
+    :param num_iter: the number of iteration to run the Markov Chain Monte Carlo (default 5000)
+    :param nwalkers: the number of walker completing MCMC (default 32)
+    :param plot_walkers: plot the walker behaviour plot
+    :param plot_corners: plot the corner plots for the posterior distributions,
+    :param plot_best_fit_sample: plot the b_mz and the associated
+    :param dict_storing: to store the best-fitted value and confidence interval in the provided dictionnary (default none)
+    :param varying_input: the name of the varying input the value are computed over (default is Heff)
+    :param varying_in_value: the value of the varying parameter
+    :return: the values of the posterior distribution for the free parameters (mean value)
+    '''
+
+    ndim = 3
+    #initial parameters for 4 dim
+    initial_pos = np.ones((32,3))
+    initial_pos[:,0] *= 0.8 +0.06 * np.random.randn(nwalkers)
+    initial_pos[:,1] *= 0.4 + 0.1 * np.random.randn(nwalkers)
+    initial_pos[:,2] *= 0.01 + 0.01 * np.random.randn(nwalkers)
+
+
+
     sampler = emcee.EnsembleSampler(nwalkers, ndim, log_post_bmz_b_errs, args=(x, y, errs))
     sampler.run_mcmc(initial_pos, num_iter, progress=True);
     samples = sampler.get_chain()
@@ -494,7 +582,6 @@ def run_MCMC_free_params(x,y,errs, num_iter = 5000, nwalkers = 32, plot_walkers 
     #the folloing line computes the highest probable result (peak of the posterior distribution) instead of computing the mean of the distribution
     best_walker = np.argmax(np.max(sampler.lnprobability,axis=1))
     best_params = samples[-1][np.argmax(sampler.lnprobability.T[best_walker])]
-    zre_mean = 8.015
     if plot_walkers:
         f, axes = plt.subplots(4, figsize=(10, 7), sharex=True)
         samples = sampler.get_chain()
