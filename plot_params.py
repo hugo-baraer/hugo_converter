@@ -2,6 +2,7 @@
 plot_params.py
 
 Author: Hugo Baraer
+  Supervision by : Prof. Adrian Liu
 Affilitation : Cosmic dawwn group at Mcgill University
 
 This module is used for the comparison between z-reion and 21cmFAST, and deals with redshift of reionization fields.
@@ -344,16 +345,23 @@ def plot_multiple_ionhist(ion_rates, data_dict, varying_name, zreion = None, zre
     plt.show()
 
 
-def plot_21zreion_ionhist(ion_rates):
+def plot_21zreion_ionhist(ion_rates, saveforgif = False, filenames = [], imnb = 0, title = ''):
     fig, ax = plt.subplots()
     # for count, ion_rate in enumerate(ion_rates):
     #     nplot, = plt.plot(np.linspace(5, 15, 100), ion_rate, labels ='{}'.format(labels[count]))
     #     #label = 'M_turn {}'.format(H_eff_zre50['Heff'][count])
-    plt.plot(np.linspace(5, 15, 100), ion_rates[0], label = 'z_reion ',   linewidth=2)
+    plt.plot(np.linspace(5, 15, 100), ion_rates[0], label = 'z_reion with me',   linewidth=2)
     plt.plot(np.linspace(5, 15, 100), ion_rates[1], linewidth=2, label='21cmFAST')
-    if len(ion_rates)== 3: plt.plot(np.linspace(5,15,100), ion_rates[2], label = 'z-reion b_0 = 0.593')
-    plt.legend(fontsize='x-small')
+    if len(ion_rates)== 3: plt.plot(np.linspace(5,15,100), ion_rates[2], label = 'z-reion with James')
+    plt.legend(fontsize='small')
     plt.xlabel('redshift')
     plt.ylabel('ionization fraction')
-    plt.show()
+    plt.title(title)
+    if saveforgif:
+        plt.savefig('./ionization_map/ionization_hist{}.png'.format(imnb))
+        filenames.append('./ionization_map/ionization_hist{}.png'.format(imnb))
+        plt.close()
+        images = []
+        return filenames
+    else: plt.show()
 

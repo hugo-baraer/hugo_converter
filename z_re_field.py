@@ -3,6 +3,7 @@
  
   Author : Hugo Baraer
   Affiliation : McGill University
+  Supervision by : Prof. Adrian Liu
   Date of creation : 2021-09-20
   
   This module computes the over_redshift z_re field with coeval cubes at different reionization redshift.

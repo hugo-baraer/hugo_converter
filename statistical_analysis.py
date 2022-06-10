@@ -3,6 +3,7 @@
  
   Author : Hugo Baraer
   Affiliation : McGill University
+  Supervision by : Prof. Adrian Liu
   Date of creation : 2021-10-26
   
   This module contains the necessary statistical analysis function required for the analysis
@@ -356,7 +357,7 @@ The next functions is when fitting the MCMC with error weighting
 def log_prior_bmz_errs(theta):
 
     a, k0, p = theta
-    if 0.4 < a < 75 and 0. < k0 < 25 and 0<p<15:
+    if 0.1 < a < 20 and 0. < k0 < 20 and 0<p<0.5:
         return 0.0
     return -np.inf
 
@@ -484,7 +485,7 @@ def run_MCMC_free_params(x,y,errs, zre_mean, num_iter = 5000, nwalkers = 32, plo
 
 
 
-    sampler = emcee.EnsembleSampler(nwalkers, ndim, log_post_bmz_errs, args=(x, y, errs))
+    sampler = emcee.EnsembleSampler(nwalkers, ndim, log_post_bmz_b_errs, args=(x, y, errs))
     sampler.run_mcmc(initial_pos, num_iter, progress=True);
     samples = sampler.get_chain()
 
@@ -572,7 +573,7 @@ def run_MCMC_free_params_nob(x,y,errs, zre_mean, num_iter = 5000, nwalkers = 32,
 
 
 
-    sampler = emcee.EnsembleSampler(nwalkers, ndim, log_post_bmz_b_errs, args=(x, y, errs))
+    sampler = emcee.EnsembleSampler(nwalkers, ndim, log_post_bmz_errs, args=(x, y, errs))
     sampler.run_mcmc(initial_pos, num_iter, progress=True);
     samples = sampler.get_chain()
 
@@ -583,9 +584,9 @@ def run_MCMC_free_params_nob(x,y,errs, zre_mean, num_iter = 5000, nwalkers = 32,
     best_walker = np.argmax(np.max(sampler.lnprobability,axis=1))
     best_params = samples[-1][np.argmax(sampler.lnprobability.T[best_walker])]
     if plot_walkers:
-        f, axes = plt.subplots(4, figsize=(10, 7), sharex=True)
+        f, axes = plt.subplots(3, figsize=(10, 7), sharex=True)
         samples = sampler.get_chain()
-        labels = [r"$\alpha$", r"$b_0$", r"$k_0$", r"$p$"]
+        labels = [r"$\alpha$", r"$k_0$", r"$p$"]
         for i in range(ndim):
             ax = axes[i]
             ax.plot(samples[:, :, i], alpha=0.3)
@@ -596,6 +597,7 @@ def run_MCMC_free_params_nob(x,y,errs, zre_mean, num_iter = 5000, nwalkers = 32,
         axes[-1].set_xlabel("Step number");
         plt.show()
     if plot_corners:
+        labels = [r"$\alpha$", r"$k_0$", r"$p$"]
         fig = corner.corner(flat_samples, labels=labels, quantiles=[0.16, 0.5, 0.84], show_titles=True)
         plt.show()
 
@@ -621,15 +623,12 @@ def run_MCMC_free_params_nob(x,y,errs, zre_mean, num_iter = 5000, nwalkers = 32,
         data_dict['a16'].append(corner.quantile(flat_samples[:, 0], [0.16]))
         data_dict['a50'].append(corner.quantile(flat_samples[:, 0], [0.5]))
         data_dict['a84'].append(corner.quantile(flat_samples[:, 0], [0.84]))
-        data_dict['b16'].append(corner.quantile(flat_samples[:, 1], [0.16]))
-        data_dict['b50'].append(corner.quantile(flat_samples[:, 1], [0.5]))
-        data_dict['b84'].append(corner.quantile(flat_samples[:, 1], [0.84]))
-        data_dict['k16'].append(corner.quantile(flat_samples[:, 2], [0.16]))
-        data_dict['k50'].append(corner.quantile(flat_samples[:, 2], [0.5]))
-        data_dict['k84'].append(corner.quantile(flat_samples[:, 2], [0.84]))
-        data_dict['p16'].append(corner.quantile(flat_samples[:, 3], [0.16]))
-        data_dict['p50'].append(corner.quantile(flat_samples[:, 3], [0.5]))
-        data_dict['p84'].append(corner.quantile(flat_samples[:, 3], [0.84]))
+        data_dict['k16'].append(corner.quantile(flat_samples[:, 1], [0.16]))
+        data_dict['k50'].append(corner.quantile(flat_samples[:, 1], [0.5]))
+        data_dict['k84'].append(corner.quantile(flat_samples[:, 1], [0.84]))
+        data_dict['p16'].append(corner.quantile(flat_samples[:, 2], [0.16]))
+        data_dict['p50'].append(corner.quantile(flat_samples[:, 2], [0.5]))
+        data_dict['p84'].append(corner.quantile(flat_samples[:, 2], [0.84]))
         data_dict['Z_re'].append(zre_mean)
         return data_dict
     return best_params
