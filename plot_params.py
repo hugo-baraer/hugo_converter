@@ -17,7 +17,7 @@ from numpy import array
 from statistical_analysis import *
 from FFT import *
 from z_re_field import *
-
+import statistical_analysis as sa
 
 #{'Z_re': [8.01], 'Heff': [30.0], 'medians': [array([2.08873889, 0.97190616, 2.00851018, 0.02540628])], 'a16': [array([0.99442916])], 'a50': [array([1.41932357])], 'a84': [array([2.16887687])], 'b16': [array([0.97635207])], 'b50': [array([0.99655587])], 'b84': [array([1.03807445])], 'k16': [array([0.66037472])], 'k50': [array([1.15658818])], 'k84': [array([2.09772472])], 'p16': [array([0.02413837])], 'p50': [array([0.02966204])], 'p84': [array([0.03743525])]}
 
@@ -147,7 +147,7 @@ def ps_ion_map(map,nb_bins,resolution, delta =1,plot=False, logbins = False):
     #kvalues = kvalues[1:]
     #compute the  average k values in Fourier space to compute the power spectrum
     #values, count= average_overk(resolution, field_fft, radius_thick)
-    values, count = average_overk(resolution, field_fft, nb_bins, logbins=logbins)
+    values, count = sa.average_overk(resolution, field_fft, nb_bins, logbins=logbins)
     field_fft_k = np.divide(values, count)
     if plot:
         fig, ax = plt.subplots()
@@ -197,6 +197,29 @@ def ionization_movie(redshifts, field, resolution, movie_name):
     imageio.mimsave(movie_name, images)
 
 #b = np.load('zreion_for_Hugo.npy')
+
+
+def plot_ionmap_diff_movie(zre1, zre2, resolution = 143, movie_name = 'ion_map_diff_james.gif' ):
+    position_vec = np.linspace(-49, 50, resolution)
+    Xd, Yd = np.meshgrid(position_vec, position_vec)
+    filenames = []
+    redshifts = np.linspace(5,15,50)
+    for i in tqdm(redshifts, 'Making the ionization map movie diff'):
+        fig, ax = plt.subplots()
+        plt.contourf(Xd, Yd, pp.ionization_map_diff(i, 143, zre1,zre2, plot = False)[int(143//2)],  cmap =  'RdBu', vmin=-1.0, vmax=1.0)
+        plt.title(r'slice of the ionization map differences at a redshift of {} '.format(i))
+        plt.colorbar()
+        ax.set_xlabel(r'$[\frac{Mpc}{\hbar}]$')
+        ax.set_ylabel(r'$[\frac{Mpc}{\hbar}]$')
+        plt.savefig('./ionization_map/ionization_field{}.png'.format(i))
+        filenames.append('./ionization_map/ionization_field{}.png'.format(i))
+        plt.close()
+    images = []
+    for filename in filenames:
+        images.append(imageio.imread(filename))
+    imageio.mimsave(movie_name, images)
+    ionization_map_diff = pp.ionization_map_diff(8.265, 143, z_re, z_reion_zre_9)
+
 
 #over_zre, zre_mean = over_zre_field(b[0])
 
@@ -339,6 +362,7 @@ def plot_multiple_ionhist(ion_rates, data_dict, varying_name, zreion = None, zre
     if zreion != None: plt.plot(np.linspace(5,15,100), zreion, label = 'zreion')
         #label = 'M_turn {}'.format(H_eff_zre50['Heff'][count])
     if zreion2 != None: plt.plot(np.linspace(5,15,100),zreion2, label = 'zreion b_0 = 0.593')
+    plt.scatter([6.8, 8.0],[0.83,0.48])
     plt.legend(fontsize='x-small')
     plt.xlabel('redshift')
     plt.ylabel('ionization fraction')

@@ -21,6 +21,8 @@ from scipy.optimize import curve_fit
 import math as m
 import emcee
 import corner
+import plot_params as pp
+import FFT
 #import pymks
 def average_overk(box_dim,field, nb_bins, logbins = False):
     '''
@@ -546,6 +548,98 @@ def run_MCMC_free_params(x,y,errs, zre_mean, num_iter = 5000, nwalkers = 32, plo
         data_dict['Z_re'].append(zre_mean)
         return data_dict
     return best_params
+
+
+def generate_bias(zre_range, initial_conditions, box_dim, astro_params, flag_options,varying_input,varying_in_value, data_dict ={}, nb_bins = 20, logbins = True, comp_width = True, comp_ion_hist = True, comp_zre_PP = False):
+    '''
+    This function generates the linear bias from the power spectrum from a set of data.
+    :param zre_range: [1D arr] the range of redshift on which to compute the redshfit of reionization field  over
+    :param initial_conditions: [obj] the 21cmFAST initial conditions objects
+    :param astro_params: [obj] the astro input parameter of 21cmFASt
+    :param flag_options: [obj] the flag options input parameter of 21cmFASt
+    :param box_dim: [int] the dimension of the generated fields
+    :param varying_input: [string] the varied 21cmFAST input (or inputs)
+    :param varying_in_value: [float] the varying 21cmFAST input value
+    :param data_dict: [dict] the dictionnary in which to stroe the value of the free parameters
+    :param nb_bins: [int] the number of data points for the power spectrums and the bias
+    :param logbins: [bool] using logbins if true
+    :param comp_width: [bool] return the width of reionization for 21cmFAST if True
+    :param comp_ion_hist: [bool] computes and return 21cmFAST ionization history of True
+    :param comp_zre_PP: [boo] computes and return the power spectrum of the redshift of reionization field
+    :return: b_mz: the computed linear bias (and the ionization history if applicable)
+    '''
+
+    #generate the redshift of reionization field
+    z_re_box = zre.generate_zre_field(zre_range, initial_conditions, box_dim, astro_params, flag_options,
+                                      comP_ionization_rate=False)
+    overzre, zre_mean = zre.over_zre_field(z_re_box)
+
+
+    """This section uses computes the ionization history from the redhsift of reionization field if applicable"""
+    if comp_ion_hist:
+        redshifts = np.linspace(5, 15, 100)
+        if comp_width: cmFast_hist, width_50_21, width_90_21 = pp.reionization_history(redshifts, z_re_box, comp_width=comp_width)
+        else: cmFast_hist = pp.reionization_history(redshifts, z_re_box, comp_width=comp_width)
+    # pp.plot_21zreion_ionhist([reion_hist_zreion,cmFast_hist, reion_hist_zreion_0593])
+    # ionization_rates.append(cmFast_hist)
+
+    nb_bins = int(nb_bins)
+
+    perturbed_field = p21c.perturb_field(redshift=zre_mean, init_boxes=initial_conditions)
+    density_field = perturbed_field.density
+
+
+    kbins_zre = [0.08570025, 7.64144032]
+
+    zre_pp = pp.ps_ion_map(overzre, nb_bins, box_dim, logbins=True)
+    den_pp = pp.ps_ion_map(density_field, nb_bins, box_dim, logbins=True)
+
+    #This section computes the cross correlation for error weighting in the MCMC
+    delta = 0.1
+    Xd, Yd, overd_fft, freqd = FFT.compute_fft(density_field, delta, box_dim)
+    Xd, Yd, overzre_fft, freqd = FFT.compute_fft(overzre, delta, box_dim)
+    cross_matrix = overd_fft.conj() * overzre_fft
+    # cross_matrix =  overzre_fft.conj().T *overd_fft
+    b_mz1 = np.sqrt(np.divide(zre_pp, den_pp))
+
+
+    values_cross, count_cross = average_overk(box_dim, cross_matrix, nb_bins, logbins=True)
+    cross_pp = np.divide(values_cross, count_cross)
+    # k_values = np.linspace(kbins_zre.min(), kbins_zre.max(), len(cross_pp))
+    #
+    if logbins : k_values = np.logspace(np.log10(0.08570025), np.log10(7.64144032), nb_bins + 1)
+    else: k_values = np.linspace(0.08570025, 7.64144032, nb_bins+1)
+
+    cross_cor = np.divide(cross_pp / 8550986.582903482,
+                          np.sqrt(((zre_pp / 8550986.582903482) * (den_pp / 8550986.582903482))))
+
+    """these lines plots the linear bias as a function of the kvalues"""
+
+    '''
+    MCMC analysis and posterior distribution on the b_mz 
+    '''
+
+    # errs = np.ones_like(b_mz)*0.05
+
+    # no b_mz fitting
+    b_mz = b_mz1[1:]
+    kbins_zre = k_values[1:]
+    cross_cor = cross_cor[1:]
+
+    data_dict = run_MCMC_free_params(kbins_zre, b_mz, cross_cor, zre_mean, data_dict=data_dict,
+                                        varying_input=varying_input, varying_in_value=varying_in_value)
+    if comp_width:
+        data_dict['width50'].append(width_50_21)
+        data_dict['width90'].append(width_90_21)
+    if comp_ion_hist and not comp_zre_PP:
+        return b_mz, k_values, data_dict, density_field, cmFast_hist
+    elif comp_ion_hist and comp_zre_PP:
+        return b_mz, k_values, data_dict, density_field, cmFast_hist, zre_pp
+    else:
+        return b_mz, k_values, data_dict, density_field
+
+
+    # print(ionization_rates)
 
 def run_MCMC_free_params_nob(x,y,errs, zre_mean, num_iter = 5000, nwalkers = 32, plot_walkers = False, plot_corners = False, plot_best_fit_sample = False, data_dict= None, varying_input = 'Heff', varying_in_value = 0 ):
     '''
