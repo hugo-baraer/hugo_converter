@@ -35,13 +35,20 @@ import z_reion_comparison as zrcomp
 
 
 
+obj = zrcomp.input_info_field()
+a = np.linspace(0,100,10)
+obj.set_zreion(a,a,1.0,2.0,3.0)
+storing_array = np.empty((10,10), dtype=object)
 
+storing_array[0][:] = obj
+np.save()
+print(obj.zreioninfo.P_k_zre)
 varying_input = 'F_star'
 #varying_input = 'Turnover_Mass'
 data_dict = {'Z_re': [], '{}'.format(varying_input): [], "medians": [], "a16":[], "a50":[], "a84":[], "b16":[], "b50":[], "b84":[], "k16":[], "k50":[], "k84":[], "p16":[], "p50":[], "p84":[], "width50":[],"width90":[]}
 ionization_rates = []
 
-storing_dict = {'21cmFAST':{'P_k_zre':[], 'ion_hist':[]}, 'z_reion_Hugo':{'P_k_zre':[], 'ion_hist':[]}}
+storing_dict = {'21cmFAST':{'P_k_zre':[], 'ion_hist':[], 'P_k_dm':[], 'z_mean':[] ,'b_mz':[]}, 'z_reion_Hugo':{'P_k_zre':[], 'ion_hist':[], 'free_params':[]}}
 
 z_reion_zre= np.load('zreion_for_Hugo.npz')['zreion']
 reion_hist_zreion = pp.reionization_history(np.linspace(5, 15, 100), z_reion_zre, plot = False)

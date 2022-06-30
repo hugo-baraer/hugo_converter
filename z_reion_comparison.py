@@ -69,3 +69,122 @@ def plot_variational_range_James(dict1, james_alpha, james_k_0, varying_name='He
     plt.setp(ax3[1], ylabel=r'$k_0$')
 
     plt.show()
+
+
+def compute_zre_zreion(alpha, b_0, k_0, zre_mean =8.011598437878444 ):
+    '''
+    This function computes the redshfit of reionization field from zreion for my  values given a set of parameters
+    :param alpha: my value
+    :param b_0: ""
+    :param k_0:""
+    :return: the redshfit of reionization field from zreion [3D array]
+    '''
+
+    #z_re = np.load('zre.npy')
+    box_dim = 143  # the desired spatial resolution of the box (corrected for Mpc/h instead of MPC to get the deried 100Mpc/h box size
+    box_len = 143  # int(143) #default value of 300
+    user_params = {"HII_DIM": box_dim, "BOX_LEN": box_len, "DIM": box_len}
+    cosmo_params = p21c.CosmoParams(SIGMA_8=0.8, hlittle=0.7, OMm=0.27, OMb=0.045)
+    initial_conditions = p21c.initial_conditions(user_params=user_params, cosmo_params=cosmo_params)
+    perturbed_field = p21c.perturb_field(redshift=zre_mean, init_boxes=initial_conditions)
+    density_field = perturbed_field.density
+    zre_zreion_me = zr.apply_zreion(density_field, 8.011598437878444, alpha, k_0, 100, b0=b_0)
+    return zre_zreion_me
+
+
+def compute_zre_james_me(alpha, b_0, k_0,james_alpha, james_k_0, james_mean):
+    '''
+    This function computes the redshfit of reionization field from zreion for my and James values given a set of parameters
+    :param alpha: my value
+    :param b_0: ""
+    :param k_0:""
+    :param james_alpha: James free parameter value
+    :param james_k_0: ""
+    :param james_mean: ""
+    :return:
+    '''
+    alpha = 1.42
+    b_0 = 1.00
+    k_0 = 1.16
+    james_alpha = 0.2400839581442675
+    james_k_0 = 0.8343517851779568
+    james_mean = 7.909691892213264
+    #z_re = np.load('zre.npy')
+    box_dim = 143  # the desired spatial resolution of the box (corrected for Mpc/h instead of MPC to get the deried 100Mpc/h box size
+    box_len = 143  # int(143) #default value of 300
+    user_params = {"HII_DIM": box_dim, "BOX_LEN": box_len, "DIM": box_len}
+    cosmo_params = p21c.CosmoParams(SIGMA_8=0.8, hlittle=0.7, OMm=0.27, OMb=0.045)
+    initial_conditions = p21c.initial_conditions(user_params=user_params, cosmo_params=cosmo_params)
+    perturbed_field = p21c.perturb_field(redshift=8.011598437878444, init_boxes=initial_conditions)
+    density_field = perturbed_field.density
+    zre_zreion_me = zr.apply_zreion(density_field, 8.011598437878444, alpha, k_0, 100, b0=b_0)
+    perturbed_field = p21c.perturb_field(redshift=james_mean, init_boxes=initial_conditions)
+    density_field = perturbed_field.density
+    zre_zreion_james = zr.apply_zreion(density_field, james_mean, james_alpha, james_k_0, 100)
+    return zre_zreion_me, zre_zreion_james
+
+def compute_field_Adrian(zre_mean, initial_conditions, astro_params, flag_options, random_seed=12345):
+    '''
+    This functions computes the desired field for Adrian (density field, xH field and brighness temperature field and save them as npz files)
+    :param zre_mean: [float] the mean redshfit of reionization computed at
+    :param initial_conditions: [obj] the 21cmFAST initial conditions objects
+    :param astro_params: [obj] the astro input parameter of 21cmFASt
+    :param flag_options: [obj] the flag options input parameter of 21cmFASt
+    :param random_seed: [int] the random seed at wich to compute the field (default is 12345)
+    :return:
+    '''
+    perturbed_field = p21c.perturb_field(redshift=zre_mean, init_boxes=initial_conditions)
+    density_field = perturbed_field.density
+    #print(density_field == p21c.run_coeval(redshift = zre_mean, user_params = user_params,cosmo_params = cosmo_params, astro_params = astro_params).density)
+    ionized_box = p21c.ionize_box(redshift=zre_mean, init_boxes=initial_conditions, astro_params=astro_params,
+                    flag_options=flag_options, write=False)
+    xh = ionized_box.xH_box
+    brightness_temp = p21c.brightness_temperature(ionized_box=ionized_box, perturbed_field=perturbed_field)
+
+    np.save(f'method_{p21c.global_params.FIND_BUBBLE_ALGORITHM}_xH_z_{zre_mean}_random_seed_{random_seed}', xh)
+    np.save(f'method_{p21c.global_params.FIND_BUBBLE_ALGORITHM}_density_field_z_{zre_mean}_random_seed_{random_seed}', density_field)
+    np.save(f'method_{p21c.global_params.FIND_BUBBLE_ALGORITHM}_brightness_temp_z_{zre_mean}_random_seed_{random_seed}', brightness_temp)
+
+
+
+class input_info_field:
+  def __init__(self):
+    pass
+
+  def set_zreion(self, P_k_zre, ion_hist, alpha, b_0, k_0):
+    self.zreioninfo = self.zreioninfo(P_k_zre, ion_hist, alpha, b_0, k_0)
+
+  def set_21cmFAST(self, P_k_zre, ion_hist, P_k_dm, z_mean, b_mz):
+    self.zreioninfo = self.zreioninfo(P_k_zre, ion_hist, P_k_dm, z_mean, b_mz)
+
+    class cmFASTinfo:
+        def __init__(self, P_k_zre, ion_hist, P_k_dm, z_mean, b_mz):
+            '''
+            This class stores the information of the density and redshfit of reionization fields for the variational range study for 21cmFAST
+            :param P_k_zre: [arr] 1D the power_spectrum of the redshift of reionization field
+            :param ion_hist: [arr] 1D the ionization history
+            :param P_k_dm: [arr] 1D the power_spectrum of the density  field
+            :param z_mean: [float] the mean redshift of reionioization
+            :param b_mz: [arr] 1D the linear bias factor
+            '''
+            self.P_k_zre = P_k_zre
+            self.ion_hist = ion_hist
+            self.P_k_dm = P_k_dm
+            self.z_mean = z_mean
+            self.b_mz = b_mz
+
+  class zreioninfo:
+        def __init__(self, P_k_zre, ion_hist, alpha, b_0, k_0):
+            '''
+            This class stores the information of the density and redshfit of reionization fields for the variational range study for
+            :param P_k_zre: [arr] 1D the power_spectrum of the redshift of reionization field
+            :param ion_hist: [arr] 1D the ionization history
+            :param alpha: [float] the value the alpha parameter
+            :param b_0: [float] the value of the b_0 parameter
+            :param k_0: [float] the value of the k_0 parameter
+            '''
+            self.P_k_zre = P_k_zre
+            self.ion_hist = ion_hist
+            self.alpha= alpha
+            self.b_0 = b_0
+            self.k_0 = k_0
