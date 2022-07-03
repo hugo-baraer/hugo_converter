@@ -141,9 +141,9 @@ def compute_field_Adrian(zre_mean, initial_conditions, astro_params, flag_option
     xh = ionized_box.xH_box
     brightness_temp = p21c.brightness_temperature(ionized_box=ionized_box, perturbed_field=perturbed_field)
 
-    np.save(f'method_{p21c.global_params.FIND_BUBBLE_ALGORITHM}_xH_z_{zre_mean}_random_seed_{random_seed}', xh)
+    np.save(f'method_{p21c.global_params.FIND_BUBBLE_ALGORITHM}_xH_z_{zre_mean}_random_seed_{random_seed}_dim200', xh)
     np.save(f'method_{p21c.global_params.FIND_BUBBLE_ALGORITHM}_density_field_z_{zre_mean}_random_seed_{random_seed}', density_field)
-    np.save(f'method_{p21c.global_params.FIND_BUBBLE_ALGORITHM}_brightness_temp_z_{zre_mean}_random_seed_{random_seed}', brightness_temp)
+    np.save(f'method_{p21c.global_params.FIND_BUBBLE_ALGORITHM}_brightness_temp_z_{zre_mean}_random_seed_{random_seed}', brightness_temp.brightness_temp)
 
 
 
@@ -155,9 +155,9 @@ class input_info_field:
     self.zreioninfo = self.zreioninfo(P_k_zre, ion_hist, alpha, b_0, k_0)
 
   def set_21cmFAST(self, P_k_zre, ion_hist, P_k_dm, z_mean, b_mz):
-    self.zreioninfo = self.zreioninfo(P_k_zre, ion_hist, P_k_dm, z_mean, b_mz)
+    self.cmFASTinfo = self.cmFASTinfo(P_k_zre, ion_hist, P_k_dm, z_mean, b_mz)
 
-    class cmFASTinfo:
+  class cmFASTinfo:
         def __init__(self, P_k_zre, ion_hist, P_k_dm, z_mean, b_mz):
             '''
             This class stores the information of the density and redshfit of reionization fields for the variational range study for 21cmFAST
@@ -188,3 +188,40 @@ class input_info_field:
             self.alpha= alpha
             self.b_0 = b_0
             self.k_0 = k_0
+
+def analyze_float_value(obj,model,observable, Xrange, Yrange, field_names = ['Tvir','Heff']):
+    '''
+    This function look at the 2D variational range of a given parameter given an 2D array filled with objects
+    :param obj: [arr] 2D, the object array filled with info of 21cmFAST and zreion
+    :param model: [string] the name of the analyzed model (21cmFAST or zreion)
+    :param observable: [string] the name of the analyzed field (like z_mean or alpha parameter)
+    :param Xrange: [arr] the 1D array of the Xrange
+    :param Yrange: [arr] the 1D array of the Yrange
+    :param field names: [list] the 2 element list of field names (default Heff and Tvir)
+    :return: a 2D contour plot of the given field
+    '''
+    X, Y = np.meshgrid(Xrange, Yrange)
+    obj_field = np.ones((len(Xrange),len(Yrange)))
+    for i in range(len(Xrange)):
+        for j in range(len(Yrange)):
+            if observable == 'ion_hist': obj_field[i][j] = pp.compute_tau(getattr(getattr(obj[i][j], f'{model}info'), observable), redshifts=np.linspace(5,15,len(getattr(getattr(obj[i][j], f'{model}info'), observable))))
+            else : obj_field[i][j] = getattr(getattr(obj[i][j], f'{model}info'), observable)
+    fig, ax = plt.subplots()
+    plt.contourf(X,Y, obj_field)
+    plt.colorbar()
+    ax.set_xlabel(field_names[0])
+    ax.set_ylabel(field_names[1])
+    plt.title(f'{observable} variational range for {model}')
+    plt.show()
+
+def plot_multiple_ion_hist(obj,Xrange, Yrange, field_names = ['Heff','Tvir']):
+    '''
+    This function plots several ionization_histories
+    :param obj: [arr] 2D, the object array filled with info of 21cmFAST and zreion
+    :param field_name: [string] the name of the field to analyze
+    :param Xrange: [arr] the 1D array of the Xrange
+    :param Yrange: [arr] the 1D array of the Yrange
+    :param field names: [list] the 2 element list of field names (default Heff and Tvir)
+    :return: a 2D contour plot of the given field
+    '''
+    fig, ax = plt.subplots((10,10), )

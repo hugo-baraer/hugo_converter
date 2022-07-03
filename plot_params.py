@@ -18,6 +18,7 @@ from statistical_analysis import *
 from FFT import *
 from z_re_field import *
 import statistical_analysis as sa
+import scipy
 
 #{'Z_re': [8.01], 'Heff': [30.0], 'medians': [array([2.08873889, 0.97190616, 2.00851018, 0.02540628])], 'a16': [array([0.99442916])], 'a50': [array([1.41932357])], 'a84': [array([2.16887687])], 'b16': [array([0.97635207])], 'b50': [array([0.99655587])], 'b84': [array([1.03807445])], 'k16': [array([0.66037472])], 'k50': [array([1.15658818])], 'k84': [array([2.09772472])], 'p16': [array([0.02413837])], 'p50': [array([0.02966204])], 'p84': [array([0.03743525])]}
 
@@ -33,7 +34,7 @@ def reionization_history(redshifts, field,  resolution = 143, plot = False, comp
     ionization_rate = []
     dummy = 0
     if comp_width:
-        for i in tqdm(redshifts, 'computing the reionization history'):
+        for i in tqdm(redshifts, 'computing the reionization history',  position=0, leave=True):
             new_box = np.zeros((resolution, resolution, resolution))
             new_box[field <= i] = 1
             ionization_rate.append((new_box == 0).sum() / (resolution) ** 3)
@@ -98,6 +99,17 @@ def ionization_map_gen(redshift,resolution,field, plot = False):
         ax.set_ylabel(r'$[\frac{Mpc}{\hbar}]$')
         plt.show()
     return new_box1
+
+
+def compute_tau(ion_hist,redshifts= np.linspace(5,15,60)):
+    '''
+    This function computes the TAU parameter from the ionization history by performing a simple simpson intergral
+    :param ion_hist: the ionization history to comute the integral over
+    :param redshifts: [arr] 1D the redshift range [default is 5-15]
+    :return: the TAU value
+    '''
+
+    return scipy.integrate.simps(ion_hist, x = redshifts)
 
 
 def ionization_map_diff(redshift,resolution,field1,field2, plot = True):

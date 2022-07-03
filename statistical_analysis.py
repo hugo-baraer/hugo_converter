@@ -54,7 +54,7 @@ def average_overk(box_dim,field, nb_bins, logbins = False):
     values = np.zeros(len(radii))
     count = np.zeros(len(radii))
 
-    for i in tqdm(range(box_dim), 'transfering fields into k 1D array'):
+    for i in tqdm(range(box_dim), 'Computing the Power Spectrum', position=0, leave=True):
         for j in range(box_dim):
             for z in range(box_dim):
                 k_radius = np.sqrt((i - cx) ** 2 + (j - cx) ** 2 + (z - cx) ** 2)
@@ -488,7 +488,7 @@ def run_MCMC_free_params(x,y,errs, zre_mean, num_iter = 5000, nwalkers = 32, plo
 
 
     sampler = emcee.EnsembleSampler(nwalkers, ndim, log_post_bmz_b_errs, args=(x, y, errs))
-    sampler.run_mcmc(initial_pos, num_iter, progress=True);
+    sampler.run_mcmc(initial_pos, num_iter, progress=True)
     samples = sampler.get_chain()
 
     flat_samples = sampler.get_chain(discard=100, thin=15, flat=True)
@@ -634,7 +634,7 @@ def generate_bias(zre_range, initial_conditions, box_dim, astro_params, flag_opt
     if comp_ion_hist and not comp_zre_PP:
         return b_mz, k_values, data_dict, density_field, cmFast_hist
     elif comp_ion_hist and comp_zre_PP:
-        return b_mz, k_values, data_dict, density_field, cmFast_hist, zre_pp
+        return b_mz, k_values, data_dict, density_field, cmFast_hist, zre_pp, den_pp
     else:
         return b_mz, k_values, data_dict, density_field
 
@@ -668,7 +668,7 @@ def run_MCMC_free_params_nob(x,y,errs, zre_mean, num_iter = 5000, nwalkers = 32,
 
 
     sampler = emcee.EnsembleSampler(nwalkers, ndim, log_post_bmz_errs, args=(x, y, errs))
-    sampler.run_mcmc(initial_pos, num_iter, progress=True);
+    sampler.run_mcmc(initial_pos, num_iter)#, progress=True
     samples = sampler.get_chain()
 
     flat_samples = sampler.get_chain(discard=100, thin=15, flat=True)
