@@ -577,7 +577,7 @@ def generate_bias(zre_range, initial_conditions, box_dim, astro_params, flag_opt
 
     """This section uses computes the ionization history from the redhsift of reionization field if applicable"""
     if comp_ion_hist:
-        redshifts = np.linspace(5, 15, 100)
+        redshifts = zre_range
         if comp_width: cmFast_hist, width_50_21, width_90_21 = pp.reionization_history(redshifts, z_re_box, comp_width=comp_width)
         else: cmFast_hist = pp.reionization_history(redshifts, z_re_box, comp_width=comp_width)
     # pp.plot_21zreion_ionhist([reion_hist_zreion,cmFast_hist, reion_hist_zreion_0593])

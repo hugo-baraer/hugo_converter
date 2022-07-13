@@ -52,7 +52,7 @@ def generate_quick_zre_field(max_z, min_z, z_shift, initial_conditions):
     return
 
 
-def generate_zre_field(zre_range,initial_conditions,box_dim, astro_params, flag_options, comP_ionization_rate = True):
+def generate_zre_field(zre_range,initial_conditions,box_dim, astro_params, flag_options, comP_ionization_rate = False, comp_brightness_temp = False):
     """
     This function generate a z_re field with coeval cubes at different reionization redshift.
     :param zre_range: the desired redhsift to compute the redshift of reionization field on
@@ -71,10 +71,17 @@ def generate_zre_field(zre_range,initial_conditions,box_dim, astro_params, flag_
     #creating a new cube where reionization vener occured (-1)
     final_cube = np.full((box_dim, box_dim, box_dim), -1, dtype = float)
     #if comP_ionization_rate : ionization_rate = []
-    for redshift in tqdm(zre_range, 'computing the redshift of reionization'):
+    if comp_brightness_temp:
+        brightness_temp = []
+        redshifts4bright = []
+    for redshift in tqdm(zre_range, 'computing the redshift of reionization',position=0, leave=True):
         #print(redshift)
         new_cube = p21c.ionize_box(redshift=redshift, init_boxes = initial_conditions, astro_params = astro_params, flag_options = flag_options, write=False).z_re_box
         #if comP_ionization_rate: ionization_rate.append((new_cube > -1).sum()/ box_dim**3)
+        if comp_brightness_temp :
+            perturbed_field = p21c.perturb_field(redshift=redshift, init_boxes=initial_conditions)
+            brightness_temp = p21c.brightness_temperature(ionized_box=new_cube, perturbed_field=perturbed_field)
+            brightness_temp.append()
         final_cube[new_cube > -1] = redshift
     if comP_ionization_rate:
         return final_cube

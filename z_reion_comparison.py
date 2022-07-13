@@ -141,7 +141,7 @@ def compute_field_Adrian(zre_mean, initial_conditions, astro_params, flag_option
     xh = ionized_box.xH_box
     brightness_temp = p21c.brightness_temperature(ionized_box=ionized_box, perturbed_field=perturbed_field)
 
-    np.save(f'method_{p21c.global_params.FIND_BUBBLE_ALGORITHM}_xH_z_{zre_mean}_random_seed_{random_seed}_dim200', xh)
+    np.save(f'method_{p21c.global_params.FIND_BUBBLE_ALGORITHM}_xH_z_{zre_mean}_random_seed_{random_seed}', xh)
     np.save(f'method_{p21c.global_params.FIND_BUBBLE_ALGORITHM}_density_field_z_{zre_mean}_random_seed_{random_seed}', density_field)
     np.save(f'method_{p21c.global_params.FIND_BUBBLE_ALGORITHM}_brightness_temp_z_{zre_mean}_random_seed_{random_seed}', brightness_temp.brightness_temp)
 
@@ -172,7 +172,9 @@ class input_info_field:
             self.P_k_dm = P_k_dm
             self.z_mean = z_mean
             self.b_mz = b_mz
-
+        def add_brightness_temp(self, brightnesstemp, z_for_bt):
+            self.z_for_bt = z_for_bt
+            self.brightnesstemp = brightnesstemp
   class zreioninfo:
         def __init__(self, P_k_zre, ion_hist, alpha, b_0, k_0):
             '''
@@ -188,6 +190,9 @@ class input_info_field:
             self.alpha= alpha
             self.b_0 = b_0
             self.k_0 = k_0
+        def add_brightness_temp(self, brightnesstemp, z_for_bt):
+            self.z_for_bt = z_for_bt
+            self.brightnesstemp = brightnesstemp
 
 def analyze_float_value(obj,model,observable, Xrange, Yrange, field_names = ['Tvir','Heff']):
     '''
@@ -214,14 +219,116 @@ def analyze_float_value(obj,model,observable, Xrange, Yrange, field_names = ['Tv
     plt.title(f'{observable} variational range for {model}')
     plt.show()
 
-def plot_multiple_ion_hist(obj,Xrange, Yrange, field_names = ['Heff','Tvir']):
+def plot_variational_bias(obj,model,observable, Xrange, Yrange, xaxis=np.logspace(np.log10(0.08570025), np.log10(7.64144032), 20), add_zreion = False,  field_names = ['Tvir','Heff'], log_scale = False):
     '''
-    This function plots several ionization_histories
+    This function plots the power spectrum over the 2D variational range of input parameters
     :param obj: [arr] 2D, the object array filled with info of 21cmFAST and zreion
     :param field_name: [string] the name of the field to analyze
     :param Xrange: [arr] the 1D array of the Xrange
     :param Yrange: [arr] the 1D array of the Yrange
+    :param xaxis: [arr] the x axis array (default is k range for 143³ box)
+    :param add_zreion: [bool] add the zreion bias if True
+    :param log_scale: [bool] return log scale if True
+    :param field names: [list] the 2 element list of field names (default Heff and Tvir)
     :param field names: [list] the 2 element list of field names (default Heff and Tvir)
     :return: a 2D contour plot of the given field
     '''
-    fig, ax = plt.subplots((10,10), )
+
+    fig, ax = plt.subplots(10,10, sharex = True, sharey = True)
+    for i in range(len(Xrange)):
+        for j in range(len(Yrange)):
+            ax[i,j].plot(xaxis, getattr(getattr(obj[i][j], f'{model}info'), observable))
+            if add_zreion:
+                    linbias = sa.lin_bias(xaxis, getattr(getattr(obj[i][j], f'zreioninfo'), 'alpha'), getattr(getattr(obj[i][j], f'zreioninfo'), 'b_0'), getattr(getattr(obj[i][j], f'zreioninfo'), 'k_0'))
+                    ax[i,j].plot(xaxis,linbias)
+
+    #ax.set_xlabel(field_names[0])
+    #ax.set_ylabel(field_names[1])
+    if log_scale: plt.loglog()
+    fig.text(0.5, 0.04, field_names[0], ha='center')
+    fig.text(0.04, 0.5, field_names[1], va='center', rotation='vertical')
+    plt.show()
+
+
+def plot_variational_PS(obj,model,observable, Xrange, Yrange, xaxis=np.logspace(np.log10(0.08570025), np.log10(7.64144032), 20), add_zreion = False, delta2 = False, field_names = ['Tvir','Heff'], log_scale = False):
+    '''
+    This function plots the power spectrum over the 2D variational range of input parameters. If you want to plot the 2 mdoels togheter, use cmFASt as model with the option add zreion
+    :param obj: [arr] 2D, the object array filled with info of 21cmFAST and zreion
+    :param field_name: [string] the name of the field to analyze
+    :param Xrange: [arr] the 1D array of the Xrange
+    :param Yrange: [arr] the 1D array of the Yrange
+    :param xaxis: [arr] the x axis array (default is k range for 143³ box)
+    :param add_zreion: [bool] add the zreion bias if True
+    :param log_scale: [bool] return log scale if True
+    :param delta2: [bool] compute the delta square instead of regular powe spectrum if True (P(k)*k³ / (2*pi²))
+    :param field names: [list] the 2 element list of field names (default Heff and Tvir)
+    :return: a 2D contour plot of the given field
+    '''
+
+    fig, ax = plt.subplots(10,10, sharex = True, sharey = True)
+    for i in range(len(Xrange)):
+        for j in range(len(Yrange)):
+            cmFastPP = getattr(getattr(obj[i][j], f'{model}info'), observable)[2:]
+            cmFastPP /= 143**3 #temporary normalization constant (V³)
+            if add_zreion:
+                    zreion_PP = getattr(getattr(obj[i][j], f'zreioninfo'), observable)[1:]
+                    zreion_PP /= 143**3
+            if delta2:
+                cmFastPP = cmFastPP * (xaxis**3) / (np.pi**2 * 2)
+                if add_zreion: zreion_PP = zreion_PP * (xaxis**3) / (np.pi**2 * 2)
+            ax[i, j].plot(xaxis, cmFastPP, label = '21cmFAST')
+            if add_zreion: ax[i,j].plot(xaxis, zreion_PP, label = 'z-reion')
+
+    #ax.set_xlabel(field_names[0])
+    #ax.set_ylabel(field_names[1])
+    if log_scale: plt.loglog()
+    lines_labels = [ax.get_legend_handles_labels() for ax in fig.axes]
+    lines, labels = [sum(lol, []) for lol in zip(*lines_labels)]
+    fig.legend(lines[:2], labels[:2])
+
+    fig.text(0.5, 0.04, field_names[0], ha='center')
+    fig.text(0.04, 0.5, field_names[1], va='center', rotation='vertical')
+    plt.show()
+
+
+def plot_variational_ion_hist(obj,model,observable, Xrange, Yrange, xaxis='redshifts', add_zreion = False, plot_diff = False,  field_names = ['Tvir','Heff'], log_scale = False):
+    '''
+    This function plots the power spectrum over the 2D variational range of input parameters.
+    :param obj: [arr] 2D, the object array filled with info of 21cmFAST and zreion
+    :param field_name: [string] the name of the field to analyze
+    :param Xrange: [arr] the 1D array of the Xrange
+    :param Yrange: [arr] the 1D array of the Yrange
+    :param xaxis: [arr] the x axis array (default is k range for 143³ box)
+    :param add_zreion: [bool] add the zreion bias if True
+    :param log_scale: [bool] return log scale if True
+    :param plot_diff: [bool] plot the differences in the ioniozation history from the 2 models instead of the 2 individuals ioniozation histories.
+    :param field names: [list] the 2 element list of field names (default Heff and Tvir)
+    :return: a 2D contour plot of the given field
+    '''
+
+    fig, ax = plt.subplots(10,10, sharex = True, sharey = True)
+    for i in range(len(Xrange)):
+        for j in range(len(Yrange)):
+            #if xaxis == 'redshifts': xaxis = np.linspace(5, 15,len(getattr(getattr(obj[i][j], f'{model}info'), observable)))
+            if xaxis == 'redshifts': xaxis = np.linspace(5, 15, 60, endpoint=True)
+            if plot_diff:
+                ax[i,j].plot(xaxis, np.array(getattr(getattr(obj[i][j], f'{model}info'), observable)) - np.array(getattr(getattr(obj[i][j], f'zreioninfo'), observable)))
+            else:
+                ax[i,j].plot(xaxis, getattr(getattr(obj[i][j], f'{model}info'), observable), label = f'{model}')
+                if add_zreion:
+                        ax[i,j].plot(xaxis, getattr(getattr(obj[i][j], f'zreioninfo'), observable), label = 'z-reion')
+
+
+    #ax.set_xlabel(field_names[0])
+    #ax.set_ylabel(field_names[1])
+    lines_labels = [ax.get_legend_handles_labels() for ax in fig.axes]
+    lines, labels = [sum(lol, []) for lol in zip(*lines_labels)]
+    fig.legend(lines[:2], labels[:2])
+
+    if log_scale: plt.loglog()
+    fig.text(0.5, 0.04, field_names[0], ha='center')
+    fig.text(0.04, 0.5, field_names[1], va='center', rotation='vertical')
+    plt.show()
+
+
+""" The following functions comes from a code designed by P.hD candidate Lisa McBride and Prof. Paul Laplante, and credits """
