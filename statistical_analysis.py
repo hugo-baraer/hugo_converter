@@ -570,8 +570,8 @@ def generate_bias(zre_range, initial_conditions, box_dim, astro_params, flag_opt
     '''
 
     #generate the redshift of reionization field
-    z_re_box = zre.generate_zre_field(zre_range, initial_conditions, box_dim, astro_params, flag_options,
-                                      comP_ionization_rate=False)
+    z_re_box, b_temp_ps, z_4_bt = zre.generate_zre_field(zre_range, initial_conditions, box_dim, astro_params, flag_options,
+                                      comP_ionization_rate=False, comp_brightness_temp=True)
     overzre, zre_mean = zre.over_zre_field(z_re_box)
 
 
@@ -634,7 +634,7 @@ def generate_bias(zre_range, initial_conditions, box_dim, astro_params, flag_opt
     if comp_ion_hist and not comp_zre_PP:
         return b_mz, k_values, data_dict, density_field, cmFast_hist
     elif comp_ion_hist and comp_zre_PP:
-        return b_mz, k_values, data_dict, density_field, cmFast_hist, zre_pp, den_pp
+        return b_mz, k_values, data_dict, density_field, cmFast_hist, zre_pp, den_pp, b_temp_ps, z_4_bt
     else:
         return b_mz, k_values, data_dict, density_field
 

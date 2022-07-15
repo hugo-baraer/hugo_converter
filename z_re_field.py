@@ -15,6 +15,7 @@ from tqdm import tqdm
 from py21cmfast import plotting
 from scipy.stats import multivariate_normal
 import matplotlib.pyplot as plt
+import plot_params as pp
 
 def generate_quick_zre_field(max_z, min_z, z_shift, initial_conditions):
     """
@@ -52,7 +53,7 @@ def generate_quick_zre_field(max_z, min_z, z_shift, initial_conditions):
     return
 
 
-def generate_zre_field(zre_range,initial_conditions,box_dim, astro_params, flag_options, comP_ionization_rate = False, comp_brightness_temp = False):
+def generate_zre_field(zre_range,initial_conditions,box_dim, astro_params, flag_options, comP_ionization_rate = False, comp_brightness_temp = False, i = 0):
     """
     This function generate a z_re field with coeval cubes at different reionization redshift.
     :param zre_range: the desired redhsift to compute the redshift of reionization field on
@@ -68,23 +69,28 @@ def generate_zre_field(zre_range,initial_conditions,box_dim, astro_params, flag_
     :return: a 3D array of the reionization field
     :rtype:
     """
+
     #creating a new cube where reionization vener occured (-1)
     final_cube = np.full((box_dim, box_dim, box_dim), -1, dtype = float)
     #if comP_ionization_rate : ionization_rate = []
     if comp_brightness_temp:
-        brightness_temp = []
+        b_temp_ps = []
         redshifts4bright = []
     for redshift in tqdm(zre_range, 'computing the redshift of reionization',position=0, leave=True):
         #print(redshift)
-        new_cube = p21c.ionize_box(redshift=redshift, init_boxes = initial_conditions, astro_params = astro_params, flag_options = flag_options, write=False).z_re_box
+        i += 1
+        ionize_box = p21c.ionize_box(redshift=redshift, init_boxes = initial_conditions, astro_params = astro_params, flag_options = flag_options, write=False)
+        new_cube = ionize_box.z_re_box
         #if comP_ionization_rate: ionization_rate.append((new_cube > -1).sum()/ box_dim**3)
-        if comp_brightness_temp :
-            perturbed_field = p21c.perturb_field(redshift=redshift, init_boxes=initial_conditions)
-            brightness_temp = p21c.brightness_temperature(ionized_box=new_cube, perturbed_field=perturbed_field)
-            brightness_temp.append()
+        if comp_brightness_temp and i%2 == 0 :
+            perturbed_field = p21c.perturb_field(redshift=redshift, init_boxes=initial_conditions, write=False)
+            brightness_temp = p21c.brightness_temperature(ionized_box=ionize_box, perturbed_field=perturbed_field, write=False).brightness_temp
+            brightness_temp_ps = pp.ps_ion_map(brightness_temp,20,143,logbins=True)
+            b_temp_ps.append(brightness_temp_ps)
+            redshifts4bright.append(redshift)
         final_cube[new_cube > -1] = redshift
-    if comP_ionization_rate:
-        return final_cube
+    if comp_brightness_temp:
+        return final_cube, b_temp_ps, redshifts4bright
     else:
         return final_cube
 
@@ -130,7 +136,7 @@ def over_zre_field(zre_field):
     zre_mean = np.mean(zre_field.flatten())
     return over_zre_equation(zre_field,zre_mean), zre_mean
 
-def plot_zre_slice(field,  resolution = 143):
+def plot_zre_slice(field,  resolution = 143, size = 143):
     '''
     This modules plot a slice of the redshift of reionization for a given redshift of reionization 3D field. I also converts Mpc/h to Mpc units while plotting
     :param field: (3D array) redshift of reionization field
@@ -138,9 +144,9 @@ def plot_zre_slice(field,  resolution = 143):
     :return:
     '''
     if resolution % 2:
-        position_vec = np.linspace(-int((resolution*(100/143))//2)-1, int(resolution*(100/143)//2), resolution)
+        position_vec = np.linspace(-int((size*(100/143))//2)-1, int(size*(100/143)//2), resolution)
     else:
-        position_vec = np.linspace(-int((resolution*(100/143))//2), int(resolution*(100/143)//2), resolution)
+        position_vec = np.linspace(-int((size*(100/143))//2), int(size*(100/143)//2), resolution)
     X, Y = np.meshgrid(position_vec, position_vec)
     fig, ax = plt.subplots()
     plt.contourf(X,Y,field[int(resolution//2)])

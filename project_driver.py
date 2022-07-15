@@ -67,39 +67,62 @@ print(pp.compute_tau(reion_hist_zreion, redshifts=np.linspace(5,15,100)))
 
 bmzs = []
 
-Heff_range = np.linspace(10, 60,10)
-T_vir_range = np.linspace(3.5,5.5,10)
-
+Heff_range = np.linspace(15, 45,10, endpoint=True)
+T_vir_range = np.linspace(4.0,4.9,10, endpoint=True)
+print(Heff_range, T_vir_range)
 
 Heff_ver, T_vir_hor = np.meshgrid(Heff_range, T_vir_range)
 
 
 
-stoo = np.load('Heff10to60_Tvir35to55_varstudy.npy', allow_pickle=True)
+stoo = np.load('Heff15to45_Tvir40to49_varstudy.npy', allow_pickle=True)
 #print(len(stoo[0][0].cmFASTinfo.ion_hist))
-#zrcomp.analyze_float_value(stoo, 'cmFAST' , 'ion_hist', T_vir_range, Heff_range)
+print( len(stoo[0][0].cmFASTinfo.z_for_bt))
+
+zrcomp.analyze_float_value(stoo, 'cmFAST' , 'ion_hist', T_vir_range, Heff_range)
 # print(len(stoo[0][0].cmFASTinfo.P_k_zre))
 # print(len(stoo[0][0].zreioninfo.P_k_zre))
 k_values = np.logspace(np.log10(0.08570025), np.log10(7.64144032), 20)
 
-#zrcomp.analyze_float_value(stoo, 'zreion' , 'alpha', T_vir_range, Heff_range)
-#zrcomp.plot_multiple_ion_hist(stoo,'cmFAST','b_mz', T_vir_range, Heff_range,xaxis = k_values, add_zreion=True, log_scale = True )
-#zrcomp.plot_multiple_ion_hist(stoo,'zreion','P_k_zre', T_vir_range, Heff_range)
+
+#plot a bunch of stuff
+# zrcomp.analyze_float_value(stoo, 'zreion' , 'alpha', T_vir_range, Heff_range)
+# zrcomp.analyze_float_value(stoo, 'zreion' , 'b_0', T_vir_range, Heff_range)
+# zrcomp.analyze_float_value(stoo, 'zreion' , 'k_0', T_vir_range, Heff_range)
+# zrcomp.plot_variational_bias(stoo,'cmFAST','b_mz', T_vir_range, Heff_range,xaxis = k_values, add_zreion=True, log_scale = True )
+# #zrcomp.plot_multiple_ion_hist(stoo,'zreion','P_k_zre', T_vir_range, Heff_range)
 # zrcomp.plot_variational_PS(stoo,'cmFAST','P_k_zre', T_vir_range, Heff_range,xaxis = k_values[1:], add_zreion=True, delta2= True)
-# zrcomp.plot_variational_ion_hist(stoo, 'cmFAST', 'ion_hist', T_vir_range, Heff_range, add_zreion = True, plot_diff=True)
+# zrcomp.plot_variational_ion_hist(stoo, 'cmFAST', 'ion_hist', T_vir_range, Heff_range, add_zreion = True, plot_diff=True, xaxis=np.linspace(5,18,60))
+# zrcomp.plot_variational_ion_hist(stoo, 'cmFAST', 'ion_hist', T_vir_range, Heff_range, add_zreion = True, xaxis=np.linspace(5,18,60))
+
+#add z-reion_bt
+redshfit_4_bt = stoo[0][0].cmFASTinfo.z_for_bt
+user_params = {"HII_DIM": 143, "BOX_LEN": 143, "DIM":143}
+cosmo_params = p21c.CosmoParams(SIGMA_8=0.8, hlittle=0.7, OMm= 0.27, OMb= 0.045)
+initial_conditions = p21c.initial_conditions(
+        user_params = user_params,
+        cosmo_params = cosmo_params
+        )
+zrcomp.add_zreion_bt(stoo,redshfit_4_bt,Heff_range,T_vir_range,initial_conditions)
+
+raise ValueError
+
 
 zre_mean = [6.8,7.0,7.2,7.4,7.6,7.8,8.0]
 random_seed = [12345,54321,23451,34512,45123]
+
 #random_seed = random_seed[0]
 
 for count1, Heff in enumerate(tqdm(random_seed)):
     for count2, Tvir in enumerate(tqdm(zre_mean)):
         #adjustable parameters to look out before running the driver
         #change the dimension of the box and see effect9
-        #
-        b_t = np.load(f'./method_1_brightness_temp_z_{Tvir}_random_seed_{Heff}.npy')
-        density = np.load(f'./method_1_density_field_z_{Tvir}_random_seed_{Heff}.npy')
-        xH = np.load(f'./method_1_xH_z_{Tvir}_random_seed_{Heff}.npy')
+        density_small = np.load(f'./fields_final/method_2_density_field_z_{Tvir}_random_seed_{Heff}.npy')
+        xH_small = np.load(f'./fields_final/method_2_xH_z_{Tvir}_random_seed_{Heff}.npy')
+        #b_t = np.load(f'./method_2_brightness_temp_z_{Tvir}_random_seed_{Heff}_dim200_len300Mpc.npy')
+        # density = np.load(f'./fields_final/method_1_density_field_z_{Tvir}_random_seed_{Heff}.npy')
+        xH = np.load(f'./fields_300MPC_21cmFAST_final/method_2_xH_z_{Tvir}_random_seed_{Heff}_dim200_len300Mpc.npy')
+        density = np.load(f'./fields_300MPC_21cmFAST_final/method_2_density_field_z_{Tvir}_random_seed_{Heff}_dim200_len300Mpc.npy')
         #xH = np.load(f'./fields_for_Adrian/method_1_xH_z_{Tvir}_random_seed_{Heff}.npy')
         #xH = np.load(f'./corrected_field/method_1_xH_z_{Tvir}_random_seed_{Heff}_dim200.npy')
         # brightness_temp = p21c.brightness_temperature(ionized_box=ionized_box, perturbed_field=perturbed_field)
@@ -109,18 +132,17 @@ for count1, Heff in enumerate(tqdm(random_seed)):
         box_dim = 143 #the desired spatial resolution of the box (corrected for Mpc/h instead of MPC to get the deried 100Mpc/h box size
         radius_thick = 2. #the radii thickness (will affect the number of bins and therefore points)
         box_len = 143 #int(143) #default value of 300
-        user_params = {"HII_DIM": box_dim, "BOX_LEN": box_len, "DIM":box_len}
+        user_params = {"HII_DIM": box_dim, "BOX_LEN": box_len, "DIM":box_dim}
         cosmo_params = p21c.CosmoParams(SIGMA_8=0.8, hlittle=0.7, OMm= 0.27, OMb= 0.045)
-        astro_params = p21c.AstroParams({ "NU_X_THRESH":500, "HII_EFF_FACTOR": 17, "ION_Tvir_MIN":4.69897}) #"HII_EFF_FACTOR":Heff = 44 #for adrian optimization, "M_TURN" : Heff "M_TURN":10, "F_STAR10": Heff, "F_ESC10":-0.08
+        astro_params = p21c.AstroParams({ "NU_X_THRESH":500, "HII_EFF_FACTOR": 44, "ION_Tvir_MIN":4.69897}) #"HII_EFF_FACTOR":Heff = 44 #for adrian optimization, "M_TURN" : Heff "M_TURN":10, "F_STAR10": Heff, "F_ESC10":-0.08
         flag_options = p21c.FlagOptions({"USE_MASS_DEPENDENT_ZETA": False})
         #add astro_params
         compare_with_james = False
-        p21c.global_params.FIND_BUBBLE_ALGORITHM = 1
+        #p21c.global_params.FIND_BUBBLE_ALGORITHM = 1
         initial_conditions = p21c.initial_conditions(
         user_params = user_params,
-        cosmo_params = cosmo_params,
-        random_seed = Heff
-        )
+        cosmo_params = cosmo_params
+        ) #random_seed = Heff
         dummy_count = 0
 
         #aaa = p21c.ionize_box(redshift=Tvir, init_boxes = initial_conditions, astro_params = astro_params, flag_options = flag_options, write=False)
@@ -128,14 +150,15 @@ for count1, Heff in enumerate(tqdm(random_seed)):
         #print(aaa.xH_box)
         #print(aaa.z_re_box)
         #print(aaa.xH_box + aaa.z_re_box)
-        zre.plot_zre_slice(xH)
-        zre.plot_zre_slice(b_t)
-        zre.plot_zre_slice(density)
-        #zre.plot_zre_slice(aaa.z_re_box)
+        zre.plot_zre_slice(density_small)
+        zre.plot_zre_slice(density, resolution=200, size = 300)
+        # zre.plot_zre_slice(b_t, resolution=200, size = 300)
+        # zre.plot_zre_slice(density)
+        # #zre.plot_zre_slice(aaa.z_re_box)
         nuetral_num = np.sum(xH.flatten() > 0)
         print( nuetral_num / len(xH.flatten()))
-        # print(xH.sum() / (143 ** 3))
-        # print(aaa.xH_box.sum() / 143 ** 3)
+        # # # print(xH.sum() / (143 ** 3))
+        # # # print(aaa.xH_box.sum() / 143 ** 3)
         continue
 
         if compare_with_james:
@@ -155,31 +178,31 @@ for count1, Heff in enumerate(tqdm(random_seed)):
             zrcomp.compute_field_Adrian(Tvir,initial_conditions,astro_params,flag_options,random_seed=Heff)
             continue
 
-            redshifts = np.linspace(5,15,60)
+            redshifts = np.linspace(5,18,60)
 
             #comment after variational run
             data_dict = {'Z_re': [], '{}'.format(varying_input): [], "medians": [], "a16": [], "a50": [], "a84": [],
                          "b16": [], "b50": [], "b84": [], "k16": [], "k50": [], "k84": [], "p16": [], "p50": [], "p84": [],
                          "width50": [], "width90": []}
             varying_in_value = 1.
-            b_mz, kvalues, data_dict, density_field, cmFAST_hist, zre_PP, den_pp = sa.generate_bias(redshifts, initial_conditions, box_dim, astro_params, flag_options, varying_input,
+            b_mz, kvalues, data_dict, density_field, cmFAST_hist, zre_PP, den_pp, b_t_ps, z_4_bt = sa.generate_bias(redshifts, initial_conditions, box_dim, astro_params, flag_options, varying_input,
                               varying_in_value, data_dict=data_dict,comp_zre_PP=True)
             obj = zrcomp.input_info_field()
 
             zre_zreion = zr.apply_zreion(density_field, data_dict['Z_re'][0], data_dict["a50"][0],data_dict["k50"][0], 143, b0 = data_dict["b50"][0])
             zreion_zre_PP = pp.ps_ion_map(zre_zreion, 20, box_dim)
-            
             zreion_hist = pp.reionization_history(redshifts,zre_zreion)
             obj.set_zreion(zreion_zre_PP, zreion_hist, data_dict["a50"][0],data_dict["b50"][0],data_dict["k50"][0])
             obj.set_21cmFAST(zre_PP,cmFAST_hist,den_pp,data_dict['Z_re'][0],b_mz)
+            obj.cmFASTinfo.add_brightness_temp(b_t_ps,z_4_bt)
             storing_array[count1][count2]=obj
-
+            # print(obj.cmFASTinfo.brightnesstemp)
             #bmzs.append(b_mz.tolist())
             #print(ionization_rates)
 
 
         #y_plot_fit = sa.lin_bias(kvalues, 0.564,0.593,0.185)
-#np.save('Heff10to60_Tvir35to55_varstudy_2', storing_array)
+#np.save('Heff15to45_Tvir40to49_varstudy', storing_array)
 #print(storing_array)
 print("bmzs = ", bmzs)
 print("dictt = ", data_dict)

@@ -1,7 +1,7 @@
 """
   EoR_research/tested_things.py
 
-  Author : Hugo Baraer
+  Author : Hugo Baraer (including some functions by Lisa McBride and Paul Laplante at the end)
   Supervision by : Prof. Adrian Liu
   Affiliation : Cosmic dawn group at McGill University
   Date of creation : 2022-05-20
@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 import statistical_analysis as sa
 import plot_params as pp
+from astropy.cosmology import Planck15
 import zreion as zr
 import imageio
 
@@ -141,9 +142,9 @@ def compute_field_Adrian(zre_mean, initial_conditions, astro_params, flag_option
     xh = ionized_box.xH_box
     brightness_temp = p21c.brightness_temperature(ionized_box=ionized_box, perturbed_field=perturbed_field)
 
-    np.save(f'method_{p21c.global_params.FIND_BUBBLE_ALGORITHM}_xH_z_{zre_mean}_random_seed_{random_seed}', xh)
-    np.save(f'method_{p21c.global_params.FIND_BUBBLE_ALGORITHM}_density_field_z_{zre_mean}_random_seed_{random_seed}', density_field)
-    np.save(f'method_{p21c.global_params.FIND_BUBBLE_ALGORITHM}_brightness_temp_z_{zre_mean}_random_seed_{random_seed}', brightness_temp.brightness_temp)
+    np.save(f'method_{p21c.global_params.FIND_BUBBLE_ALGORITHM}_xH_z_{zre_mean}_random_seed_{random_seed}_dim200_len300Mpc', xh)
+    np.save(f'method_{p21c.global_params.FIND_BUBBLE_ALGORITHM}_density_field_z_{zre_mean}_random_seed_{random_seed}_dim200_len300Mpc', density_field)
+    np.save(f'method_{p21c.global_params.FIND_BUBBLE_ALGORITHM}_brightness_temp_z_{zre_mean}_random_seed_{random_seed}_dim200_len300Mpc', brightness_temp.brightness_temp)
 
 
 
@@ -194,6 +195,32 @@ class input_info_field:
             self.z_for_bt = z_for_bt
             self.brightnesstemp = brightnesstemp
 
+def add_zreion_bt(object, redshifts, Xrange, Yrange, initial_conditions ):
+    '''
+    computes the brightness temperature for z-reion and add it to the object
+    :param object: [obj] the object containing information for
+    :param redshifts: [arr] 1D array of redshfit at which to compute the redshift of reionization
+    :param Xrange: [arr] the 1D array of the Xrange
+    :param Yrange: [arr] the 1D array of the Yrange
+    :return:
+    '''
+    for i in tqdm(range(len(Xrange)), 'computing the brigthness temperature for z-reion'):
+        for j in range(len(Yrange)):
+            b_temp_ps = []
+            for redshift in redshifts:
+                perturbed_field = p21c.perturb_field(redshift=redshift, init_boxes=initial_conditions, write=False)
+                zre_zreion = zr.apply_zreion(perturbed_field.density,
+                                             redshift,
+                                             getattr(getattr(object[i][j], f'zreioninfo'), 'alpha'),
+                                             getattr(getattr(object[i][j], f'zreioninfo'), 'k_0'),
+                                             143,
+                                             b0=getattr(getattr(object[i][j], f'zreioninfo'), 'b_0'))
+                ion, brightness_temp = get_21cm_fields(redshift,zre_zreion,perturbed_field.density)
+                brightness_temp_ps = pp.ps_ion_map(brightness_temp, 20, 143, logbins=True)
+                b_temp_ps.append(brightness_temp_ps)
+            object[i][j].zreioninfo.add_brightness_temp(b_temp_ps,redshifts)
+
+
 def analyze_float_value(obj,model,observable, Xrange, Yrange, field_names = ['Tvir','Heff']):
     '''
     This function look at the 2D variational range of a given parameter given an 2D array filled with objects
@@ -237,14 +264,18 @@ def plot_variational_bias(obj,model,observable, Xrange, Yrange, xaxis=np.logspac
     fig, ax = plt.subplots(10,10, sharex = True, sharey = True)
     for i in range(len(Xrange)):
         for j in range(len(Yrange)):
-            ax[i,j].plot(xaxis, getattr(getattr(obj[i][j], f'{model}info'), observable))
+            ax[i,j].plot(xaxis, getattr(getattr(obj[i][j], f'{model}info'), observable), label = '21cmFAST')
             if add_zreion:
                     linbias = sa.lin_bias(xaxis, getattr(getattr(obj[i][j], f'zreioninfo'), 'alpha'), getattr(getattr(obj[i][j], f'zreioninfo'), 'b_0'), getattr(getattr(obj[i][j], f'zreioninfo'), 'k_0'))
-                    ax[i,j].plot(xaxis,linbias)
+                    ax[i,j].plot(xaxis,linbias, label = 'z-reion')
 
     #ax.set_xlabel(field_names[0])
     #ax.set_ylabel(field_names[1])
     if log_scale: plt.loglog()
+    lines_labels = [ax.get_legend_handles_labels() for ax in fig.axes]
+    lines, labels = [sum(lol, []) for lol in zip(*lines_labels)]
+    fig.legend(lines[:2], labels[:2])
+
     fig.text(0.5, 0.04, field_names[0], ha='center')
     fig.text(0.04, 0.5, field_names[1], va='center', rotation='vertical')
     plt.show()
@@ -331,4 +362,30 @@ def plot_variational_ion_hist(obj,model,observable, Xrange, Yrange, xaxis='redsh
     plt.show()
 
 
-""" The following functions comes from a code designed by P.hD candidate Lisa McBride and Prof. Paul Laplante, and credits """
+""" The following functions comes from a code designed by P.hD candidate Lisa McBride and Prof. Paul Laplante, and credits for the following function are FULLY DESERVED by these two """
+
+omegam = Planck15.Om0
+omegab = Planck15.Ob0
+hubble0 = Planck15.H0
+
+# global temperature as a function of redshift
+def t0(z):
+    return 38.6 * hubble0.value * (omegab / 0.045) * np.sqrt(0.27 / omegam * (1 + z) / 10)
+
+
+def get_21cm_fields(z, zreion, delta):
+    # print("computing t21 at z=", z, "...")
+    ion_field = np.where(zreion > z, 1.0, 0.0)
+    t21_field = t0(z) * (1 + delta) * (1 - ion_field)
+
+    return ion_field, t21_field
+
+
+def create_reion_history(redshifts, zreion, delta, rez = 143):
+    neutral_frac = np.zeros_like(redshifts)
+    for i, z in enumerate(redshifts):
+        ion_field, t21_field = get_21cm_fields(z, zreion, delta)
+        ion_frac = ion_field.sum() / rez ** 3
+        neutral_frac[i] = 1 - ion_frac
+
+    return neutral_frac
