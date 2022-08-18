@@ -101,7 +101,7 @@ def ionization_map_gen(redshift,resolution,field, plot = False):
     return new_box1
 
 
-def compute_tau(ion_hist,redshifts= np.linspace(5,15,60)):
+def compute_tau(ion_hist,redshifts= np.linspace(5,18,60)):
     '''
     This function computes the TAU parameter from the ionization history by performing a simple simpson intergral
     :param ion_hist: the ionization history to comute the integral over
@@ -109,7 +109,7 @@ def compute_tau(ion_hist,redshifts= np.linspace(5,15,60)):
     :return: the TAU value
     '''
 
-    return scipy.integrate.simps(ion_hist, x = redshifts)
+    return (8*np.pi /3)* (((np.e**2) /(scipy.constants.m_e * (scipy.constants.c**2)))**2) * scipy.integrate.simps(ion_hist, x = redshifts)
 
 
 def ionization_map_diff(redshift,resolution,field1,field2, plot = True):

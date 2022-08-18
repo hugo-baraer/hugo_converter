@@ -18,6 +18,7 @@ import plot_params as pp
 from astropy.cosmology import Planck15
 import zreion as zr
 import imageio
+import powerbox as pbox
 
 def compare_reion_hist(zremean_Hugo, alpha_hugo, b_0_Hugo, k_0_Hugo, ion_rates, james_zre_means, james_alphas, james_k_0, plot = True, saveforgif = False, filenames = [], imnb = 0, title = ''):
     '''
@@ -216,10 +217,10 @@ def add_zreion_bt(object, redshifts, Xrange, Yrange, initial_conditions ):
                                              143,
                                              b0=getattr(getattr(object[i][j], f'zreioninfo'), 'b_0'))
                 ion, brightness_temp = get_21cm_fields(redshift,zre_zreion,perturbed_field.density)
-                brightness_temp_ps = pp.ps_ion_map(brightness_temp, 20, 143, logbins=True)
+                brightness_temp_ps = pbox.get_power(brightness_temp, 100, bins = 20, log_bins=True)[0]
                 b_temp_ps.append(brightness_temp_ps)
             object[i][j].zreioninfo.add_brightness_temp(b_temp_ps,redshifts)
-
+    return object
 
 def analyze_float_value(obj,model,observable, Xrange, Yrange, field_names = ['Tvir','Heff']):
     '''
@@ -243,8 +244,42 @@ def analyze_float_value(obj,model,observable, Xrange, Yrange, field_names = ['Tv
     plt.colorbar()
     ax.set_xlabel(field_names[0])
     ax.set_ylabel(field_names[1])
+    if observable == 'ion_hist': observable = 'TAU'
     plt.title(f'{observable} variational range for {model}')
     plt.show()
+
+
+def analyze_Tau_diff(obj,model, observable, Xrange, Yrange, field_names = ['Tvir','Heff']):
+    '''
+    This function look at the 2D variational range of a given parameter given an 2D array filled with objects
+    :param obj: [arr] 2D, the object array filled with info of 21cmFAST and zreion
+    :param model: [string] the name of the analyzed model (21cmFAST or zreion) NOTICE THIS MUST BEEN 21CMFAST FOR THIS FUNCTION TO WORK
+    :param observable: [string] the name of the analyzed field (like z_mean or alpha parameter)
+    :param Xrange: [arr] the 1D array of the Xrange
+    :param Yrange: [arr] the 1D array of the Yrange
+    :param field names: [list] the 2 element list of field names (default Heff and Tvir)
+    :return: a 2D contour plot of the given field
+    '''
+    X, Y = np.meshgrid(Xrange, Yrange)
+    obj_field = np.ones((len(Xrange),len(Yrange)))
+    for i in range(len(Xrange)):
+        for j in range(len(Yrange)):
+            if observable == 'ion_hist':
+                cmFAST_TAU = pp.compute_tau(getattr(getattr(obj[i][j], f'{model}info'), observable), redshifts=np.linspace(5,18,len(getattr(getattr(obj[i][j], f'{model}info'), observable))))
+                zreion_TAU = pp.compute_tau(getattr(getattr(obj[i][j], f'zreioninfo'), observable), redshifts=np.linspace(5,18,len(getattr(getattr(obj[i][j], f'{model}info'), observable))))
+                diff_TAU = cmFAST_TAU - zreion_TAU
+                obj_field[i][j] = diff_TAU / cmFAST_TAU
+                if obj_field[i][j] > 0.08: obj_field[i][j]= 0.08
+    fig, ax = plt.subplots()
+    levels = np.linspace(obj_field.min(),0.08,3000)
+    cntr = plt.contourf(X,Y, obj_field, levels =levels, vmin =-0.06, vmax=0.06, cmap = 'RdBu')
+    plt.clim(-0.06, 0.06)
+    plt.colorbar(cntr, ax = ax)
+    ax.set_xlabel(field_names[0])
+    ax.set_ylabel(field_names[1])
+    plt.title(f'TAU variational range for (21cmFAST - zreion) / 21cmFAST')
+    plt.show()
+
 
 def plot_variational_bias(obj,model,observable, Xrange, Yrange, xaxis=np.logspace(np.log10(0.08570025), np.log10(7.64144032), 20), add_zreion = False,  field_names = ['Tvir','Heff'], log_scale = False):
     '''
@@ -275,10 +310,67 @@ def plot_variational_bias(obj,model,observable, Xrange, Yrange, xaxis=np.logspac
     lines_labels = [ax.get_legend_handles_labels() for ax in fig.axes]
     lines, labels = [sum(lol, []) for lol in zip(*lines_labels)]
     fig.legend(lines[:2], labels[:2])
+    plt.title(r'Linear bias $b_mz$ as a function of Heff and Tvir ')
+    fig.text(0.5, 0.02, field_names[0], ha='center')
 
+    fig.text(0.5, 0.04, '                 3.8'
+                        '                              3.9'
+                        '                            4.0'
+                        '                            4.1'
+                        '                            4.2'
+                        '                            4.3'
+                        '                            4.4'
+                        '                            4.5'
+                        '                            4.6'
+                        '                            4.7' , ha='center')
+    fig.text(0.04, 0.5, field_names[1], va='center', rotation='vertical')
+    plt.show()
+
+def plot_variational_bright_temp(obj,model,observable, slice, Xrange, Yrange, xaxis=np.logspace(np.log10(0.08570025), np.log10(7.64144032), 20), add_zreion = False,  field_names = ['Tvir','Heff'], log_scale = False):
+    '''
+    This function plots the power spectrum over the 2D variational range of input parameters
+    :param obj: [arr] 2D, the object array filled with info of 21cmFAST and zreion
+    :param field_name: [string] the name of the field to analyze
+    :param Xrange: [arr] the 1D array of the Xrange
+    :param Yrange: [arr] the 1D array of the Yrange
+    :param xaxis: [arr] the x axis array (default is k range for 143³ box)
+    :param add_zreion: [bool] add the zreion bias if True
+    :param log_scale: [bool] return log scale if True
+    :param field names: [list] the 2 element list of field names (default Heff and Tvir)
+    :param field names: [list] the 2 element list of field names (default Heff and Tvir)
+    :return: a 2D contour plot of the given field
+    '''
+
+    fig, ax = plt.subplots(10,10, sharex = True, sharey = True)
+    for i in range(len(Xrange)):
+        for j in range(len(Yrange)):
+            cmFastPP = getattr(getattr(obj[i][j], f'{model}info'), observable)[slice][1:]
+            cmFastPP /= (143 ** 3)
+            #cmFastPP *= 0.11694557
+            cmFastPP = cmFastPP * (xaxis ** 3) / (np.pi ** 2 * 2)
+            ax[i,j].plot(xaxis, cmFastPP, label = '21cmFAST')
+            if add_zreion:
+                    linbias = getattr(getattr(obj[i][j], f'zreioninfo'), observable)[slice][0]
+                    #linbias /= 143**3
+                    linbias = linbias * (xaxis ** 3) / (np.pi ** 2 * 2)
+                    #print(linbias == cmFastPP)
+                    ax[i,j].plot(xaxis,linbias, label = 'z-reion')
+
+    #ax.set_xlabel(field_names[0])
+    #ax.set_ylabel(field_names[1])
+    if log_scale: plt.loglog()
+    lines_labels = [ax.get_legend_handles_labels() for ax in fig.axes]
+    lines, labels = [sum(lol, []) for lol in zip(*lines_labels)]
+    fig.legend(lines[:2], labels[:2])
+    plt.loglog()
+    #plt.title(r'Linear bias $b_mz$ as a function of Heff and Tvir ')
     fig.text(0.5, 0.04, field_names[0], ha='center')
     fig.text(0.04, 0.5, field_names[1], va='center', rotation='vertical')
     plt.show()
+
+
+
+
 
 
 def plot_variational_PS(obj,model,observable, Xrange, Yrange, xaxis=np.logspace(np.log10(0.08570025), np.log10(7.64144032), 20), add_zreion = False, delta2 = False, field_names = ['Tvir','Heff'], log_scale = False):
@@ -299,11 +391,11 @@ def plot_variational_PS(obj,model,observable, Xrange, Yrange, xaxis=np.logspace(
     fig, ax = plt.subplots(10,10, sharex = True, sharey = True)
     for i in range(len(Xrange)):
         for j in range(len(Yrange)):
-            cmFastPP = getattr(getattr(obj[i][j], f'{model}info'), observable)[2:]
-            cmFastPP /= 143**3 #temporary normalization constant (V³)
+            cmFastPP = getattr(getattr(obj[i][j], f'{model}info'), observable)#[2:]
+            #cmFastPP /= 143**3 #temporary normalization constant (V³)
             if add_zreion:
-                    zreion_PP = getattr(getattr(obj[i][j], f'zreioninfo'), observable)[1:]
-                    zreion_PP /= 143**3
+                    zreion_PP = getattr(getattr(obj[i][j], f'zreioninfo'), observable)#[1:]
+
             if delta2:
                 cmFastPP = cmFastPP * (xaxis**3) / (np.pi**2 * 2)
                 if add_zreion: zreion_PP = zreion_PP * (xaxis**3) / (np.pi**2 * 2)
@@ -317,8 +409,10 @@ def plot_variational_PS(obj,model,observable, Xrange, Yrange, xaxis=np.logspace(
     lines, labels = [sum(lol, []) for lol in zip(*lines_labels)]
     fig.legend(lines[:2], labels[:2])
 
+    #plt.title('The Power spectrum of the redshfit of reioniozation fields as a function of heff and Tvir')
     fig.text(0.5, 0.04, field_names[0], ha='center')
     fig.text(0.04, 0.5, field_names[1], va='center', rotation='vertical')
+    plt.loglog()
     plt.show()
 
 

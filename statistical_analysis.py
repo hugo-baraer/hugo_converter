@@ -23,6 +23,7 @@ import emcee
 import corner
 import plot_params as pp
 import FFT
+import powerbox as pbox
 #import pymks
 def average_overk(box_dim,field, nb_bins, logbins = False):
     '''
@@ -591,8 +592,8 @@ def generate_bias(zre_range, initial_conditions, box_dim, astro_params, flag_opt
 
     kbins_zre = [0.08570025, 7.64144032]
 
-    zre_pp = pp.ps_ion_map(overzre, nb_bins, box_dim, logbins=True)
-    den_pp = pp.ps_ion_map(density_field, nb_bins, box_dim, logbins=True)
+    zre_pp = pbox.get_power(overzre,100, bins = nb_bins,log_bins=True)[0]
+    den_pp = pbox.get_power(density_field, 100, bins = nb_bins,log_bins=True)[0]
 
     #This section computes the cross correlation for error weighting in the MCMC
     delta = 0.1
@@ -600,18 +601,19 @@ def generate_bias(zre_range, initial_conditions, box_dim, astro_params, flag_opt
     Xd, Yd, overzre_fft, freqd = FFT.compute_fft(overzre, delta, box_dim)
     cross_matrix = overd_fft.conj() * overzre_fft
     # cross_matrix =  overzre_fft.conj().T *overd_fft
-    b_mz1 = np.sqrt(np.divide(zre_pp, den_pp))
+    b_mz = np.sqrt(np.divide(zre_pp, den_pp))
 
 
     values_cross, count_cross = average_overk(box_dim, cross_matrix, nb_bins, logbins=True)
     cross_pp = np.divide(values_cross, count_cross)
+    cross_pp = cross_pp[1:]
     # k_values = np.linspace(kbins_zre.min(), kbins_zre.max(), len(cross_pp))
     #
     if logbins : k_values = np.logspace(np.log10(0.08570025), np.log10(7.64144032), nb_bins + 1)
     else: k_values = np.linspace(0.08570025, 7.64144032, nb_bins+1)
 
-    cross_cor = np.divide(cross_pp / 8550986.582903482,
-                          np.sqrt(((zre_pp / 8550986.582903482) * (den_pp / 8550986.582903482))))
+    cross_cor = np.divide(np.array(cross_pp),
+                          np.sqrt((np.array(zre_pp) * np.array(den_pp))))
 
     """these lines plots the linear bias as a function of the kvalues"""
 
@@ -622,9 +624,9 @@ def generate_bias(zre_range, initial_conditions, box_dim, astro_params, flag_opt
     # errs = np.ones_like(b_mz)*0.05
 
     # no b_mz fitting
-    b_mz = b_mz1[1:]
-    kbins_zre = k_values[1:]
-    cross_cor = cross_cor[1:]
+    kbins_zre = pbox.get_power(density_field, 100, bins = 20, log_bins = True)[1]
+    k_values = kbins_zre
+
 
     data_dict = run_MCMC_free_params(kbins_zre, b_mz, cross_cor, zre_mean, data_dict=data_dict,
                                         varying_input=varying_input, varying_in_value=varying_in_value)
