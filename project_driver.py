@@ -71,18 +71,26 @@ Heff_range = np.linspace(52, 25,10, endpoint=True)
 T_vir_range = np.linspace(3.8,4.7,10, endpoint=True)
 print(Heff_range, T_vir_range)
 
+print(len(Heff_range))
 Heff_ver, T_vir_hor = np.meshgrid(Heff_range, T_vir_range)
 
 
 
-stoo = np.load('Heff25to52_Tvir38to47_varstudy.npy', allow_pickle=True)
+stoo = np.load('Heff25to52_Tvir38to47_varstudy_withzreionbt_withJamesparams.npy', allow_pickle=True)
+# James_params = np.load('Heff25to52_Tvir38to47_Jamesparamsonly.npy', allow_pickle=True)
+# objjj = zrcomp.add_James_params(stoo,James_params,Heff_range,T_vir_range)
+#
+# np.save('Heff25to52_Tvir38to47_varstudy_withzreionbt_withJamesparams', objjj)
+#
+# raise ValueError
 #print(len(stoo[0][0].cmFASTinfo.ion_hist))
 
 #print((stoo[5][5].cmFASTinfo.brightnesstemp[15][1:]/(143**3))/stoo[5][5].zreioninfo.brightnesstemp[15][0])
 #print(stoo[5][5].zreioninfo.brightnesstemp[15])
-k_values = pbox.get_power(np.ones((143,143,143)), 100,bins = 20, log_bins = True)[1]
+density_small = np.load(f'./density.npy')
+k_values = pbox.get_power(density_small, 100,bins = 20, log_bins = True)[1]
 print(k_values)
-#cmFAST_TAU = zrcomp.analyze_float_value(stoo, 'zreion' , 'ion_hist', T_vir_range, Heff_range)
+cmFAST_TAU = zrcomp.analyze_float_value(stoo, 'James' , 'z_mean', T_vir_range, Heff_range)
 #zrcomp.analyze_Tau_diff(stoo, 'cmFAST', 'ion_hist', T_vir_range, Heff_range)
 # print(len(stoo[0][0].cmFASTinfo.P_k_zre))
 # print(len(stoo[0][0].zreioninfo.P_k_zre))
@@ -114,28 +122,38 @@ print(k_values)
 # zrcomp.analyze_float_value(stoo, 'cmFAST' , 'z_mean', T_vir_range, Heff_range)
 # zrcomp.analyze_float_value(stoo, 'zreion' , 'alpha', T_vir_range, Heff_range)
 # zrcomp.analyze_float_value(stoo, 'zreion' , 'k_0', T_vir_range, Heff_range)
-zrcomp.plot_variational_bias(stoo,'cmFAST','b_mz', T_vir_range, Heff_range,xaxis = k_values, add_zreion=True, log_scale = True)
-#zrcomp.plot_variational_bright_temp(stoo, 'cmFAST', 'brightnesstemp', 15,T_vir_range, Heff_range,xaxis = k_values, add_zreion=True)
+#zrcomp.plot_variational_bias(stoo,'cmFAST','b_mz', T_vir_range, Heff_range,xaxis = k_values, add_zreion=True, log_scale = True)
+
+#make a brightness temperature movie
+# filenames = []
+# for slice in tqdm(range(len(stoo[0][0].cmFASTinfo.z_for_bt)), 'making a reionization movie'):
+#     filenames = zrcomp.plot_variational_bright_temp(stoo, 'cmFAST', 'brightnesstemp', stoo[0][0].cmFASTinfo.z_for_bt[slice],slice,T_vir_range, Heff_range,xaxis = k_values, add_zreion=True,savefig = True, filenames = filenames)
+#
+# images = []
+# for filename in filenames:
+#     images.append(imageio.imread(filename))
+# imageio.mimsave('bt_fct_redshift143_delta2.gif', images)
+
 #zrcomp.plot_multiple_ion_hist(stoo,'zreion','P_k_zre', T_vir_range, Heff_range)
-zrcomp.plot_variational_PS(stoo,'cmFAST','P_k_zre', T_vir_range, Heff_range,xaxis = k_values[1:], add_zreion=True, delta2= True)
+zrcomp.plot_variational_PS(stoo,'cmFAST','P_k_zre', T_vir_range, Heff_range,xaxis = k_values, add_zreion=True)
 zrcomp.plot_variational_ion_hist(stoo, 'cmFAST', 'ion_hist', T_vir_range, Heff_range, add_zreion = True, plot_diff=True, xaxis=np.linspace(5,18,60))
 zrcomp.plot_variational_ion_hist(stoo, 'cmFAST', 'ion_hist', T_vir_range, Heff_range, add_zreion = True, xaxis=np.linspace(5,18,60))
-p_k_zre, kbins_zre = pbox.get_power(stoo[0][0].cmFASTinfo.P_k_zre, 100)
+#p_k_zre, kbins_zre = pbox.get_power(stoo[0][0].cmFASTinfo.P_k_zre, 100)
 #
 #
-# #add z-reion_bt
-# redshfit_4_bt = stoo[0][0].cmFASTinfo.z_for_bt
-# user_params = {"HII_DIM": 143, "BOX_LEN": 143, "DIM":143}
-# cosmo_params = p21c.CosmoParams(SIGMA_8=0.8, hlittle=0.7, OMm= 0.27, OMb= 0.045)
-# initial_conditions = p21c.initial_conditions(
-#         user_params = user_params,
-#         cosmo_params = cosmo_params
-#         )
-# objjj = zrcomp.add_zreion_bt(stoo,redshfit_4_bt,Heff_range,T_vir_range,initial_conditions)
+#add z-reion_bt
+redshfit_4_bt = stoo[0][0].cmFASTinfo.z_for_bt
+user_params = {"HII_DIM": 143, "BOX_LEN": 143, "DIM":143}
+cosmo_params = p21c.CosmoParams(SIGMA_8=0.8, hlittle=0.7, OMm= 0.27, OMb= 0.045)
+initial_conditions = p21c.initial_conditions(
+        user_params = user_params,
+        cosmo_params = cosmo_params
+        )
+objjj = zrcomp.add_James_bt(stoo,redshfit_4_bt,Heff_range,T_vir_range,initial_conditions)
 
-#np.save('Heff15to45_Tvir40to49_varstudy_withbt', objjj)
+np.save('Heff25to52_Tvir38to47_varstudy_withzreionbt_withJamesbt', objjj)
 
-#raise ValueError
+raise ValueError
 
 
 zre_mean = [6.8,7.0,7.2,7.4,7.6,7.8,8.0]
