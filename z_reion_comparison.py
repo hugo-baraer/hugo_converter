@@ -41,10 +41,10 @@ def compare_reion_hist(zremean_Hugo, alpha_hugo, b_0_Hugo, k_0_Hugo, ion_rates, 
     initial_conditions = p21c.initial_conditions(user_params=user_params, cosmo_params=cosmo_params, )
     perturbed_field = p21c.perturb_field(redshift=zremean_Hugo, init_boxes=initial_conditions)
     density_field = perturbed_field.density
-    zre_zreion_me = zr.apply_zreion(density_field, zremean_Hugo, alpha_hugo, k_0_Hugo, 100, b0=b_0_Hugo)
+    zre_zreion_me = zr.apply_zreion(density_field, zremean_Hugo, alpha_hugo, k_0_Hugo, 143, b0=b_0_Hugo)
     perturbed_field = p21c.perturb_field(redshift=james_zre_means, init_boxes=initial_conditions)
     density_field = perturbed_field.density
-    zre_zreion_james = zr.apply_zreion(density_field, james_zre_means, james_alphas, james_k_0, 100)
+    zre_zreion_james = zr.apply_zreion(density_field, james_zre_means, james_alphas, james_k_0, 143)
     reion_hist_zreion_me = pp.reionization_history(np.linspace(5, 15, 100), zre_zreion_me, plot=False)
     reion_hist_zreion_James = pp.reionization_history(np.linspace(5, 15, 100), zre_zreion_james, plot=False)
 
@@ -90,7 +90,7 @@ def compute_zre_zreion(alpha, b_0, k_0, zre_mean =8.011598437878444 ):
     initial_conditions = p21c.initial_conditions(user_params=user_params, cosmo_params=cosmo_params)
     perturbed_field = p21c.perturb_field(redshift=zre_mean, init_boxes=initial_conditions)
     density_field = perturbed_field.density
-    zre_zreion_me = zr.apply_zreion(density_field, 8.011598437878444, alpha, k_0, 100, b0=b_0)
+    zre_zreion_me = zr.apply_zreion(density_field, 8.011598437878444, alpha, k_0, 143, b0=b_0)
     return zre_zreion_me
 
 
@@ -119,10 +119,10 @@ def compute_zre_james_me(alpha, b_0, k_0,james_alpha, james_k_0, james_mean):
     initial_conditions = p21c.initial_conditions(user_params=user_params, cosmo_params=cosmo_params)
     perturbed_field = p21c.perturb_field(redshift=8.011598437878444, init_boxes=initial_conditions)
     density_field = perturbed_field.density
-    zre_zreion_me = zr.apply_zreion(density_field, 8.011598437878444, alpha, k_0, 100, b0=b_0)
+    zre_zreion_me = zr.apply_zreion(density_field, 8.011598437878444, alpha, k_0, 143, b0=b_0)
     perturbed_field = p21c.perturb_field(redshift=james_mean, init_boxes=initial_conditions)
     density_field = perturbed_field.density
-    zre_zreion_james = zr.apply_zreion(density_field, james_mean, james_alpha, james_k_0, 100)
+    zre_zreion_james = zr.apply_zreion(density_field, james_mean, james_alpha, james_k_0, 143)
     return zre_zreion_me, zre_zreion_james
 
 def compute_field_Adrian(zre_mean, initial_conditions, astro_params, flag_options, random_seed=12345):
@@ -210,6 +210,9 @@ class input_info_field:
             self.alpha = alpha
             self.z_mean= z_mean
             self.k_0 = k_0
+        def add_brightness_temp(self, brightnesstemp, z_for_bt):
+            self.z_for_bt = z_for_bt
+            self.brightnesstemp = brightnesstemp
 def add_zreion_bt(object, redshifts, Xrange, Yrange, initial_conditions ):
     '''
     computes the brightness temperature for z-reion and add it to the object
@@ -231,7 +234,7 @@ def add_zreion_bt(object, redshifts, Xrange, Yrange, initial_conditions ):
                                              143,
                                              b0=getattr(getattr(object[i][j], f'zreioninfo'), 'b_0'))
                 ion, brightness_temp = get_21cm_fields(redshift,zre_zreion,perturbed_field.density)
-                brightness_temp_ps = pbox.get_power(brightness_temp, 100, bins = 20, log_bins=True)[0]
+                brightness_temp_ps = pbox.get_power(brightness_temp,143, bins = 20, log_bins=True)[0]
                 b_temp_ps.append(brightness_temp_ps)
             object[i][j].zreioninfo.add_brightness_temp(b_temp_ps,redshifts)
     return object
@@ -255,11 +258,11 @@ def add_James_bt(object, redshifts, Xrange, Yrange, initial_conditions ):
                                              getattr(getattr(object[i][j], f'Jamesinfo'), 'alpha'),
                                              getattr(getattr(object[i][j], f'Jamesinfo'), 'k_0'),
                                              143,
-                                             b0=getattr(getattr(object[i][j], f'zreioninfo'), 'b_0'))
+                                             )
                 ion, brightness_temp = get_21cm_fields(redshift,zre_zreion,perturbed_field.density)
-                brightness_temp_ps = pbox.get_power(brightness_temp, 100, bins = 20, log_bins=True)[0]
+                brightness_temp_ps = pbox.get_power(brightness_temp,143, bins = 20, log_bins=True)[0]
                 b_temp_ps.append(brightness_temp_ps)
-            object[i][j].zreioninfo.add_brightness_temp(b_temp_ps,redshifts)
+            object[i][j].Jamesinfo.add_brightness_temp(b_temp_ps,redshifts)
     return object
 
 
@@ -377,7 +380,7 @@ def plot_variational_bias(obj,model,observable, Xrange, Yrange, xaxis=np.logspac
                         '             52' , va='center', rotation = 'vertical')
     plt.show()
 
-def plot_variational_bright_temp(obj,model,observable, redshift, slice, Xrange, Yrange, xaxis=np.logspace(np.log10(0.08570025), np.log10(7.64144032), 20), add_zreion = False,  field_names = ['Tvir','Heff'], log_scale = False, savefig = False, filenames = []):
+def plot_variational_bright_temp(obj,model,observable, redshift, slice, Xrange, Yrange, xaxis=np.logspace(np.log10(0.08570025), np.log10(7.64144032), 20), add_zreion = False,  field_names = ['Tvir','Heff'], log_scale = False, savefig = False, filenames = [], add_James = False):
     '''
     This function plots the power spectrum over the 2D variational range of input parameters
     :param obj: [arr] 2D, the object array filled with info of 21cmFAST and zreion
@@ -408,17 +411,20 @@ def plot_variational_bright_temp(obj,model,observable, redshift, slice, Xrange, 
                     #linbias = np.array(linbias) * (xaxis ** 3) / (2*(np.pi** 2 ))
                     #print(linbias == cmFastPP)
                     ax[i,j].plot(xaxis,linbias, label = 'z-reion')
-            print(cmFastPP/linbias)
+            if add_James:
+                    James_PP = getattr(getattr(obj[i][j], f'Jamesinfo'), observable)[slice]
+                    ax[i, j].plot(xaxis, James_PP, label='James TAU')
+            # print(cmFastPP/linbias)
     #ax.set_xlabel(field_names[0])
     #ax.set_ylabel(field_names[1])
     if log_scale: plt.loglog()
     lines_labels = [ax.get_legend_handles_labels() for ax in fig.axes]
     lines, labels = [sum(lol, []) for lol in zip(*lines_labels)]
-    fig.legend(lines[:2], labels[:2])
+    fig.legend(lines[:3], labels[:3])
     plt.loglog()
     #plt.title(r'Linear bias $b_mz$ as a function of Heff and Tvir ')
     fig.text(0.5, 0.02, field_names[0], ha='center')
-    fig.text(0.45, 0.9, f'Brightness temperature at redshift z = {redshift} ', size='large')
+    fig.text(0.2, 0.9, f'Brightness temperature at redshift z = {redshift} ', size='large')
     fig.text(0.5, 0.04, '                 3.8'
                         '                              3.9'
                         '                            4.0'

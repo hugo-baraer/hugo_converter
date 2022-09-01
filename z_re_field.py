@@ -85,7 +85,7 @@ def generate_zre_field(zre_range,initial_conditions,box_dim, astro_params, flag_
         if comp_brightness_temp and i%2 == 0 :
             perturbed_field = p21c.perturb_field(redshift=redshift, init_boxes=initial_conditions, write=False)
             brightness_temp = p21c.brightness_temperature(ionized_box=ionize_box, perturbed_field=perturbed_field, write=False).brightness_temp
-            brightness_temp_ps = pbox.get_power(brightness_temp, 100, bins = 20, log_bins=True)
+            brightness_temp_ps = pbox.get_power(brightness_temp, 143, bins = 20, log_bins=True)
             b_temp_ps.append(brightness_temp_ps[0])
             redshifts4bright.append(redshift)
         final_cube[new_cube > -1] = redshift

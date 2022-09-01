@@ -46,11 +46,12 @@ def average_overk(box_dim,field, nb_bins, logbins = False):
     # radii = np.concatenate((radii1[1:-1],radii2))
 
     #radii = np.linspace(0, np.sqrt(3 * (cx) ** 2), num=int(np.sqrt(3 * (cx) ** 2) / int(radius_thick)))
-    radii = np.linspace(0, np.sqrt(3 * (cx) ** 2), nb_bins+1)
+    radii = np.linspace(0, np.sqrt(3 * (cx) ** 2), nb_bins)
     radii = radii[1:]  # exlude the radii 0 to avoid divison by 0
 
     if logbins :
-        radii =  np.logspace(0, np.log10(np.sqrt(3 * (cx) ** 2)), nb_bins+1)
+        radii =  np.logspace(0, np.log10(np.sqrt(3 * (cx) ** 2)), nb_bins)
+
 
     values = np.zeros(len(radii))
     count = np.zeros(len(radii))
@@ -575,7 +576,7 @@ def generate_bias(zre_range, initial_conditions, box_dim, astro_params, flag_opt
                                       comP_ionization_rate=False, comp_brightness_temp=True)
     overzre, zre_mean = zre.over_zre_field(z_re_box)
 
-
+    zre.plot_zre_slice(overzre)
     """This section uses computes the ionization history from the redhsift of reionization field if applicable"""
     if comp_ion_hist:
         redshifts = zre_range
@@ -590,10 +591,9 @@ def generate_bias(zre_range, initial_conditions, box_dim, astro_params, flag_opt
     density_field = perturbed_field.density
 
 
-    kbins_zre = [0.08570025, 7.64144032]
 
-    zre_pp = pbox.get_power(overzre,100, bins = nb_bins,log_bins=True)[0]
-    den_pp = pbox.get_power(density_field, 100, bins = nb_bins,log_bins=True)[0]
+    zre_pp = pbox.get_power(overzre,143, bins = nb_bins,log_bins=True)[0][1:]
+    den_pp = pbox.get_power(density_field, 143, bins = nb_bins,log_bins=True)[0][1:]
 
     #This section computes the cross correlation for error weighting in the MCMC
     delta = 0.1
@@ -609,8 +609,13 @@ def generate_bias(zre_range, initial_conditions, box_dim, astro_params, flag_opt
     cross_pp = cross_pp[1:]
     # k_values = np.linspace(kbins_zre.min(), kbins_zre.max(), len(cross_pp))
     #
-    if logbins : k_values = np.logspace(np.log10(0.08570025), np.log10(7.64144032), nb_bins + 1)
-    else: k_values = np.linspace(0.08570025, 7.64144032, nb_bins+1)
+    kbins_zre = pbox.get_power(density_field,143, bins = nb_bins, log_bins = True)[1][1:] #if logbins :
+    #else: kbins_zre = pbox.get_power(density_field,143, bins = 21, log_bins = False)[1]
+    print(kbins_zre, 'kbins1')
+    print(b_mz, 'bmz1')
+    #kbins_zre = kbins_zre
+    print(kbins_zre, 'kbins2')
+    print(b_mz, 'bmz2')
 
     cross_cor = np.divide(np.array(cross_pp),
                           np.sqrt((np.array(zre_pp) * np.array(den_pp))))
@@ -624,7 +629,6 @@ def generate_bias(zre_range, initial_conditions, box_dim, astro_params, flag_opt
     # errs = np.ones_like(b_mz)*0.05
 
     # no b_mz fitting
-    kbins_zre = pbox.get_power(density_field, 100, bins = 20, log_bins = True)[1]
     k_values = kbins_zre
 
 
