@@ -5,8 +5,7 @@
 ## Author
 This repository and its content is credited to Hugo Baraer [@hugo-baraer](https://github.com/hugo-baraer) and his research with the cosmic dawn group at McGill University, supervised by prof. Adrian Liu [@acliu](https://github.com/acliu). 
 
-It is the results of 3 undergraduate physics research classes, and a SURA summer internship. 
-Currently, it includes the PHYS 449 research project, a parameters comparison in two different models: 21cmFAST and Battaglia and al. (2013) 
+It is the results of one an a half year of work : 3 undergraduate physics research classes, and a SURA summer internship. 
 
 ## explanation
 
@@ -90,4 +89,5 @@ his project aims to link the statistical parameters of . to the model of 21cm fa
 The model proposed by Battaglia et al. starts from a P³M N-body code to generate the over-density field. The Fourier transform is then taken for a particular redshift. Next, the statistical parameter acting as an N-body simulation with radiative transfer and hydrodynamic is multiplied to that over-density field in momentum space, giving the over-redshift in momentum space. An inverse Fourier transform is then performed, and the over redshift is shifted back to the redshift field. The following diagram presents the Battaglia model and its steps towards plotting the reionization redshift field.
 
 21cmFast has an option to generate density field and cosmic redshift field through different simulation processes. By generating both fields and reverse engineering the process shown in the figure below , it is possible to get a value for the parameters from Battaglia et al. 
+Currently, it includes the PHYS 449 research project, a parameters comparison in two different models: 21cmFAST and Battaglia and al. (2013) 
 
