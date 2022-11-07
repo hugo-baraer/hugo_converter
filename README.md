@@ -27,7 +27,7 @@ Using z-reion allows for a computationnaly quick generation of a redshfit of rei
 * Works with any 21cmFAST inputs (different inputs available [here](https://21cmfast.readthedocs.io/en/latest/_modules/py21cmfast/inputs.html) )
 * Option to use your own density and/or redshfit of reionization fields to compute the parameters values.
 * Contains all the necessary analysis functions including plotting and the computation of several obsevables)
-* Can also be used to analyse several observables (power spectrums, ionization histories, brightness temperatures, TAU parameters, )
+* Can analyse several observables (power spectrums, ionization histories, brightness temperatures, TAU parameters, etc.)
 * Possibility to run parameter space studies (vary simultaneaously inputs and see it's effect on parameters or observables)
 
 ## Installation
@@ -41,7 +41,7 @@ are computed with the average of their fields, showing the relative differences 
 
 ![Screenshot from 2022-11-03 17-18-43](https://user-images.githubusercontent.com/59851566/200437285-aeebf956-d8b0-4bbd-878b-b4dec202b9fa.png)
 
-The following schematic shows the process followed by the algorithm in the calibration of the free parameters.
+The linear bias is then fitted using Markov Chains Monte Carlo, to generate posterior distributions for the free parameters (alpha, b_0 and k_0). In this fitting, the cross correlation is used to weight errors. The following schematic resumes the process followed by the algorithm in the calibration of the free parameters.
 
 ![battaglia_process](https://user-images.githubusercontent.com/59851566/200426827-45335b46-d89c-4a1c-a462-fca73e590b66.jpg)
 
@@ -49,17 +49,11 @@ For more information, internship reports from research classes present here furt
 
 ## Important to note: a word on units. 
 
+h versus h_bar. The parameters will have units of which you choose
+
 ## directory content
 
 The algorithm has functions seperated in different modules. Having more than 85 different functions, here is a brief decription of the repartition.  
-
-### FTT
-
-This module takes the Fourrier transforms of both fields, and contains the necesseray functions for plotting and computing.
-
-### Gaussian_testing
-
-This module is made for testing the fft process with 3D gaussian testing
 
 ### z_re_field.py
 
@@ -74,6 +68,15 @@ This module computes the MCMC algorithm necessary to generate posterior distribu
 ### plot_params.py
 
 ### project_driver 
+
+### FTT.py
+
+This module takes the Fourrier transforms of both fields, and contains the necesseray functions for plotting and computing.
+
+### Gaussian_testing.py
+
+This module is made for testing the fft process with 3D gaussian testing
+
 
 This file is the driver to run to execute the different modules. In this driver file, all the different components of the project are launched. 
 
