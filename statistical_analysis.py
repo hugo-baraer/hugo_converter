@@ -552,7 +552,7 @@ def run_MCMC_free_params(x,y,errs, zre_mean, num_iter = 5000, nwalkers = 32, plo
     return best_params
 
 
-def generate_bias(zre_range, initial_conditions, box_dim, astro_params, flag_options,varying_input,varying_in_value, data_dict ={}, nb_bins = 20, logbins = True, comp_width = True, comp_ion_hist = True, comp_zre_PP = False):
+def generate_bias(zre_range, initial_conditions, box_dim, astro_params, flag_options,varying_input,varying_in_value, data_dict ={}, nb_bins = 20, logbins = True, comp_width = True, comp_ion_hist = True, comp_zre_PP = False, comp_bt = False, return_zre = False):
     '''
     This function generates the linear bias from the power spectrum from a set of data.
     :param zre_range: [1D arr] the range of redshift on which to compute the redshfit of reionization field  over
@@ -572,11 +572,12 @@ def generate_bias(zre_range, initial_conditions, box_dim, astro_params, flag_opt
     '''
 
     #generate the redshift of reionization field
-    z_re_box, b_temp_ps, z_4_bt = zre.generate_zre_field(zre_range, initial_conditions, box_dim, astro_params, flag_options,
-                                      comP_ionization_rate=False, comp_brightness_temp=True)
+    z_re_box = zre.generate_zre_field(zre_range, initial_conditions, box_dim, astro_params, flag_options,
+                                      comP_ionization_rate=False, comp_brightness_temp=False)
+    #zre.plot_zre_slice(z_re_box)
     overzre, zre_mean = zre.over_zre_field(z_re_box)
 
-    zre.plot_zre_slice(overzre)
+    #zre.plot_zre_slice(overzre)
     """This section uses computes the ionization history from the redhsift of reionization field if applicable"""
     if comp_ion_hist:
         redshifts = zre_range
@@ -639,8 +640,12 @@ def generate_bias(zre_range, initial_conditions, box_dim, astro_params, flag_opt
         data_dict['width90'].append(width_90_21)
     if comp_ion_hist and not comp_zre_PP:
         return b_mz, k_values, data_dict, density_field, cmFast_hist
-    elif comp_ion_hist and comp_zre_PP:
+    elif comp_ion_hist and comp_zre_PP and comp_bt and not return_zre:
         return b_mz, k_values, data_dict, density_field, cmFast_hist, zre_pp, den_pp, b_temp_ps, z_4_bt
+    elif comp_ion_hist and comp_zre_PP and comp_bt and return_zre:
+        return z_re_box, b_mz, k_values, data_dict, density_field, cmFast_hist, zre_pp, den_pp, b_temp_ps, z_4_bt
+    elif comp_ion_hist and comp_zre_PP and not comp_bt and return_zre:
+        return z_re_box, b_mz, k_values, data_dict, density_field, cmFast_hist, zre_pp, den_pp
     else:
         return b_mz, k_values, data_dict, density_field
 

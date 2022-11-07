@@ -199,6 +199,7 @@ class input_info_field:
             self.z_for_bt = z_for_bt
             self.brightnesstemp = brightnesstemp
 
+
   class Jamesinfo:
         def __init__(self, alpha, z_mean, k_0):
             '''
@@ -213,6 +214,9 @@ class input_info_field:
         def add_brightness_temp(self, brightnesstemp, z_for_bt):
             self.z_for_bt = z_for_bt
             self.brightnesstemp = brightnesstemp
+
+        def add_ion_hist(self,ion_hist):
+            self.ion_hist = ion_hist
 def add_zreion_bt(object, redshifts, Xrange, Yrange, initial_conditions ):
     '''
     computes the brightness temperature for z-reion and add it to the object
@@ -228,7 +232,7 @@ def add_zreion_bt(object, redshifts, Xrange, Yrange, initial_conditions ):
             for redshift in redshifts:
                 perturbed_field = p21c.perturb_field(redshift=redshift, init_boxes=initial_conditions, write=False)
                 zre_zreion = zr.apply_zreion(perturbed_field.density,
-                                             redshift,
+                                             getattr(getattr(object[i][j], f'Jamesinfo'), 'z_mean'),
                                              getattr(getattr(object[i][j], f'zreioninfo'), 'alpha'),
                                              getattr(getattr(object[i][j], f'zreioninfo'), 'k_0'),
                                              143,
@@ -242,6 +246,34 @@ def add_zreion_bt(object, redshifts, Xrange, Yrange, initial_conditions ):
 def add_James_bt(object, redshifts, Xrange, Yrange, initial_conditions ):
     '''
     computes the brightness temperature for the James TAU and add it to the object
+    Please not that James algortithm (as compared to mine and 21cmFAST) uses Mpc / h instead of regular Mpc
+    :param object: [obj] the object containing information for
+    :param redshifts: [arr] 1D array of redshfit at which to compute the redshift of reionization
+    :param Xrange: [arr] the 1D array of the Xrange
+    :param Yrange: [arr] the 1D array of the Yrange
+    :return: [obj] 3D object containing z-reion brightness temperature for several redhfits
+    '''
+    for i,Heff in tqdm(enumerate(Xrange), 'computing the brigthness temperature for z-reion'):
+        for j,Tvir in enumerate(Yrange):
+            #astro_params = p21c.AstroParams({"NU_X_THRESH": 500, "HII_EFF_FACTOR": Heff, "ION_Tvir_MIN": Tvir})
+            b_temp_ps = []
+            for redshift in redshifts:
+                perturbed_field = p21c.perturb_field(redshift=redshift, init_boxes=initial_conditions, write=False)
+                zre_zreion = zr.apply_zreion(perturbed_field.density,
+                                             getattr(getattr(object[i][j], f'Jamesinfo'), 'z_mean'),
+                                             getattr(getattr(object[i][j], f'Jamesinfo'), 'alpha'),
+                                             getattr(getattr(object[i][j], f'Jamesinfo'), 'k_0'),
+                                             100,
+                                             )
+                ion, brightness_temp = get_21cm_fields(redshift,zre_zreion,perturbed_field.density)
+                brightness_temp_ps = pbox.get_power(brightness_temp,100, bins = 20, log_bins=True)[0]
+                b_temp_ps.append(brightness_temp_ps)
+            object[i][j].Jamesinfo.add_brightness_temp(b_temp_ps,redshifts)
+    return object
+
+def add_James_ion_hist(object, Xrange, Yrange, initial_conditions, redshifts = np.linspace(5,18,60) ):
+    '''
+    computes the brightness temperature for the James TAU and add it to the object
     :param object: [obj] the object containing information for
     :param redshifts: [arr] 1D array of redshfit at which to compute the redshift of reionization
     :param Xrange: [arr] the 1D array of the Xrange
@@ -250,19 +282,15 @@ def add_James_bt(object, redshifts, Xrange, Yrange, initial_conditions ):
     '''
     for i in tqdm(range(len(Xrange)), 'computing the brigthness temperature for z-reion'):
         for j in range(len(Yrange)):
-            b_temp_ps = []
-            for redshift in redshifts:
-                perturbed_field = p21c.perturb_field(redshift=redshift, init_boxes=initial_conditions, write=False)
-                zre_zreion = zr.apply_zreion(perturbed_field.density,
-                                             redshift,
-                                             getattr(getattr(object[i][j], f'Jamesinfo'), 'alpha'),
-                                             getattr(getattr(object[i][j], f'Jamesinfo'), 'k_0'),
-                                             143,
-                                             )
-                ion, brightness_temp = get_21cm_fields(redshift,zre_zreion,perturbed_field.density)
-                brightness_temp_ps = pbox.get_power(brightness_temp,143, bins = 20, log_bins=True)[0]
-                b_temp_ps.append(brightness_temp_ps)
-            object[i][j].Jamesinfo.add_brightness_temp(b_temp_ps,redshifts)
+            perturbed_field = p21c.perturb_field(redshift=getattr(getattr(object[i][j], f'Jamesinfo'), 'z_mean'), init_boxes=initial_conditions, write=False)
+            zre_zreion = zr.apply_zreion(perturbed_field.density,
+                                         getattr(getattr(object[i][j], f'Jamesinfo'), 'z_mean'),
+                                         getattr(getattr(object[i][j], f'Jamesinfo'), 'alpha'),
+                                         getattr(getattr(object[i][j], f'Jamesinfo'), 'k_0'),
+                                         100,
+                                         )
+            zreion_hist = pp.reionization_history(redshifts, zre_zreion)
+            object[i][j].Jamesinfo.add_ion_hist(zreion_hist)
     return object
 
 
@@ -293,11 +321,12 @@ def analyze_float_value(obj,model,observable, Xrange, Yrange, field_names = ['Tv
     plt.show()
 
 
-def analyze_Tau_diff(obj,model, observable, Xrange, Yrange, field_names = ['Tvir','Heff']):
+def analyze_Tau_diff(obj,model1, model2, observable, Xrange, Yrange, field_names = ['Tvir','Heff']):
     '''
     This function look at the 2D variational range of a given parameter given an 2D array filled with objects
     :param obj: [arr] 2D, the object array filled with info of 21cmFAST and zreion
-    :param model: [string] the name of the analyzed model (21cmFAST or zreion) NOTICE THIS MUST BEEN 21CMFAST FOR THIS FUNCTION TO WORK
+    :param model1: [string] the name of the analyzed model (21cmFAST, James or zreion)
+    :param model2: [string] the name of the analyzed model (21cmFAST, James or zreion)
     :param observable: [string] the name of the analyzed field (like z_mean or alpha parameter)
     :param Xrange: [arr] the 1D array of the Xrange
     :param Yrange: [arr] the 1D array of the Yrange
@@ -309,8 +338,8 @@ def analyze_Tau_diff(obj,model, observable, Xrange, Yrange, field_names = ['Tvir
     for i in range(len(Xrange)):
         for j in range(len(Yrange)):
             if observable == 'ion_hist':
-                cmFAST_TAU = pp.compute_tau(getattr(getattr(obj[i][j], f'{model}info'), observable), redshifts=np.linspace(5,18,len(getattr(getattr(obj[i][j], f'{model}info'), observable))))
-                zreion_TAU = pp.compute_tau(getattr(getattr(obj[i][j], f'zreioninfo'), observable), redshifts=np.linspace(5,18,len(getattr(getattr(obj[i][j], f'{model}info'), observable))))
+                cmFAST_TAU = pp.compute_tau(getattr(getattr(obj[i][j], f'{model1}info'), observable), redshifts=np.linspace(5,18,len(getattr(getattr(obj[i][j], f'{model1}info'), observable))))
+                zreion_TAU = pp.compute_tau(getattr(getattr(obj[i][j], f'{model2}info'), observable), redshifts=np.linspace(5,18,len(getattr(getattr(obj[i][j], f'{model1}info'), observable))))
                 diff_TAU = cmFAST_TAU - zreion_TAU
                 obj_field[i][j] = diff_TAU / cmFAST_TAU
                 if obj_field[i][j] > 0.08: obj_field[i][j]= 0.08
@@ -319,9 +348,9 @@ def analyze_Tau_diff(obj,model, observable, Xrange, Yrange, field_names = ['Tvir
     cntr = plt.contourf(X,Y, obj_field, levels =levels, vmin =-0.06, vmax=0.06, cmap = 'RdBu')
     plt.clim(-0.06, 0.06)
     plt.colorbar(cntr, ax = ax)
-    ax.set_xlabel(field_names[0])
-    ax.set_ylabel(field_names[1])
-    plt.title(f'TAU variational range for (21cmFAST - zreion) / 21cmFAST')
+    ax.set_xlabel(r'Virial temperature [$log_{10}(K)$]')
+    ax.set_ylabel('Ionizing efficiency')
+    plt.title(f'TAU variational range for ({model1} - {model2}) / {model1}')
     plt.show()
 
 
@@ -380,7 +409,7 @@ def plot_variational_bias(obj,model,observable, Xrange, Yrange, xaxis=np.logspac
                         '             52' , va='center', rotation = 'vertical')
     plt.show()
 
-def plot_variational_bright_temp(obj,model,observable, redshift, slice, Xrange, Yrange, xaxis=np.logspace(np.log10(0.08570025), np.log10(7.64144032), 20), add_zreion = False,  field_names = ['Tvir','Heff'], log_scale = False, savefig = False, filenames = [], add_James = False):
+def plot_variational_bright_temp(obj,model,observable, redshift, slice, Xrange, Yrange, xaxis=np.logspace(np.log10(0.08570025), np.log10(7.64144032), 20), add_zreion = False,  field_names = ['Tvir','Heff'], log_scale = True, savefig = False, filenames = [], add_James = False, xaxis_James = np.logspace(np.log10(0.08885766), np.log10(6.45765192), 20)):
     '''
     This function plots the power spectrum over the 2D variational range of input parameters
     :param obj: [arr] 2D, the object array filled with info of 21cmFAST and zreion
@@ -397,35 +426,48 @@ def plot_variational_bright_temp(obj,model,observable, redshift, slice, Xrange, 
     :return: a 2D contour plot of the given field
     '''
 
-    fig, ax = plt.subplots(10,10, sharex = True, sharey = True)
+    fig, ax = plt.subplots(10,10, sharex = True, sharey = True, figsize=(19, 9.5))
     for i in range(len(Xrange)):
         for j in range(len(Yrange)):
             cmFastPP = getattr(getattr(obj[i][j], f'{model}info'), observable)[slice]
             #cmFastPP /= (143 ** 3)
             #cmFastPP *= 0.11694557
             #cmFastPP = np.array(cmFastPP) * (xaxis ** 3) / (2*(np.pi ** 2))
+
             ax[i,j].plot(xaxis, cmFastPP, label = '21cmFAST')
+            ax[i,j].set_xlabel(r'k [$\frac{1}{Mpc}$]')
+
+            if j ==0:
+                ax[i,j].set_ylabel(r'$P_{bt}$ [K²Mpc³]', size = 'small')
             if add_zreion:
                     linbias = getattr(getattr(obj[i][j], f'zreioninfo'), observable)[slice]
                     #linbias /= 143**3
                     #linbias = np.array(linbias) * (xaxis ** 3) / (2*(np.pi** 2 ))
                     #print(linbias == cmFastPP)
-                    ax[i,j].plot(xaxis,linbias, label = 'z-reion')
+                    ax[i,j].plot(xaxis,linbias, label = 'Hugo algorithm')
             if add_James:
                     James_PP = getattr(getattr(obj[i][j], f'Jamesinfo'), observable)[slice]
-                    ax[i, j].plot(xaxis, James_PP, label='James TAU')
+                    James_PP_correctedh = James_PP / (0.7**3)
+                    ax[i, j].plot(xaxis, James_PP_correctedh[1:], label='James algorithm')
+                    #James_PP2 = getattr(getattr(obj[i+1][j+1], f'Jamesinfo'), observable)[slice]
+                    #print(James_PP2-James_PP)
             # print(cmFastPP/linbias)
     #ax.set_xlabel(field_names[0])
     #ax.set_ylabel(field_names[1])
+    print(plt.ylim())
+    #plt.ylim([-324049718.6696194, 6844765738.942251])
     if log_scale: plt.loglog()
     lines_labels = [ax.get_legend_handles_labels() for ax in fig.axes]
     lines, labels = [sum(lol, []) for lol in zip(*lines_labels)]
     fig.legend(lines[:3], labels[:3])
-    plt.loglog()
+
+    plt.ylim([1198742.8859540655, 9818689819.912655])
     #plt.title(r'Linear bias $b_mz$ as a function of Heff and Tvir ')
-    fig.text(0.5, 0.02, field_names[0], ha='center')
-    fig.text(0.2, 0.9, f'Brightness temperature at redshift z = {redshift} ', size='large')
-    fig.text(0.5, 0.04, '                 3.8'
+    fig.text(0.5, 0.01, r'Virial temperature [$log_{10}(K)$]', ha='center')
+    fig.text(0.4, 0.9, f'Power spectrum of the Brightness temperature at redshift z = {redshift} ', size='large')
+
+    fig.text(0.5, 0.032
+             , '                 3.8'
                         '                              3.9'
                         '                            4.0'
                         '                            4.1'
@@ -435,7 +477,7 @@ def plot_variational_bright_temp(obj,model,observable, redshift, slice, Xrange, 
                         '                            4.5'
                         '                            4.6'
                         '                            4.7', ha='center')
-    fig.text(0.04, 0.5, field_names[1], va='center', rotation='vertical')
+    fig.text(0.04, 0.5, 'Ionizing efficiency', va='center', rotation='vertical')
     fig.text(0.06, 0.5, '25'
                         '             28'
                         '             31'
@@ -449,8 +491,8 @@ def plot_variational_bright_temp(obj,model,observable, redshift, slice, Xrange, 
     if savefig:
         manager = plt.get_current_fig_manager()
         manager.full_screen_toggle()
-        plt.savefig('./bt_map/bt1_z{}.png'.format(redshift))
-        filenames.append('./bt_map/bt1_z{}.png'.format(redshift))
+        plt.savefig('./bt_map/bt1James_z{}.png'.format(redshift))
+        filenames.append('./bt_map/bt1James_z{}.png'.format(redshift))
         plt.close()
         return filenames
     else:
@@ -527,7 +569,7 @@ def plot_variational_PS(obj,model,observable, Xrange, Yrange, xaxis=np.logspace(
     plt.show()
 
 
-def plot_variational_ion_hist(obj,model,observable, Xrange, Yrange, xaxis='redshifts', add_zreion = False, plot_diff = False,  field_names = ['Tvir','Heff'], log_scale = False):
+def plot_variational_ion_hist(obj,model,observable, Xrange, Yrange, xaxis='redshifts', add_zreion = False, add_James = False, plot_diff = False,  field_names = ['Tvir','Heff'], log_scale = False):
     '''
     This function plots the power spectrum over the 2D variational range of input parameters.
     :param obj: [arr] 2D, the object array filled with info of 21cmFAST and zreion
@@ -546,35 +588,42 @@ def plot_variational_ion_hist(obj,model,observable, Xrange, Yrange, xaxis='redsh
     for i in range(len(Xrange)):
         for j in range(len(Yrange)):
             #if xaxis == 'redshifts': xaxis = np.linspace(5, 15,len(getattr(getattr(obj[i][j], f'{model}info'), observable)))
-            if xaxis == 'redshifts': xaxis = np.linspace(5, 15, 60, endpoint=True)
+            if xaxis == 'redshifts': xaxis = np.linspace(5, 18, 60, endpoint=True)
             if plot_diff:
                 ax[i,j].plot(xaxis, np.array(getattr(getattr(obj[i][j], f'{model}info'), observable)) - np.array(getattr(getattr(obj[i][j], f'zreioninfo'), observable)))
             else:
                 ax[i,j].plot(xaxis, getattr(getattr(obj[i][j], f'{model}info'), observable), label = f'{model}')
+                ax[i, j].set_xlabel(r'redshift')
+                if j == 0:
+                    ax[i, j].set_ylabel(r'$x_i$', size='small')
                 if add_zreion:
-                        ax[i,j].plot(xaxis, getattr(getattr(obj[i][j], f'zreioninfo'), observable), label = 'z-reion')
+                        ax[i,j].plot(xaxis, getattr(getattr(obj[i][j], f'zreioninfo'), observable), label = 'Hugo algorithm')
+                if add_James:
+                        ax[i, j].plot(xaxis, getattr(getattr(obj[i][j], f'Jamesinfo'), observable), label='James algorithm')
+
 
 
     #ax.set_xlabel(field_names[0])
     #ax.set_ylabel(field_names[1])
     lines_labels = [ax.get_legend_handles_labels() for ax in fig.axes]
     lines, labels = [sum(lol, []) for lol in zip(*lines_labels)]
-    fig.legend(lines[:2], labels[:2])
+    fig.legend(lines[:3], labels[:3])
     fig.text(0.45, 0.9, f'Ionization history as function of the ioniozation efficiency and virial temperature', size='large')
     if log_scale: plt.loglog()
-    fig.text(0.5, 0.02, field_names[0], ha='center')
+    fig.text(0.5, 0.01, r'Virial temperature [$log_{10}(K)$]', ha='center')
 
-    fig.text(0.5, 0.04, '                 3.8'
-                        '                              3.9'
-                        '                            4.0'
-                        '                            4.1'
-                        '                            4.2'
-                        '                            4.3'
-                        '                            4.4'
-                        '                            4.5'
-                        '                            4.6'
-                        '                            4.7', ha='center')
-    fig.text(0.04, 0.5, field_names[1], va='center', rotation='vertical')
+    fig.text(0.5, 0.032
+             , '                 3.8'
+               '                              3.9'
+               '                            4.0'
+               '                            4.1'
+               '                            4.2'
+               '                            4.3'
+               '                            4.4'
+               '                            4.5'
+               '                            4.6'
+               '                            4.7', ha='center')
+    fig.text(0.04, 0.5, 'Ionizing efficiency', va='center', rotation='vertical')
     fig.text(0.06, 0.5, '25'
                         '             28'
                         '             31'

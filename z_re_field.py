@@ -85,14 +85,33 @@ def generate_zre_field(zre_range,initial_conditions,box_dim, astro_params, flag_
         if comp_brightness_temp and i%2 == 0 :
             perturbed_field = p21c.perturb_field(redshift=redshift, init_boxes=initial_conditions, write=False)
             brightness_temp = p21c.brightness_temperature(ionized_box=ionize_box, perturbed_field=perturbed_field, write=False).brightness_temp
+            #plot_zre_slice(brightness_temp)
+            t21_field = t0(redshift) * (1 + perturbed_field.density) * (1 - new_cube)
+            #t21_field = abs(t21_field)
+            #plot_zre_slice(t21_field)
             brightness_temp_ps = pbox.get_power(brightness_temp, 143, bins = 20, log_bins=True)
-            b_temp_ps.append(brightness_temp_ps[0])
+            brightness_temp_ps2 = pbox.get_power(t21_field, 143, bins = 20, log_bins=True)
+            # fig, ax = plt.subplots()
+            # plt.scatter(brightness_temp_ps2[1],brightness_temp_ps2[0], label = 'zreion')
+            # plt.scatter(brightness_temp_ps[1],brightness_temp_ps[0], label = '21cmfast')
+            # plt.legend()
+            # plt.show()
+            b_temp_ps.append(brightness_temp_ps2[0][1:])
             redshifts4bright.append(redshift)
         final_cube[new_cube > -1] = redshift
     if comp_brightness_temp:
         return final_cube, b_temp_ps, redshifts4bright
     else:
         return final_cube
+
+
+def t0(z):
+    '''
+    for BT testing
+    :param z:
+    :return:
+    '''
+    return 38.6 * 70 * np.sqrt((1 + z) / 10)
 
 def over_zre_equation(zre_x,zre_mean):
     '''
@@ -104,7 +123,7 @@ def over_zre_equation(zre_x,zre_mean):
     :return: over-redshift field
     :rtype: 3D array
     '''
-    return((1+zre_x)-(1+zre_mean))/(1+zre_mean)
+    return np.array(((1+zre_x)-(1+zre_mean))/(1+zre_mean))
 
 def over_p_equation(p,p_mean):
     '''
