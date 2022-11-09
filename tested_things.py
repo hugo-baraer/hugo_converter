@@ -460,6 +460,46 @@ axes[-1].set_xlabel("Step number");
 # plt.title(r'best curve fitting for the linear bias')
 # plt.show()
 
+"""Test fields in 21cmFAST"""
+# zre.plot_zre_slice(zre_zreion, 143, 143)
+# print(pbox.get_power(zre_zreion,100, bins = 20, log_bins = True))
+# print(pbox.get_power(zre_zreion, 143, bins=20, log_bins=True))
+# print('coucou')
+# zre_zreion1 = zr.apply_zreion(perturbed_field.density,
+#                            8.1,0.6,0.4,143,b0 = 1.0)
+# zre.plot_zre_slice(zre_zreion1, 143, 143)
+#
+# fig, ax = plt.subplots()
+# plt.scatter(pbox.get_power(perturbed_field.density,100, bins = 20, log_bins = True)[1], pbox.get_power(zre_zreion,100, bins = 20, log_bins = True)[0], label='100')
+# plt.scatter(pbox.get_power(zre_zreion1,100, bins = 20, log_bins = True)[1], pbox.get_power(zre_zreion1,100, bins = 20, log_bins = True)[0], label='143')
+# plt.legend()
+# plt.show()
+# break
+# aaa = p21c.ionize_box(redshift=Tvir, init_boxes = initial_conditions, astro_params = astro_params, flag_options = flag_options, write=False)
+# box = aaa.xH_box
+# print(aaa.xH_box)
+# print(aaa.z_re_box)
+# print(aaa.xH_box + aaa.z_re_box)
+# zre.plot_zre_slice(density_small)
+# zre.plot_zre_slice(density, resolution=200, size = 300)
+# zre.plot_zre_slice(b_t, resolution=200, size = 300)
+# zre.plot_zre_slice(density)
+# #zre.plot_zre_slice(aaa.z_re_box)
+# nuetral_num = np.sum(xH.flatten() > 0)
+# print( nuetral_num / len(xH.flatten()))
+# # # print(xH.sum() / (143 ** 3))
+# # # print(aaa.xH_box.sum() / 143 ** 3)
+# continueb_mz = b_mz1[1:]
+
+
+# zre_range = np.linspace(8,10,2)
+# # z_re_box, b_temp_ps, z_4_bt = zre.generate_zre_field(zre_range, initial_conditions, box_dim, astro_params,
+# #                                                      flag_options,
+# #                                                      comP_ionization_rate=False, comp_brightness_temp=True)
+# perturbed_field = p21c.perturb_field(redshift=8.1, init_boxes=initial_conditions, write=False)
+# zre_zreion = zr.apply_zreion(perturbed_field.density,
+#                              8.1, 0.6, 0.4, 143, b0=1.0)
+
 """Test the FFT function for a 3D Gaussian field"""
 
 # start by generating a 3d gaussian field and plotting a slice of it (uncomment second line for plotting)
