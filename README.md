@@ -17,7 +17,7 @@ The linear bias in it's simpliest form is expressable as:
 
 ![Screenshot from 2022-06-16 22-50-42](https://user-images.githubusercontent.com/59851566/200427950-3221477b-d322-41c2-a602-e76f3a96064c.png)
 
-Using z-reion allows for a computationnaly quick generation of a redshfit of reionization field. However, since z-reion is a semi-analytical model relying on a statistical term, it has no physical parameters' inputs (astrophyscial, cosmological, etc.). [21cmFAST](https://github.com/21cmfast/21cmFAST) provides a model with inputable physical parameters. Plugging in 21cmFAST inputs, `Hugo's converter` can be used to fit for the values of z-reion's bias parameters. Plugged in Paul Laplante [z-reion](https://github.com/plaplant/zreion) python implementation (the model was originally designed and proposed by:  Battaglia and al. (2013)), redshfit of reionization fields can then be quickly generated from density fields. 
+Using z-reion allows for a computationnaly quick generation of a redshfit of reionization field. However, since z-reion is a semi-analytical model relying on a statistical term, it has no physical parameters' inputs (astrophyscial, cosmological, etc.). [21cmFAST](https://github.com/21cmfast/21cmFAST) provides a model with inputable physical parameters. Plugging in `21cmFAST` inputs, `Hugo's converter` can be used to fit for the values of z-reion's bias parameters. Plugged in Paul Laplante [z-reion](https://github.com/plaplant/zreion) python implementation (the model was originally designed and proposed by:  Battaglia and al. (2013)), redshfit of reionization fields can then be quickly generated from density fields. 
 
 
 ## Features
@@ -28,6 +28,7 @@ Using z-reion allows for a computationnaly quick generation of a redshfit of rei
 * Contains all the necessary analysis functions including plotting and the computation of several obsevables)
 * Can analyse several observables (power spectrums, ionization histories, brightness temperatures, TAU parameters, etc.)
 * Possibility to run parameter space studies (vary simultaneaously inputs and see it's effect on parameters or observables)
+* Easily generate and save 21cmFAST fields (density, ionization maps, and brightness temperature)
 
 ## Installation
 
