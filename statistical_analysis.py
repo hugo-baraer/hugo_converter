@@ -462,7 +462,7 @@ def log_post_bmz_b_errs(theta, x, y, yerr):
         return -np.inf
     return lp + log_likelihood_bmz_b_errs(theta, x, y, yerr)
 
-def run_MCMC_free_params(x,y,errs, zre_mean, num_iter = 5000, nwalkers = 32, plot_walkers = False, plot_corners = False, plot_best_fit_sample = False, data_dict= None, add_varying_val = False, varying_input = 'None', varying_in_value = 0 ):
+def run_MCMC_free_params(x,y,errs, zre_mean, num_iter = 5000, nwalkers = 32, plot_walkers = False, plot_corners = False, plot_best_fit_sample = False, data_dict= None, varying_input = 'None', varying_in_value = 0 ):
     '''
     This function runs the MCMC
     :param x: the kbins fitting for
@@ -525,7 +525,7 @@ def run_MCMC_free_params(x,y,errs, zre_mean, num_iter = 5000, nwalkers = 32, plo
         ax.errorbar(x, y, yerr=(sample[3] / errs), linestyle='None', capsize=4,
                     marker='o')  # yerr = bmz_errors*sample[2]
         # plt.plot(kvalues,y_plot_fit, label = 'Battaglia fit') #this lines plots the Battaglia best fit value
-        ax.set_xlim(0, 10.)
+        ax.set_xlim(0.05, 10)
         ax.set_ylabel(r'$b_{mz}$ ')
         ax.set_xlabel(r'$k[Mpc⁻1 h]$')
         plt.title(r'$b_{zm}$ as a function of k ')
@@ -534,12 +534,12 @@ def run_MCMC_free_params(x,y,errs, zre_mean, num_iter = 5000, nwalkers = 32, plo
         plt.show()
     if data_dict != None:
         if data_dict == {}:
-            if add_varying_val: data_dict = {'Z_re': [], '{}'.format(varying_input): [], "medians": [], "a16":[], "a50":[], "a84":[], "b16":[], "b50":[], "b84":[], "k16":[], "k50":[], "k84":[], "p16":[], "p50":[], "p84":[], "width50":[],"width90":[]}
+            if varying_input != 'None': data_dict = {'Z_re': [], '{}'.format(varying_input): [], "medians": [], "a16":[], "a50":[], "a84":[], "b16":[], "b50":[], "b84":[], "k16":[], "k50":[], "k84":[], "p16":[], "p50":[], "p84":[], "width50":[],"width90":[]}
             else: data_dict = {'Z_re': [], "medians": [], "a16":[], "a50":[], "a84":[], "b16":[], "b50":[], "b84":[], "k16":[], "k50":[], "k84":[], "p16":[], "p50":[], "p84":[], "width50":[],"width90":[]}
 
 
         data_dict['medians'].append(best_params)
-        if add_varying_val: data_dict['{}'.format(varying_input)].append(varying_in_value)
+        if varying_input != 'None': data_dict['{}'.format(varying_input)].append(varying_in_value)
         data_dict['a16'].append(corner.quantile(flat_samples[:, 0], [0.16]))
         data_dict['a50'].append(corner.quantile(flat_samples[:, 0], [0.5]))
         data_dict['a84'].append(corner.quantile(flat_samples[:, 0], [0.84]))
@@ -557,7 +557,7 @@ def run_MCMC_free_params(x,y,errs, zre_mean, num_iter = 5000, nwalkers = 32, plo
     return best_params
 
 
-def generate_bias(zre_range, initial_conditions, box_dim, astro_params, flag_options, density_field = None, z_re_box = None,varying_input = 'None', varying_in_value = 0, data_dict ={}, nb_bins = 20, logbins = True, comp_width = True, comp_ion_hist = True, comp_zre_PP = False, comp_bt = False, return_zre = False, plot_best_fit = False, plot_corner = False):
+def generate_bias(zre_range, initial_conditions, box_dim, box_len, astro_params, flag_options, density_field = None, z_re_box = None,varying_input = 'None', varying_in_value = 0, data_dict ={}, nb_bins = 20, logbins = True, comp_width = True, comp_ion_hist = False, comp_zre_PP = False, comp_bt = False, return_zre = False, return_density = False, plot_best_fit = False, plot_corner = False):
     '''
     This function generates the linear bias from the power spectrum from a set of data.
     :param zre_range: [1D arr] the range of redshift on which to compute the redshfit of reionization field  over
@@ -575,6 +575,8 @@ def generate_bias(zre_range, initial_conditions, box_dim, astro_params, flag_opt
     :param comp_width: [bool] return the width of reionization for 21cmFAST if True
     :param comp_ion_hist: [bool] computes and return 21cmFAST ionization history of True
     :param comp_zre_PP: [boo] computes and return the power spectrum of the redshift of reionization field
+    :param return_zre : [bool] return the redshift of reionization field if True False
+    :param return_density: [bool] return the density field if True
     :return: b_mz: the computed linear bias (and the ionization history if applicable)
     :param plot_best_fit: [bool] Will plot the best fitted paramters over the computed bias if True (default True)
     :param plot_corner: [bool] Will plot the posterior distribution of the best fitted parameters if True (default True)
@@ -604,62 +606,60 @@ def generate_bias(zre_range, initial_conditions, box_dim, astro_params, flag_opt
         density_field = perturbed_field.density
 
 
-
-    zre_pp = pbox.get_power(overzre,box_dim, bins = nb_bins,log_bins=True)[0][1:]
-    den_pp = pbox.get_power(density_field, box_dim, bins = nb_bins,log_bins=True)[0][1:]
+    #[1:] is because the first result given by powerbox is always Nan
+    #compute the power spectrums of the respective fields
+    zre_pp = pbox.get_power(overzre,box_len, bins = nb_bins,log_bins=True)[0][1:]
+    den_pp = pbox.get_power(density_field, box_len, bins = nb_bins,log_bins=True)[0][1:]
+    #compute the linear bias as the sqrt of the power spectrum ratio
+    b_mz = np.sqrt(np.divide(zre_pp, den_pp))
 
     #This section computes the cross correlation for error weighting in the MCMC
-    delta = 0.1
-    Xd, Yd, overd_fft, freqd = FFT.compute_fft(density_field, delta, box_dim)
-    Xd, Yd, overzre_fft, freqd = FFT.compute_fft(overzre, delta, box_dim)
-    cross_matrix = overd_fft.conj() * overzre_fft
-    # cross_matrix =  overzre_fft.conj().T *overd_fft
-    b_mz = np.sqrt(np.divide(zre_pp, den_pp))
-    print(b_mz)
+    cross_cor_pbox = pbox.get_power(overzre, box_len, bins=nb_bins, log_bins=True, deltax2=density_field)# equivalent to: cross_cor_pbox2 = pbox.get_power(density_field, box_dim, bins = nb_bins, log_bins = True, deltax2 = overzre)
 
-    values_cross, count_cross = average_overk(box_dim, cross_matrix, nb_bins, logbins=True)
-    cross_pp = np.divide(values_cross, count_cross)
-    cross_pp = cross_pp[1:]/(box_dim**3)
-    # k_values = np.linspace(kbins_zre.min(), kbins_zre.max(), len(cross_pp))
-    #
-    kbins_zre = pbox.get_power(density_field,box_dim, bins = nb_bins, log_bins = True)[1][1:] #if logbins :
-    #else: kbins_zre = pbox.get_power(density_field,143, bins = 21, log_bins = False)[1]
-    # print(kbins_zre, 'kbins1')
-    # print(b_mz, 'bmz1')
-    # #kbins_zre = kbins_zre
-    # print(kbins_zre, 'kbins2')
-    # print(b_mz, 'bmz2')
-
-    cross_cor = np.divide(np.array(cross_pp),
+    #compute the cross correlation ration r_mz that is used to weight the errors as presented in the Battaglia model
+    r_mz= np.divide(np.array(cross_cor_pbox[0][1:]),
                           np.sqrt((np.array(zre_pp) * np.array(den_pp))))
-    print(cross_cor)
-    """these lines plots the linear bias as a function of the kvalues"""
+
+    # This computes the values of k for which the power spectrums are computed and a function of (one again discarding first Nan
+    kbins_zre = pbox.get_power(density_field, box_len, bins=nb_bins, log_bins=True)[1][1:]
+
 
     '''
     MCMC analysis and posterior distribution on the b_mz 
     '''
 
-    # errs = np.ones_like(b_mz)*0.05
 
     # no b_mz fitting
     k_values = kbins_zre
 
-
-    data_dict = run_MCMC_free_params(kbins_zre, b_mz, cross_cor, zre_mean, data_dict=data_dict,
+    data_dict = run_MCMC_free_params(kbins_zre, b_mz, r_mz, zre_mean, data_dict=data_dict,
                                         varying_input=varying_input, varying_in_value=varying_in_value, plot_corners=plot_corner, plot_best_fit_sample=plot_best_fit)
-    if comp_width:
-        data_dict['width50'].append(width_50_21)
-        data_dict['width90'].append(width_90_21)
-    if comp_ion_hist and not comp_zre_PP:
-        return b_mz, k_values, data_dict, density_field, cmFast_hist
-    elif comp_ion_hist and comp_zre_PP and comp_bt and not return_zre:
-        return b_mz, k_values, data_dict, density_field, cmFast_hist, zre_pp, den_pp, b_temp_ps, z_4_bt
-    elif comp_ion_hist and comp_zre_PP and comp_bt and return_zre:
-        return z_re_box, b_mz, k_values, data_dict, density_field, cmFast_hist, zre_pp, den_pp, b_temp_ps, z_4_bt
-    elif comp_ion_hist and comp_zre_PP and not comp_bt and return_zre:
+    # if comp_width:
+    #     data_dict['width50'].append(width_50_21)
+    #     data_dict['width90'].append(width_90_21)
+
+    if comp_zre_PP:
         return z_re_box, b_mz, k_values, data_dict, density_field, cmFast_hist, zre_pp, den_pp
+    elif not return_density and not return_zre:
+        return data_dict
+    elif not return_density and return_zre:
+        return data_dict, z_re_box
+    elif not return_zre and return_density:
+        return data_dict, density_field
+    elif return_density and return_zre:
+        return data_dict, density_field, z_re_box
+
+    # elif comp_ion_hist and not comp_zre_PP:
+    #     return b_mz, k_values, data_dict, density_field, cmFast_hist
+    # elif comp_ion_hist and comp_zre_PP and comp_bt and not return_zre:
+    #     return b_mz, k_values, data_dict, density_field, cmFast_hist, zre_pp, den_pp, b_temp_ps, z_4_bt
+    # elif comp_ion_hist and comp_zre_PP and comp_bt and return_zre:
+    #     return z_re_box, b_mz, k_values, data_dict, density_field, cmFast_hist, zre_pp, den_pp, b_temp_ps, z_4_bt
+    # elif comp_ion_hist and comp_zre_PP and not comp_bt and return_zre:
+    #     return z_re_box, b_mz, k_values, data_dict, density_field, cmFast_hist, zre_pp, den_pp
+    #
     else:
-        return b_mz, k_values, data_dict, density_field
+        return data_dict
 
 
     # print(ionization_rates)
@@ -726,7 +726,7 @@ def run_MCMC_free_params_nob(x,y,errs, zre_mean, num_iter = 5000, nwalkers = 32,
         ax.errorbar(kbins_zre, b_mz, yerr=(sample[3] / (cross_cor)), linestyle='None', capsize=4,
                     marker='o')  # yerr = bmz_errors*sample[2]
         # plt.plot(kvalues,y_plot_fit, label = 'Battaglia fit') #this lines plots the Battaglia best fit value
-        ax.set_xlim(0, 10.)
+        ax.set_xlim(0.01, 1.2)
         ax.set_ylabel(r'$b_{mz}$ ')
         ax.set_xlabel(r'$k[Mpc⁻1 h]$')
         plt.title(r'$b_{zm}$ as a function of k ')

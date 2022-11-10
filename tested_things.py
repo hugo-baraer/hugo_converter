@@ -14,6 +14,38 @@
 #import statistics
 #from scipy import signal
 
+
+"""This whole section manually computes the cross correlation to verify the use of powerbox"""
+# delta = 0.1
+# Xd, Yd, overd_fft, freqd = FFT.compute_fft(density_field, delta, box_dim)
+# Xd, Yd, overzre_fft, freqd = FFT.compute_fft(overzre, delta, box_dim)
+# cross_matrix = overd_fft.conj() * overzre_fft
+# # cross_matrix =  overzre_fft.conj().T *overd_fft
+#
+# values_cross, count_cross = average_overk(box_dim, cross_matrix, nb_bins, logbins=True)
+# cross_pp = np.divide(values_cross, count_cross)
+# cross_pp = cross_pp[1:]/(box_dim**3)
+#
+# #if logbins :
+#
+# print(kbins_zre, cross_cor_pbox[1:])
+# cross_cor = np.divide(np.array(cross_pp),
+#                       np.sqrt((np.array(zre_pp) * np.array(den_pp))))
+#
+# print(cross_cor, cross_cor_pbox)
+# """these lines plots the linear bias as a function of the kvalues"""
+#
+#
+# fig, ax = plt.subplots()
+# plt.scatter(kbins_zre, cross_cor_pbox, label = 'pbox1')
+# #plt.scatter(cross_cor_pbox2[1], cross_cor_pbox2[0], label='pbox2')
+# plt.scatter(kbins_zre, cross_cor, label = 'myFFT cross corr')
+# plt.legend()
+# plt.loglog()
+# plt.show()
+
+
+
 """power box and kbins testing """
 # p_k_zre, kbins_zre = pbox.get_power(overzre, 100)
 # kbins_zre = np.linspace(0,np.pi*2*box_dim/100., nb_bins+1)

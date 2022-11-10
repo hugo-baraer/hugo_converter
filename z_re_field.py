@@ -82,22 +82,22 @@ def generate_zre_field(zre_range,initial_conditions,box_dim, astro_params, flag_
         ionize_box = p21c.ionize_box(redshift=redshift, init_boxes = initial_conditions, astro_params = astro_params, flag_options = flag_options, write=False)
         new_cube = ionize_box.z_re_box
         #if comP_ionization_rate: ionization_rate.append((new_cube > -1).sum()/ box_dim**3)
-        if comp_brightness_temp and i%2 == 0 :
-            perturbed_field = p21c.perturb_field(redshift=redshift, init_boxes=initial_conditions, write=False)
-            brightness_temp = p21c.brightness_temperature(ionized_box=ionize_box, perturbed_field=perturbed_field, write=False).brightness_temp
-            #plot_zre_slice(brightness_temp)
-            t21_field = t0(redshift) * (1 + perturbed_field.density) * (1 - new_cube)
-            #t21_field = abs(t21_field)
-            #plot_zre_slice(t21_field)
-            brightness_temp_ps = pbox.get_power(brightness_temp, 143, bins = 20, log_bins=True)
-            brightness_temp_ps2 = pbox.get_power(t21_field, 143, bins = 20, log_bins=True)
-            # fig, ax = plt.subplots()
-            # plt.scatter(brightness_temp_ps2[1],brightness_temp_ps2[0], label = 'zreion')
-            # plt.scatter(brightness_temp_ps[1],brightness_temp_ps[0], label = '21cmfast')
-            # plt.legend()
-            # plt.show()
-            b_temp_ps.append(brightness_temp_ps2[0][1:])
-            redshifts4bright.append(redshift)
+        # if comp_brightness_temp and i%2 == 0 :
+        #     perturbed_field = p21c.perturb_field(redshift=redshift, init_boxes=initial_conditions, write=False)
+        #     brightness_temp = p21c.brightness_temperature(ionized_box=ionize_box, perturbed_field=perturbed_field, write=False).brightness_temp
+        #     #plot_zre_slice(brightness_temp)
+        #     t21_field = t0(redshift) * (1 + perturbed_field.density) * (1 - new_cube)
+        #     #t21_field = abs(t21_field)
+        #     #plot_zre_slice(t21_field)
+        #     brightness_temp_ps = pbox.get_power(brightness_temp, 143, bins = 20, log_bins=True)
+        #     brightness_temp_ps2 = pbox.get_power(t21_field, 143, bins = 20, log_bins=True)
+        #     # fig, ax = plt.subplots()
+        #     # plt.scatter(brightness_temp_ps2[1],brightness_temp_ps2[0], label = 'zreion')
+        #     # plt.scatter(brightness_temp_ps[1],brightness_temp_ps[0], label = '21cmfast')
+        #     # plt.legend()
+        #     # plt.show()
+        #     b_temp_ps.append(brightness_temp_ps2[0][1:])
+        #     redshifts4bright.append(redshift)
         final_cube[new_cube > -1] = redshift
     if comp_brightness_temp:
         return final_cube, b_temp_ps, redshifts4bright
