@@ -11,21 +11,20 @@
   
 """
 import py21cmfast as p21c
-from py21cmfast import plotting
 import os
 import numpy as np
 import matplotlib.pyplot as plt
 import z_re_field as zre
 from tqdm import tqdm
 from scipy.optimize import curve_fit
-import math as m
 import emcee
 import corner
 import plot_params as pp
-import FFT
 import powerbox as pbox
-#import pymks
-def average_overk(box_dim,field, nb_bins, logbins = False):
+import z_reion_comparison as zrcomp
+
+# import pymks
+def average_overk(box_dim, field, nb_bins, logbins=False):
     '''
     this modules compute the average of 3d fields over theta and phi to make it only k dependant
     :param box_dim: the number of pixels in one side of the box
@@ -40,18 +39,17 @@ def average_overk(box_dim,field, nb_bins, logbins = False):
     '''
     cx = int(box_dim // 2)
 
-    #uncomment these lines for an uneven distribution of points
+    # uncomment these lines for an uneven distribution of points
     # radii1 = np.linspace(0, np.sqrt((cx/2) ** 2), num=int(3*np.sqrt((cx) ** 2) / int(radius_thick)))
     # radii2 = np.linspace(np.sqrt((cx/2) ** 2), np.sqrt(3 * (cx) ** 2), num=int(0.5*np.sqrt((cx) ** 2) / int(radius_thick)))
     # radii = np.concatenate((radii1[1:-1],radii2))
 
-    #radii = np.linspace(0, np.sqrt(3 * (cx) ** 2), num=int(np.sqrt(3 * (cx) ** 2) / int(radius_thick)))
+    # radii = np.linspace(0, np.sqrt(3 * (cx) ** 2), num=int(np.sqrt(3 * (cx) ** 2) / int(radius_thick)))
     radii = np.linspace(0, np.sqrt(3 * (cx) ** 2), nb_bins)
     radii = radii[1:]  # exlude the radii 0 to avoid divison by 0
 
-    if logbins :
-        radii =  np.logspace(0, np.log10(np.sqrt(3 * (cx) ** 2)), nb_bins)
-
+    if logbins:
+        radii = np.logspace(0, np.log10(np.sqrt(3 * (cx) ** 2)), nb_bins)
 
     values = np.zeros(len(radii))
     count = np.zeros(len(radii))
@@ -67,7 +65,8 @@ def average_overk(box_dim,field, nb_bins, logbins = False):
                         break
     return values, count
 
-def average_overk_2fields(box_dim,overzre_fft, overd_fft, radius_thick):
+
+def average_overk_2fields(box_dim, overzre_fft, overd_fft, radius_thick):
     '''
     this modules compute the average of 3d fields over theta and phi to make it only k dependant, but with 2 fields(goes quicker than two loops)
     :param box_dim: the number of pixels in the box
@@ -82,7 +81,7 @@ def average_overk_2fields(box_dim,overzre_fft, overd_fft, radius_thick):
     cx = int(box_dim // 2)
     cy = int(box_dim // 2)
 
-    #uncomment these lines for an uneven distribution of points
+    # uncomment these lines for an uneven distribution of points
     # radii1 = np.linspace(0, np.sqrt((cx/2) ** 2), num=int(3*np.sqrt((cx) ** 2) / int(radius_thick)))
     # radii2 = np.linspace(np.sqrt((cx/2) ** 2), np.sqrt(3 * (cx) ** 2), num=int(0.5*np.sqrt((cx) ** 2) / int(radius_thick)))
     # radii = np.concatenate((radii1[1:-1],radii2))
@@ -94,7 +93,6 @@ def average_overk_2fields(box_dim,overzre_fft, overd_fft, radius_thick):
     count = np.zeros(len(radii))
     values_overd = np.zeros(len(radii))
     count_overd = np.zeros(len(radii))
-
 
     for i in tqdm(range(box_dim), 'transfering fields into k 1D array'):
         for j in range(box_dim):
@@ -110,7 +108,7 @@ def average_overk_2fields(box_dim,overzre_fft, overd_fft, radius_thick):
     return values, values_overd, count, count_overd
 
 
-def average_std(box_dim,overzre_fft, overd_fft, radius_thick, averagezre, averaged, countzre, countd):
+def average_std(box_dim, overzre_fft, overd_fft, radius_thick, averagezre, averaged, countzre, countd):
     '''
     This function computes the standard devitation of the averaged field
     :param box_dim: the number of pixels in the array (size)
@@ -140,7 +138,7 @@ def average_std(box_dim,overzre_fft, overd_fft, radius_thick, averagezre, averag
     # radii = np.concatenate((radii1[1:-1],radii2))
 
     radii = np.linspace(0, np.sqrt(3 * (cx) ** 2), num=int(np.sqrt(3 * (cx) ** 2) / int(radius_thick)))
-    radii = radii[1:] #exlude the radii 0 to avoid divison by 0
+    radii = radii[1:]  # exlude the radii 0 to avoid divison by 0
 
     sigmad = np.zeros(len(countd))
     sigmazre = np.zeros(len(countzre))
@@ -148,17 +146,19 @@ def average_std(box_dim,overzre_fft, overd_fft, radius_thick, averagezre, averag
     for i in tqdm(range(box_dim), 'computing the standard deviation for the averaged field'):
         for j in range(box_dim):
             for z in range(box_dim):
-                k_radius = np.sqrt((i - cx) ** 2 + (j - cy) ** 2 + (z - cy) ** 2) #the radius of the point
+                k_radius = np.sqrt((i - cx) ** 2 + (j - cy) ** 2 + (z - cy) ** 2)  # the radius of the point
                 for step, radius in enumerate(radii):
                     if k_radius < radius:
                         sigmad[step] += (overd_fft[i, j, z] - averaged[step]) ** 2
                         sigmazre[step] += (overzre_fft[i, j, z] - averagezre[step]) ** 2
                         break
-    std_d = np.sqrt(np.divide(sigmad,countd)) #get the sqrt of each ring for the overdensity
-    std_zre = np.sqrt(np.divide(sigmazre,countzre)) #get the sqrt of each ring for the over-redshift of reionization
-    return np.divide(std_d,np.sqrt(countd)), np.divide(std_zre,np.sqrt(countzre)) #divide the sqrt by their number of points to get the confidence in the mean.
+    std_d = np.sqrt(np.divide(sigmad, countd))  # get the sqrt of each ring for the overdensity
+    std_zre = np.sqrt(np.divide(sigmazre, countzre))  # get the sqrt of each ring for the over-redshift of reionization
+    return np.divide(std_d, np.sqrt(countd)), np.divide(std_zre, np.sqrt(
+        countzre))  # divide the sqrt by their number of points to get the confidence in the mean.
 
-def compute_bmz_error(b_mz, overzre_fft_k,overd_fft_k, sigmad, sigmazre):
+
+def compute_bmz_error(b_mz, overzre_fft_k, overd_fft_k, sigmad, sigmazre):
     '''
     This module computes the errors in the bm_z error with error propagation from the average std
     :param b_mz: the linear bias factor
@@ -174,12 +174,12 @@ def compute_bmz_error(b_mz, overzre_fft_k,overd_fft_k, sigmad, sigmazre):
     :return: the errors bars for the bmz factor
     :rtype: 1d array
     '''
-    term1 = np.divide((0.5*sigmad),overd_fft_k)**2
-    term2 = np.divide((0.5*sigmazre),overzre_fft_k)**2
-    return np.multiply(b_mz,(np.sqrt(term1 + term2)))
+    term1 = np.divide((0.5 * sigmad), overd_fft_k) ** 2
+    term2 = np.divide((0.5 * sigmazre), overzre_fft_k) ** 2
+    return np.multiply(b_mz, (np.sqrt(term1 + term2)))
 
 
-def lin_bias(x, a,b0,k0):
+def lin_bias(x, a, b0, k0):
     '''
     This function represents the linear bias equation that will be fitted.
     :param k: the k_space that will be iterated over
@@ -193,9 +193,10 @@ def lin_bias(x, a,b0,k0):
     :return: the linear bias equation
     :rtype: array
     '''
-    return b0/(1+x/k0)**a
+    return b0 / (1 + x / k0) ** a
 
-def get_param_value(x,y):
+
+def get_param_value(x, y):
     '''
     This function computes the best-fit value for
     :param x:
@@ -207,44 +208,13 @@ def get_param_value(x,y):
     '''
     return curve_fit(lin_bias, np.asarray(x), np.asarray(y))
 
-def cart2pol(x, y, z):
-    '''
-    convert cartesian values to polar coordinates.
-    inspired by https://stackoverflow.com/questions/20924085/python-conversion-between-coordinates
-    :param x: values in x of the polar coordinates
-    :type x: arr
-    :param y: values in y of the polar coordinates
-    :type y: arr
-    :param z: values in z of the polar coordinates
-    :type z: arr
-    :return: the polar coordinates values of the array
-    :rtype:
-    '''
-    XsqPlusYsq = x ** 2 + y ** 2
-    r = m.sqrt(XsqPlusYsq + z ** 2)  # r
-    elev = m.atan2(z, m.sqrt(XsqPlusYsq))  # theta
-    az = m.atan2(y, x)  # phi
-    return r, elev, az
-
-def cart2sphA(pts):
-    return np.array([cart2pol(x,y,z) for x,y,z in pts])
-
-def plot_bestfit(x,y):
-    '''
-    This function computes the best-fit value for
-    :param x:
-    :type x:
-    :param y:
-    :type y:
-    :return:
-    :rtype:
-    '''
 
 def log_prior_lin(theta):
     a, b = theta
-    if -20 < a < 20. and -50< b < 50:
+    if -20 < a < 20. and -50 < b < 50:
         return 0.0
     return -np.inf
+
 
 def log_likelihood_lin(theta, x, y, yerr):
     '''
@@ -262,7 +232,7 @@ def log_likelihood_lin(theta, x, y, yerr):
     '''
     a, b = theta
     sigma2 = yerr ** 2
-    model = a*x +b
+    model = a * x + b
     return -0.5 * np.sum((y - model) ** 2 / sigma2 + np.log(sigma2))  # the 2pi factor doesn't affect the shape
 
 
@@ -279,6 +249,7 @@ def log_prior_bmz(theta):
         return 0.0
     return -np.inf
 
+
 def log_likelihood_bmz(theta, x, y, yerr):
     '''
     this functions evaluates the likelihood, to test on the data we have
@@ -293,15 +264,14 @@ def log_likelihood_bmz(theta, x, y, yerr):
     :return:
     :rtype:
     '''
-    a, b0, k0= theta
+    a, b0, k0 = theta
     sigma2 = yerr ** 2
     try:
-        model = (b0/(1+(x/k0)))**a
+        model = (b0 / (1 + (x / k0))) ** a
         likelihood = -0.5 * np.sum((y - model) ** 2 / sigma2 + np.log(sigma2))
         return likelihood
     except:
         return -np.inf
-
 
 
 def log_post_bmz(theta, x, y, yerr):
@@ -312,11 +282,11 @@ def log_post_bmz(theta, x, y, yerr):
 
 
 def log_prior_bmz_nob(theta):
-
     a, k0 = theta
     if 0.4 < a < 2.5 and 0. < k0 < 0.3:
         return 0.0
     return -np.inf
+
 
 def log_likelihood_bmz_nob(theta, x, y, yerr):
     '''
@@ -332,19 +302,18 @@ def log_likelihood_bmz_nob(theta, x, y, yerr):
     :return:
     :rtype:
     '''
-    #sigma2 = -np.exp(1.2*x-1)+1.35
-    a, k0= theta
-    #sigma2 = (yerr ) ** 2
+    # sigma2 = -np.exp(1.2*x-1)+1.35
+    a, k0 = theta
+    # sigma2 = (yerr ) ** 2
     sigma2 = (yerr
-              /(-np.exp((0.7*x)+0.1)+2.2)) ** 2
+              / (-np.exp((0.7 * x) + 0.1) + 2.2)) ** 2
 
     try:
-        model = 0.93/((1+((x)/k0))**(a))
+        model = 0.93 / ((1 + ((x) / k0)) ** (a))
         likelihood = -0.5 * np.sum((y - model) ** 2 / sigma2 + np.log(sigma2))
         return likelihood
     except:
         return -np.inf
-
 
 
 def log_post_bmz_nob(theta, x, y, yerr):
@@ -358,12 +327,13 @@ def log_post_bmz_nob(theta, x, y, yerr):
 The next functions is when fitting the MCMC with error weighting
 '''
 
-def log_prior_bmz_errs(theta):
 
+def log_prior_bmz_errs(theta):
     a, k0, p = theta
-    if 0.1 < a < 20 and 0. < k0 < 20 and 0<p<0.5:
+    if 0.1 < a < 20 and 0. < k0 < 20 and 0 < p < 0.5:
         return 0.0
     return -np.inf
+
 
 def log_likelihood_bmz_errs(theta, x, y, yerr):
     '''
@@ -380,19 +350,18 @@ def log_likelihood_bmz_errs(theta, x, y, yerr):
     :rtype:
     '''
 
-    #sigma2 = -np.exp(1.2*x-1)+1.35
+    # sigma2 = -np.exp(1.2*x-1)+1.35
     a, k0, p = theta
-    #sigma2 = (yerr ) ** 2
+    # sigma2 = (yerr ) ** 2
     sigma2 = ((p)
-              /(yerr)) ** 2
+              / (yerr)) ** 2
 
     try:
-        model = 0.593/((1+((x)/k0))**(a))
+        model = 0.593 / ((1 + ((x) / k0)) ** (a))
         likelihood = -0.5 * np.sum((y - model) ** 2 / sigma2 + np.log(sigma2))
         return likelihood
     except:
         return -np.inf
-
 
 
 def log_post_bmz_errs(theta, x, y, yerr):
@@ -402,7 +371,7 @@ def log_post_bmz_errs(theta, x, y, yerr):
     return lp + log_likelihood_bmz_errs(theta, x, y, yerr)
 
 
-def compute_bmz(overzre_k,overd_k):
+def compute_bmz(overzre_k, overd_k):
     '''
     this module computes the bmz factor as it should be according to the equation in Battaglia et al.
     :param overzre_k: the over-redshift of reionization in momentum space
@@ -412,18 +381,19 @@ def compute_bmz(overzre_k,overd_k):
     :return: the linear bias factor
     :rtype: 1d array
     '''
-    #prim_basis = pymks.PrimitiveBasis(n_states =2)
-    #X_ = prim_basis.discretize(X)
-    inner_product_dzre = np.correlate(overzre_k,overzre_k, "full")
-    inner_product_dzre = inner_product_dzre[inner_product_dzre.size//2:]
-    inner_product_dm = np.correlate(overd_k,overd_k, "full")
+    # prim_basis = pymks.PrimitiveBasis(n_states =2)
+    # X_ = prim_basis.discretize(X)
+    inner_product_dzre = np.correlate(overzre_k, overzre_k, "full")
+    inner_product_dzre = inner_product_dzre[inner_product_dzre.size // 2:]
+    inner_product_dm = np.correlate(overd_k, overd_k, "full")
     inner_product_dm = inner_product_dm[inner_product_dm.size // 2:]
-    return np.sqrt(np.divide(inner_product_dzre,inner_product_dm))
+    return np.sqrt(np.divide(inner_product_dzre, inner_product_dm))
 
 
 """
 One last test of probability function MCMC, with b_mz and erros scaling
 """
+
 
 def log_likelihood_bmz_b_errs(theta, x, y, yerr):
     '''
@@ -443,18 +413,19 @@ def log_likelihood_bmz_b_errs(theta, x, y, yerr):
     sigma2 = ((p)
               / (yerr)) ** 2
     try:
-        model = (b0/(1+(x/k0)))**a
+        model = (b0 / (1 + (x / k0))) ** a
         likelihood = -0.5 * np.sum((y - model) ** 2 / sigma2 + np.log(sigma2))
         return likelihood
     except:
         return -np.inf
 
-def log_prior_bmz_b_errs(theta):
 
+def log_prior_bmz_b_errs(theta):
     a, b0, k0, p = theta
     if 0.3 < a < 3.5 and 0. < k0 < 3.5 and 0.5 < b0 < 1.6 and 0 < p < 0.15:
         return 0.0
     return -np.inf
+
 
 def log_post_bmz_b_errs(theta, x, y, yerr):
     lp = log_prior_bmz_b_errs(theta)
@@ -462,7 +433,9 @@ def log_post_bmz_b_errs(theta, x, y, yerr):
         return -np.inf
     return lp + log_likelihood_bmz_b_errs(theta, x, y, yerr)
 
-def run_MCMC_free_params(x,y,errs, zre_mean, num_iter = 5000, nwalkers = 32, plot_walkers = False, plot_corners = False, plot_best_fit_sample = False, data_dict= None, varying_input = 'None', varying_in_value = 0 ):
+
+def run_MCMC_free_params(x, y, errs, zre_mean, num_iter=5000, nwalkers=32, plot_walkers=False, plot_corners=False,
+                         plot_best_fit_sample=False, data_dict=None, varying_input='None', varying_in_value=0):
     '''
     This function runs the MCMC
     :param x: the kbins fitting for
@@ -480,14 +453,12 @@ def run_MCMC_free_params(x,y,errs, zre_mean, num_iter = 5000, nwalkers = 32, plo
     '''
 
     ndim = 4
-    #initial parameters for 4 dim
-    initial_pos = np.ones((32,4))
-    initial_pos[:,0] *= 0.7 +0.06 * np.random.randn(nwalkers)
-    initial_pos[:,1] *= 0.8 + 0.1 * np.random.randn(nwalkers)
-    initial_pos[:,2] *= 0.2 + 0.01 * np.random.randn(nwalkers)
-    initial_pos[:,3] *= 0.01 + 0.005 * np.random.randn(nwalkers)
-
-
+    # initial parameters for 4 dim
+    initial_pos = np.ones((32, 4))
+    initial_pos[:, 0] *= 0.7 + 0.06 * np.random.randn(nwalkers)
+    initial_pos[:, 1] *= 0.8 + 0.1 * np.random.randn(nwalkers)
+    initial_pos[:, 2] *= 0.2 + 0.01 * np.random.randn(nwalkers)
+    initial_pos[:, 3] *= 0.01 + 0.005 * np.random.randn(nwalkers)
 
     sampler = emcee.EnsembleSampler(nwalkers, ndim, log_post_bmz_b_errs, args=(x, y, errs))
     sampler.run_mcmc(initial_pos, num_iter, progress=True)
@@ -496,8 +467,8 @@ def run_MCMC_free_params(x,y,errs, zre_mean, num_iter = 5000, nwalkers = 32, plo
     flat_samples = sampler.get_chain(discard=100, thin=15, flat=True)
     inds = np.random.randint(len(flat_samples), size=100)
 
-    #the folloing line computes the highest probable result (peak of the posterior distribution) instead of computing the mean of the distribution
-    best_walker = np.argmax(np.max(sampler.lnprobability,axis=1))
+    # the folloing line computes the highest probable result (peak of the posterior distribution) instead of computing the mean of the distribution
+    best_walker = np.argmax(np.max(sampler.lnprobability, axis=1))
     best_params = samples[-1][np.argmax(sampler.lnprobability.T[best_walker])]
     if plot_walkers:
         f, axes = plt.subplots(4, figsize=(10, 7), sharex=True)
@@ -534,9 +505,14 @@ def run_MCMC_free_params(x,y,errs, zre_mean, num_iter = 5000, nwalkers = 32, plo
         plt.show()
     if data_dict != None:
         if data_dict == {}:
-            if varying_input != 'None': data_dict = {'Z_re': [], '{}'.format(varying_input): [], "medians": [], "a16":[], "a50":[], "a84":[], "b16":[], "b50":[], "b84":[], "k16":[], "k50":[], "k84":[], "p16":[], "p50":[], "p84":[], "width50":[],"width90":[]}
-            else: data_dict = {'Z_re': [], "medians": [], "a16":[], "a50":[], "a84":[], "b16":[], "b50":[], "b84":[], "k16":[], "k50":[], "k84":[], "p16":[], "p50":[], "p84":[], "width50":[],"width90":[]}
-
+            if varying_input != 'None':
+                data_dict = {'Z_re': [], '{}'.format(varying_input): [], "medians": [], "a16": [], "a50": [], "a84": [],
+                             "b16": [], "b50": [], "b84": [], "k16": [], "k50": [], "k84": [], "p16": [], "p50": [],
+                             "p84": [], "width50": [], "width90": []}
+            else:
+                data_dict = {'Z_re': [], "medians": [], "a16": [], "a50": [], "a84": [], "b16": [], "b50": [],
+                             "b84": [], "k16": [], "k50": [], "k84": [], "p16": [], "p50": [], "p84": [], "width50": [],
+                             "width90": []}
 
         data_dict['medians'].append(best_params)
         if varying_input != 'None': data_dict['{}'.format(varying_input)].append(varying_in_value)
@@ -557,7 +533,10 @@ def run_MCMC_free_params(x,y,errs, zre_mean, num_iter = 5000, nwalkers = 32, plo
     return best_params
 
 
-def generate_bias(zre_range, initial_conditions, box_dim, box_len, astro_params, flag_options, density_field = None, z_re_box = None,varying_input = 'None', varying_in_value = 0, data_dict ={}, nb_bins = 20, logbins = True, comp_width = True, comp_ion_hist = False, comp_zre_PP = False, comp_bt = False, return_zre = False, return_density = False, plot_best_fit = False, plot_corner = False):
+def generate_bias(zre_range, initial_conditions, box_dim, box_len, astro_params, flag_options, density_field=None,
+                  z_re_box=None, varying_input='None', varying_in_value=0, data_dict={}, nb_bins=20, logbins=True,
+                  comp_width=True, comp_ion_hist=False, comp_zre_PP=False, comp_bt=False, return_zre=False,
+                  return_density=False, plot_best_fit=False, plot_corner=False):
     '''
     This function generates the linear bias from the power spectrum from a set of data.
     :param zre_range: [1D arr] the range of redshift on which to compute the redshfit of reionization field  over
@@ -582,21 +561,23 @@ def generate_bias(zre_range, initial_conditions, box_dim, box_len, astro_params,
     :param plot_corner: [bool] Will plot the posterior distribution of the best fitted parameters if True (default True)
     '''
 
-    #if not 21cmFASt, import redshift of reionization field
+    # if not 21cmFASt, import redshift of reionization field
 
-    #generate the redshift of reionization field in 21cmFAST
+    # generate the redshift of reionization field in 21cmFAST
     if z_re_box is None:
         z_re_box = zre.generate_zre_field(zre_range, initial_conditions, box_dim, astro_params, flag_options,
-                                      comP_ionization_rate=False, comp_brightness_temp=False)
+                                          comP_ionization_rate=False, comp_brightness_temp=False)
 
     overzre, zre_mean = zre.over_zre_field(z_re_box)
 
-    #zre.plot_zre_slice(overzre)
+    # zre.plot_zre_slice(overzre)
     """This section uses computes the ionization history from the redhsift of reionization field if applicable"""
     if comp_ion_hist:
         redshifts = zre_range
-        if comp_width: cmFast_hist, width_50_21, width_90_21 = pp.reionization_history(redshifts, z_re_box, comp_width=comp_width)
-        else: cmFast_hist = pp.reionization_history(redshifts, z_re_box, comp_width=comp_width)
+        if comp_width:
+            cmFast_hist, width_50_21, width_90_21 = pp.reionization_history(redshifts, z_re_box, comp_width=comp_width)
+        else:
+            cmFast_hist = pp.reionization_history(redshifts, z_re_box, comp_width=comp_width)
     # pp.plot_21zreion_ionhist([reion_hist_zreion,cmFast_hist, reion_hist_zreion_0593])
     # ionization_rates.append(cmFast_hist)
 
@@ -605,35 +586,34 @@ def generate_bias(zre_range, initial_conditions, box_dim, box_len, astro_params,
         perturbed_field = p21c.perturb_field(redshift=zre_mean, init_boxes=initial_conditions)
         density_field = perturbed_field.density
 
-
-    #[1:] is because the first result given by powerbox is always Nan
-    #compute the power spectrums of the respective fields
-    zre_pp = pbox.get_power(overzre,box_len, bins = nb_bins,log_bins=True)[0][1:]
-    den_pp = pbox.get_power(density_field, box_len, bins = nb_bins,log_bins=True)[0][1:]
-    #compute the linear bias as the sqrt of the power spectrum ratio
+    # [1:] is because the first result given by powerbox is always Nan
+    # compute the power spectrums of the respective fields
+    zre_pp = pbox.get_power(overzre, box_len, bins=nb_bins, log_bins=True)[0][1:]
+    den_pp = pbox.get_power(density_field, box_len, bins=nb_bins, log_bins=True)[0][1:]
+    # compute the linear bias as the sqrt of the power spectrum ratio
     b_mz = np.sqrt(np.divide(zre_pp, den_pp))
 
-    #This section computes the cross correlation for error weighting in the MCMC
-    cross_cor_pbox = pbox.get_power(overzre, box_len, bins=nb_bins, log_bins=True, deltax2=density_field)# equivalent to: cross_cor_pbox2 = pbox.get_power(density_field, box_dim, bins = nb_bins, log_bins = True, deltax2 = overzre)
+    # This section computes the cross correlation for error weighting in the MCMC
+    cross_cor_pbox = pbox.get_power(overzre, box_len, bins=nb_bins, log_bins=True,
+                                    deltax2=density_field)  # equivalent to: cross_cor_pbox2 = pbox.get_power(density_field, box_dim, bins = nb_bins, log_bins = True, deltax2 = overzre)
 
-    #compute the cross correlation ration r_mz that is used to weight the errors as presented in the Battaglia model
-    r_mz= np.divide(np.array(cross_cor_pbox[0][1:]),
-                          np.sqrt((np.array(zre_pp) * np.array(den_pp))))
+    # compute the cross correlation ration r_mz that is used to weight the errors as presented in the Battaglia model
+    r_mz = np.divide(np.array(cross_cor_pbox[0][1:]),
+                     np.sqrt((np.array(zre_pp) * np.array(den_pp))))
 
     # This computes the values of k for which the power spectrums are computed and a function of (one again discarding first Nan
     kbins_zre = pbox.get_power(density_field, box_len, bins=nb_bins, log_bins=True)[1][1:]
-
 
     '''
     MCMC analysis and posterior distribution on the b_mz 
     '''
 
-
     # no b_mz fitting
     k_values = kbins_zre
 
     data_dict = run_MCMC_free_params(kbins_zre, b_mz, r_mz, zre_mean, data_dict=data_dict,
-                                        varying_input=varying_input, varying_in_value=varying_in_value, plot_corners=plot_corner, plot_best_fit_sample=plot_best_fit)
+                                     varying_input=varying_input, varying_in_value=varying_in_value,
+                                     plot_corners=plot_corner, plot_best_fit_sample=plot_best_fit)
     # if comp_width:
     #     data_dict['width50'].append(width_50_21)
     #     data_dict['width90'].append(width_90_21)
@@ -661,10 +641,24 @@ def generate_bias(zre_range, initial_conditions, box_dim, box_len, astro_params,
     else:
         return data_dict
 
-
     # print(ionization_rates)
 
-def run_MCMC_free_params_nob(x,y,errs, zre_mean, num_iter = 5000, nwalkers = 32, plot_walkers = False, plot_corners = False, plot_best_fit_sample = False, data_dict= None, varying_input = 'Heff', varying_in_value = 0 ):
+def compute_bt(zre_field, redshift, density_field, comp_power_spectrum = True, plot = False):
+    '''
+    This function computes the brightness temperature from a density field and redshfit of reionization field (also works with a ionization map)
+    :param zre_field: [3D array] the redshift of reionization field (or ionization map)
+    :param redshift: [float] the redshift ot wich to compute the brightness temperature
+    :param density_field: [3D array] the density field
+    :param comp_power_spectrum: [bool] Will return the power spectrum and its associated k_values if True (default = True)
+    :param plot: [bool] Will plot the brighness temperature field if True
+    :return: [3D array] the brightness temperature field and [1D array] the power spectrum values [1D array] it's associated k_values if power_spectrum = True
+    '''
+    ion, brightness_temp = zrcomp.get_21cm_fields(redshift, zre_field, density_field)
+    brightness_temp_ps = pbox.get_power(brightness_temp, 143, bins=20, log_bins=True)[0][1:]
+
+
+def run_MCMC_free_params_nob(x, y, errs, zre_mean, num_iter=5000, nwalkers=32, plot_walkers=False, plot_corners=False,
+                             plot_best_fit_sample=False, data_dict=None, varying_input='Heff', varying_in_value=0):
     '''
     This function runs the MCMC
     :param x: the kbins fitting for
@@ -682,23 +676,21 @@ def run_MCMC_free_params_nob(x,y,errs, zre_mean, num_iter = 5000, nwalkers = 32,
     '''
 
     ndim = 3
-    #initial parameters for 4 dim
-    initial_pos = np.ones((32,3))
-    initial_pos[:,0] *= 0.8 +0.06 * np.random.randn(nwalkers)
-    initial_pos[:,1] *= 0.4 + 0.1 * np.random.randn(nwalkers)
-    initial_pos[:,2] *= 0.01 + 0.01 * np.random.randn(nwalkers)
-
-
+    # initial parameters for 4 dim
+    initial_pos = np.ones((32, 3))
+    initial_pos[:, 0] *= 0.8 + 0.06 * np.random.randn(nwalkers)
+    initial_pos[:, 1] *= 0.4 + 0.1 * np.random.randn(nwalkers)
+    initial_pos[:, 2] *= 0.01 + 0.01 * np.random.randn(nwalkers)
 
     sampler = emcee.EnsembleSampler(nwalkers, ndim, log_post_bmz_errs, args=(x, y, errs))
-    sampler.run_mcmc(initial_pos, num_iter)#, progress=True
+    sampler.run_mcmc(initial_pos, num_iter)  # , progress=True
     samples = sampler.get_chain()
 
     flat_samples = sampler.get_chain(discard=100, thin=15, flat=True)
     inds = np.random.randint(len(flat_samples), size=100)
 
-    #the folloing line computes the highest probable result (peak of the posterior distribution) instead of computing the mean of the distribution
-    best_walker = np.argmax(np.max(sampler.lnprobability,axis=1))
+    # the folloing line computes the highest probable result (peak of the posterior distribution) instead of computing the mean of the distribution
+    best_walker = np.argmax(np.max(sampler.lnprobability, axis=1))
     best_params = samples[-1][np.argmax(sampler.lnprobability.T[best_walker])]
     if plot_walkers:
         f, axes = plt.subplots(3, figsize=(10, 7), sharex=True)
@@ -734,7 +726,9 @@ def run_MCMC_free_params_nob(x,y,errs, zre_mean, num_iter = 5000, nwalkers = 32,
         plt.loglog()
         plt.show()
     if data_dict != None:
-        if data_dict == {}: data_dict = {'Z_re': [], '{}'.format(varying_input): [], "medians": [], "a16":[], "a50":[], "a84":[], "b16":[], "b50":[], "b84":[], "k16":[], "k50":[], "k84":[], "p16":[], "p50":[], "p84":[], "width50":[],"width90":[]}
+        if data_dict == {}: data_dict = {'Z_re': [], '{}'.format(varying_input): [], "medians": [], "a16": [],
+                                         "a50": [], "a84": [], "b16": [], "b50": [], "b84": [], "k16": [], "k50": [],
+                                         "k84": [], "p16": [], "p50": [], "p84": [], "width50": [], "width90": []}
         data_dict['medians'].append(best_params)
         data_dict['{}'.format(varying_input)].append(varying_in_value)
         data_dict['a16'].append(corner.quantile(flat_samples[:, 0], [0.16]))

@@ -45,6 +45,116 @@
 # plt.show()
 
 
+"""quick density field generation"""
+# user_params = {"HII_DIM": 128, "BOX_LEN": 128, "DIM": 128}
+# cosmo_params = p21c.CosmoParams(SIGMA_8=0.8, hlittle=0.7, OMm=0.27, OMb=0.045)
+# initial_conditions = p21c.initial_conditions(
+#     user_params=user_params,
+#     cosmo_params=cosmo_params
+# )
+# perturbed_field = p21c.perturb_field(redshift=8, init_boxes=initial_conditions)
+# density_field = perturbed_field.density[64]
+#
+# np.save('d_field_for_Sabrina_128Mpclen_1Mpcres', density_field)
+
+
+"""This whole section represent tested things at the beggining of the driver"""
+# print(stoo[0][0].zreioninfo.alpha)
+# print(stoo[0][1].zreioninfo.alpha)
+# print(stoo[1][0].zreioninfo.alpha)
+# print(obj.zreioninfo.P_k_zre)
+# varying_input = 'F_star'
+# varying_input = 'Turnover_Mass'
+# data_dict = {'Z_re': [], '{}'.format(varying_input): [], "medians": [], "a16":[], "a50":[], "a84":[], "b16":[], "b50":[], "b84":[], "k16":[], "k50":[], "k84":[], "p16":[], "p50":[], "p84":[], "width50":[],"width90":[]}
+# ionization_rates = []
+
+# storing_dict = {'21cmFAST':{'P_k_zre':[], 'ion_hist':[], 'P_k_dm':[], 'z_mean':[] ,'b_mz':[]}, 'z_reion_Hugo':{'P_k_zre':[], 'ion_hist':[], 'free_params':[]}}
+
+# z_reion_zre= np.load('zreion_for_Hugo.npz')['zreion']
+# reion_hist_zreion = pp.reionization_history(np.linspace(5, 18, 100), z_reion_zre, plot = False)
+
+# print(pp.compute_tau(reion_hist_zreion, redshifts=np.linspace(5,18,100)))
+
+# z_re_box= np.load('zre.npy')
+# density_field = np.load('density.npy')
+# overzre, zre_mean = zre.over_zre_field(z_re_box)
+#
+# reion_hist_zreion_0593 = pp.reionization_history(np.linspace(5, 18, 100), zre_zreion, plot=False)
+# pp.plot_multiple_ionhist(ion_rates, dictt,varying_input,zreion=reion_hist_zreion, zreion2=reion_hist_zreion_0593)
+# pp.plot_variational_range_1dict(dictt, varying_name=varying_input)
+
+# bmzs = []
+#
+# Heff_range = np.linspace(52, 25,10, endpoint=True)
+# T_vir_range = np.linspace(3.8,4.7,10, endpoint=True)
+# print(Heff_range, T_vir_range)
+#
+# print(len(Heff_range))
+# Heff_ver, T_vir_hor = np.meshgrid(Heff_range, T_vir_range)
+#
+# density_small = np.load(f'./density.npy')
+#
+
+# density_small =  p21c.perturb_field(redshift=8.246021505034825, init_boxes=initial_conditions, write=False).density
+# zre_zreion = zr.apply_zreion(density_small,  8.246021505034825, 0.16132113321299762,0.7388640891815643, 100)
+# reion_hist_zreion_james = pp.reionization_history(np.linspace(5, 18, 100), zre_zreion, plot=True)
+# zrcomp.plot_variational_range_James(dictt, james_alphas, james_k_0, varying_name=varying_input)
+
+
+# zrcomp.analyze_Tau_diff(stoo, 'cmFAST','James','ion_hist', T_vir_range, Heff_range)
+# zrcomp.analyze_Tau_diff(stoo, 'zreion','James','ion_hist', T_vir_range, Heff_range)
+# zrcomp.analyze_Tau_diff(stoo, 'cmFAST','zreion','ion_hist', T_vir_range, Heff_range)
+# print(len(stoo[0][0].cmFASTinfo.P_k_zre))
+# print(len(stoo[0][0].zreioninfo.P_k_zre))
+# k_values = np.logspace(np.log10(0.08570025), np.log10(7.64144032), 20)
+
+
+# slice = 0
+# zrcomp.plot_variational_bright_temp(stoo, 'cmFAST', 'brightnesstemp', slice,T_vir_range, Heff_range,xaxis = k_values, add_zreion=True)
+# print(stoo[0][0].cmFASTinfo.z_for_bt[slice])
+
+# plot a bunch of stuff
+# zrcomp.analyze_float_value(stoo, 'cmFAST' , 'z_mean', T_vir_range, Heff_range)
+# zrcomp.analyze_float_value(stoo, 'zreion' , 'alpha', T_vir_range, Heff_range)
+# zrcomp.analyze_float_value(stoo, 'zreion' , 'k_0', T_vir_range, Heff_range)
+# zrcomp.plot_variational_bias(stoo,'cmFAST','b_mz', T_vir_range, Heff_range,xaxis = k_values, add_zreion=True, log_scale = True)
+
+# for slice in tqdm(range(len(stoo[0][0].cmFASTinfo.z_for_bt)), 'making a reionization movie'):
+# print(getattr(getattr(stoo[0][0], f'Jamesinfo'),'brightnesstemp')[slice]-getattr(getattr(stoo[0][1], f'Jamesinfo'),'brightnesstemp')[slice])
+# print(getattr(getattr(stoo[0][0], f'Jamesinfo'), 'brightnesstemp')[20] -
+# getattr(getattr(stoo[9][9], f'Jamesinfo'), 'brightnesstemp')[20])
+
+
+# for count1, Heff in enumerate(tqdm(Heff_range)):
+#     for count2, Tvir in enumerate(tqdm(T_vir_range)):
+#         print(getattr(getattr(stoo[count1][count2], f'Jamesinfo'),'brightnesstemp')[20]-getattr(getattr(stoo[count1+1][count2], f'Jamesinfo'),'brightnesstemp')[20])
+#
+#         continue
+
+# print(len(stoo[0][0].cmFASTinfo.ion_hist))
+
+# print((stoo[5][5].cmFASTinfo.brightnesstemp[15][1:]/(143**3))/stoo[5][5].zreioninfo.brightnesstemp[15][0])
+# print(stoo[5][5].zreioninfo.brightnesstemp[15])
+# density_small = np.load(f'./density.npy')
+# k_values = pbox.get_power(density_small, 143,bins = 20, log_bins = True)[1][1:]
+# k_values_James = pbox.get_power(density_small, 100,bins = 20, log_bins = True)[1][1:]
+# print(k_values)
+# print(k_values)
+
+"""Load fields"""
+# adjustable parameters to look out before running the driver
+            # change the dimension of the box and see effect9
+            # density_small = np.load(f'./fields_final/method_2_density_field_z_{Tvir}_random_seed_{Heff}.npy')
+            # xH_small = np.load(f'./fields_final/method_2_xH_z_{Tvir}_random_seed_{Heff}.npy')
+            # #b_t = np.load(f'./method_2_brightness_temp_z_{Tvir}_random_seed_{Heff}_dim200_len300Mpc.npy')
+            # # density = np.load(f'./fields_final/method_1_density_field_z_{Tvir}_random_seed_{Heff}.npy')
+            # xH = np.load(f'./fields_300MPC_21cmFAST_final/method_2_xH_z_{Tvir}_random_seed_{Heff}_dim200_len300Mpc.npy')
+            # density = np.load(f'./fields_300MPC_21cmFAST_final/method_2_density_field_z_{Tvir}_random_seed_{Heff}_dim200_len300Mpc.npy')
+            # xH = np.load(f'./fields_for_Adrian/method_1_xH_z_{Tvir}_random_seed_{Heff}.npy')
+            # xH = np.load(f'./corrected_field/method_1_xH_z_{Tvir}_random_seed_{Heff}_dim200.npy')
+            # brightness_temp = p21c.brightness_temperature(ionized_box=ionized_box, perturbed_field=perturbed_field)
+            # np.save(f'method_1_brightness_temp_z_{zre_mean}_random_seed_{random_seed}', brightness_temp.brightness_temp)
+
 
 """power box and kbins testing """
 # p_k_zre, kbins_zre = pbox.get_power(overzre, 100)

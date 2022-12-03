@@ -17,6 +17,8 @@ from scipy.stats import multivariate_normal
 import matplotlib.pyplot as plt
 import plot_params as pp
 import powerbox as pbox
+
+
 def generate_quick_zre_field(max_z, min_z, z_shift, initial_conditions):
     """
     This function generate a z_re field with coeval cubes at different reionization redshift.
@@ -26,8 +28,8 @@ def generate_quick_zre_field(max_z, min_z, z_shift, initial_conditions):
     :param HII_Dim: [float] the minimum redshift of the plot
     :return: a 3D array of the reionization field
     """
-    #creating a new cube where reionization vener occured (-1)
-    redshifts = np.linspace(min_z,max_z, max_z)
+    # creating a new cube where reionization vener occured (-1)
+    redshifts = np.linspace(min_z, max_z, max_z)
     print(redshifts)
     """
     perturbed_field=p21c.perturb_field(
@@ -44,8 +46,8 @@ def generate_quick_zre_field(max_z, min_z, z_shift, initial_conditions):
     )
     plotting.coeval_sliceplot(ionized_field, "z_re_box");
     """
-    zre_fields = p21c.ionize_box(redshift=8, init_boxes = initial_conditions)
-    #zre_fields = p21c.run_coeval(redshift=redshifts, init_box=initial_conditions)
+    zre_fields = p21c.ionize_box(redshift=8, init_boxes=initial_conditions)
+    # zre_fields = p21c.run_coeval(redshift=redshifts, init_box=initial_conditions)
     # final_cube = np.full((HII_Dim, HII_Dim, HII_Dim), -1)
     # for redshift in tqdm(np.arange(min_z, max_z, z_shift), 'computing the redshift of reionization'):
     #     new_cube = p21c.run_coeval(redshift=redshift,user_params={'HII_DIM': HII_Dim, 'BOX_LEN': box_len, "USE_INTERPOLATION_TABLES":False}).z_re_box
@@ -53,7 +55,8 @@ def generate_quick_zre_field(max_z, min_z, z_shift, initial_conditions):
     return
 
 
-def generate_zre_field(zre_range,initial_conditions,box_dim, astro_params, flag_options, comP_ionization_rate = False, comp_brightness_temp = False, i = 0):
+def generate_zre_field(zre_range, initial_conditions, box_dim, astro_params, flag_options, comP_ionization_rate=False,
+                       comp_brightness_temp=False, i=0):
     """
     This function generate a z_re field with coeval cubes at different reionization redshift.
     :param zre_range: the desired redhsift to compute the redshift of reionization field on
@@ -70,18 +73,19 @@ def generate_zre_field(zre_range,initial_conditions,box_dim, astro_params, flag_
     :rtype:
     """
 
-    #creating a new cube where reionization vener occured (-1)
-    final_cube = np.full((box_dim, box_dim, box_dim), -1, dtype = float)
-    #if comP_ionization_rate : ionization_rate = []
+    # creating a new cube where reionization vener occured (-1)
+    final_cube = np.full((box_dim, box_dim, box_dim), -1, dtype=float)
+    # if comP_ionization_rate : ionization_rate = []
     if comp_brightness_temp:
         b_temp_ps = []
         redshifts4bright = []
-    for redshift in tqdm(zre_range, 'computing the redshift of reionization',position=0, leave=True):
-        #print(redshift)
+    for redshift in tqdm(zre_range, 'computing the redshift of reionization field', position=0, leave=True):
+        # print(redshift)
         i += 1
-        ionize_box = p21c.ionize_box(redshift=redshift, init_boxes = initial_conditions, astro_params = astro_params, flag_options = flag_options, write=False)
+        ionize_box = p21c.ionize_box(redshift=redshift, init_boxes=initial_conditions, astro_params=astro_params,
+                                     flag_options=flag_options, write=False)
         new_cube = ionize_box.z_re_box
-        #if comP_ionization_rate: ionization_rate.append((new_cube > -1).sum()/ box_dim**3)
+        # if comP_ionization_rate: ionization_rate.append((new_cube > -1).sum()/ box_dim**3)
         # if comp_brightness_temp and i%2 == 0 :
         #     perturbed_field = p21c.perturb_field(redshift=redshift, init_boxes=initial_conditions, write=False)
         #     brightness_temp = p21c.brightness_temperature(ionized_box=ionize_box, perturbed_field=perturbed_field, write=False).brightness_temp
@@ -113,7 +117,8 @@ def t0(z):
     '''
     return 38.6 * 70 * np.sqrt((1 + z) / 10)
 
-def over_zre_equation(zre_x,zre_mean):
+
+def over_zre_equation(zre_x, zre_mean):
     '''
 
     :param zre_x: the reionization redshift field
@@ -123,9 +128,10 @@ def over_zre_equation(zre_x,zre_mean):
     :return: over-redshift field
     :rtype: 3D array
     '''
-    return np.array(((1+zre_x)-(1+zre_mean))/(1+zre_mean))
+    return np.array(((1 + zre_x) - (1 + zre_mean)) / (1 + zre_mean))
 
-def over_p_equation(p,p_mean):
+
+def over_p_equation(p, p_mean):
     '''
 
     :param p: the density field
@@ -135,7 +141,8 @@ def over_p_equation(p,p_mean):
     :return: over-density field
     :rtype: 3D array
     '''
-    return(p -p_mean)/(p_mean)
+    return (p - p_mean) / (p_mean)
+
 
 def over_p_field(p_field):
     """
@@ -144,7 +151,8 @@ def over_p_field(p_field):
     :return: a 3D array of the reionization field
     """
     p_mean = np.mean(p_field)
-    return over_p_equation(p_field,p_mean), p_mean
+    return over_p_equation(p_field, p_mean), p_mean
+
 
 def over_zre_field(zre_field):
     """
@@ -153,9 +161,10 @@ def over_zre_field(zre_field):
     :return: a 3D array of the reionization field
     """
     zre_mean = np.mean(zre_field.flatten())
-    return over_zre_equation(zre_field,zre_mean), zre_mean
+    return over_zre_equation(zre_field, zre_mean), zre_mean
 
-def plot_zre_slice(field,  resolution = 143, size = 143):
+
+def plot_zre_slice(field, resolution=143, size=143):
     '''
     This modules plot a slice of the redshift of reionization for a given redshift of reionization 3D field. I also converts Mpc/h to Mpc units while plotting
     :param field: (3D array) redshift of reionization field
@@ -163,12 +172,12 @@ def plot_zre_slice(field,  resolution = 143, size = 143):
     :return:
     '''
     if resolution % 2:
-        position_vec = np.linspace(-int((size*(100/143))//2)-1, int(size*(100/143)//2), resolution)
+        position_vec = np.linspace(-int((size * (100 / 143)) // 2) - 1, int(size * (100 / 143) // 2), resolution)
     else:
-        position_vec = np.linspace(-int((size*(100/143))//2), int(size*(100/143)//2), resolution)
+        position_vec = np.linspace(-int((size * (100 / 143)) // 2), int(size * (100 / 143) // 2), resolution)
     X, Y = np.meshgrid(position_vec, position_vec)
     fig, ax = plt.subplots()
-    plt.contourf(X,Y,field[int(resolution//2)])
+    plt.contourf(X, Y, field[int(resolution // 2)])
     plt.colorbar()
     ax.set_xlabel(r'[Mpc h⁻¹]')
     ax.set_ylabel(r'[Mpc h⁻¹]')
@@ -176,7 +185,8 @@ def plot_zre_slice(field,  resolution = 143, size = 143):
         r'slice of a the over-redshift of reionization at the center with a pixel resolution of {} Mpc h⁻¹'.format('1'))
     plt.show()
 
-def plot_zre_hist(field, nb_bins = 100):
+
+def plot_zre_hist(field, nb_bins=100):
     '''
     This module plots the histograms for redshift reionization field
     :param field:  (3D array) redshift of reionization field
@@ -185,5 +195,3 @@ def plot_zre_hist(field, nb_bins = 100):
     fig, ax = plt.subplots()
     plt.hist(field.flatten(), bins=nb_bins, density=True)
     plt.show()
-
-
