@@ -29,23 +29,24 @@ from numpy import array
 import zreion as zr
 import z_reion_comparison as zrcomp
 
-#For testing purposes, these two modules can be installed:
+# For testing purposes, these two modules can be installed:
 # import Gaussian_testing as gauss
 # import FFT
 
 
-Heff_range = np.linspace(66, 30,10, endpoint=True)
-T_vir_range = np.linspace(4.0,4.9,10, endpoint=True)
-stoo = np.load('Heff30to66_Tvir40to49_withJamesall_100box.npy', allow_pickle=True)#loaded with 143, can load 100 for comparison (r even uncorrected 100
-#stoo = np.load('Heff30to66_Tvir40to49_withJamesall.npy', allow_pickle=True)
-#stoo = np.load('Heff30to66_Tvir40to49_withJamesion_hist_withpkzre2_100box_not_corrected.npy', allow_pickle=True)
+Heff_range = np.linspace(66, 30, 10, endpoint=True)
+T_vir_range = np.linspace(4.0, 4.9, 10, endpoint=True)
+stoo = np.load('Heff30to66_Tvir40to49_withJamesall_100box.npy',
+               allow_pickle=True)  # loaded with 143, can load 100 for comparison (r even uncorrected 100
+# stoo = np.load('Heff30to66_Tvir40to49_withJamesall.npy', allow_pickle=True)
+# stoo = np.load('Heff30to66_Tvir40to49_withJamesion_hist_withpkzre2_100box_not_corrected.npy', allow_pickle=True)
 
-#ADD JAMES PARAMS from translator
+# ADD JAMES PARAMS from translator
 # James_params = np.load('Heff30to66_Tvir40to49_Jamesparamsonly.npy', allow_pickle=True)
 # objjj = zrcomp.add_James_params(stoo,James_params,Heff_range,T_vir_range)
 # np.save('Heff30to66_Tvir40to49_withJamesparams', objjj)
 
-#ADD JAMES IONIZATION HISTORY
+# ADD JAMES IONIZATION HISTORY
 # wJames_params = np.load('Heff30to66_Tvir40to49_withJamesparams.npy', allow_pickle=True)
 # redshfit_4_bt = stoo[0][0].cmFASTinfo.z_for_bt
 # user_params = {"HII_DIM": 143, "BOX_LEN": 143, "DIM":143}
@@ -58,7 +59,7 @@ stoo = np.load('Heff30to66_Tvir40to49_withJamesall_100box.npy', allow_pickle=Tru
 # np.save('Heff30to66_Tvir40to49_withJamesion_hist_nobt', objjj)
 # raise ValueError
 
-#ADD JAMES POWER SPECTRUMS ( ZRE FIELD OR BT FIELD)
+# ADD JAMES POWER SPECTRUMS ( ZRE FIELD OR BT FIELD)
 # redshfit_4_bt = stoo[0][0].cmFASTinfo.z_for_bt
 # user_params = {"HII_DIM": 143, "BOX_LEN": 143, "DIM":143}
 # cosmo_params = p21c.CosmoParams(SIGMA_8=0.8, hlittle=0.7, OMm= 0.27, OMb= 0.045)
@@ -74,30 +75,26 @@ stoo = np.load('Heff30to66_Tvir40to49_withJamesall_100box.npy', allow_pickle=Tru
 # raise ValueError
 
 
-#Plot the main observables
-zrcomp.plot_variational_ion_hist(stoo, 'cmFAST', 'ion_hist', T_vir_range, Heff_range, add_zreion = True, add_James=True, xaxis=np.linspace(5,18,60))
-#zrcomp.plot_variational_PS(stoo,'cmFAST','P_k_zre', T_vir_range, Heff_range, add_zreion=True, add_James = True, delta2= True)
-slice = 15
-print(stoo[0][0].cmFASTinfo.z_for_bt[slice])
-zrcomp.analyze_frac_diff(stoo, 'cmFAST','zreion', 'ion_hist',T_vir_range, Heff_range, redshift_bt=slice)
-zrcomp.analyze_frac_diff(stoo, 'cmFAST','James', 'ion_hist',T_vir_range, Heff_range, redshift_bt=slice)
-zrcomp.analyze_frac_diff(stoo, 'zreion','James', 'ion_hist',T_vir_range, Heff_range, redshift_bt=slice)
-
-
-cmFAST_mean = zrcomp.analyze_float_value(stoo, 'cmFAST' , 'brightness temperature mean', T_vir_range, Heff_range)
-cmFAST_std = zrcomp.analyze_float_value(stoo, 'cmFAST' , 'brightness temperature std', T_vir_range, Heff_range)
-zreion_mean = zrcomp.analyze_float_value(stoo, 'zreion' , 'brightness temperature mean', T_vir_range, Heff_range)
-zreion_std = zrcomp.analyze_float_value(stoo, 'zreion' , 'brightness temperature std', T_vir_range, Heff_range)
-
-James_mean = zrcomp.analyze_float_value(stoo, 'James' , 'brightness temperature mean', T_vir_range, Heff_range)
-James_std = zrcomp.analyze_float_value(stoo, 'James' , 'brightness temperature std', T_vir_range, Heff_range)
-
-
-
-
-zrcomp.plot_variational_ion_hist(stoo, 'cmFAST', 'ion_hist', T_vir_range, Heff_range, add_zreion = True, add_James=True, xaxis=np.linspace(5,18,60))
-
-
+# Plot the main observables
+# zrcomp.plot_variational_ion_hist(stoo, 'cmFAST', 'ion_hist', T_vir_range, Heff_range, add_zreion=True, add_James=True,
+#                                  xaxis=np.linspace(5, 18, 60))
+# # zrcomp.plot_variational_PS(stoo,'cmFAST','P_k_zre', T_vir_range, Heff_range, add_zreion=True, add_James = True, delta2= True)
+# slice = 15
+# print(stoo[0][0].cmFASTinfo.z_for_bt[slice])
+# zrcomp.analyze_frac_diff(stoo, 'cmFAST', 'zreion', 'ion_hist', T_vir_range, Heff_range, redshift_bt=slice)
+# zrcomp.analyze_frac_diff(stoo, 'cmFAST', 'James', 'ion_hist', T_vir_range, Heff_range, redshift_bt=slice)
+# zrcomp.analyze_frac_diff(stoo, 'zreion', 'James', 'ion_hist', T_vir_range, Heff_range, redshift_bt=slice)
+#
+# cmFAST_mean = zrcomp.analyze_float_value(stoo, 'cmFAST', 'brightness temperature mean', T_vir_range, Heff_range)
+# cmFAST_std = zrcomp.analyze_float_value(stoo, 'cmFAST', 'brightness temperature std', T_vir_range, Heff_range)
+# zreion_mean = zrcomp.analyze_float_value(stoo, 'zreion', 'brightness temperature mean', T_vir_range, Heff_range)
+# zreion_std = zrcomp.analyze_float_value(stoo, 'zreion', 'brightness temperature std', T_vir_range, Heff_range)
+#
+# James_mean = zrcomp.analyze_float_value(stoo, 'James', 'brightness temperature mean', T_vir_range, Heff_range)
+# James_std = zrcomp.analyze_float_value(stoo, 'James', 'brightness temperature std', T_vir_range, Heff_range)
+#
+# zrcomp.plot_variational_ion_hist(stoo, 'cmFAST', 'ion_hist', T_vir_range, Heff_range, add_zreion=True, add_James=True,
+#                                  xaxis=np.linspace(5, 18, 60))
 
 
 # make a brightness temperature movie
@@ -113,11 +110,11 @@ def make_bt_movie(stoo, k_values, Heff_range, T_vir_range, gifname, add_zreion=T
     '''
     filenames = []
     for slice in tqdm(range(len(stoo[0][0].cmFASTinfo.z_for_bt)), 'making a reionization movie'):
-        filenames = zrcomp.plot_variational_bright_temp(stoo, 'cmFAST', 'brightnesstemp',
-                                                        stoo[0][0].cmFASTinfo.z_for_bt[slice], slice, T_vir_range,
-                                                        Heff_range, xaxis=k_values, add_zreion=add_zreion, savefig=True,
-                                                        filenames=filenames, add_James=add_James,
-                                                        )
+        filenames = zrcomp.plot_variational_PS(stoo, 'cmFAST', 'brightnesstemp',
+                                               T_vir_range, Heff_range, xaxis=k_values, add_zreion=add_zreion,
+                                               savefig=True, filenames=filenames, add_James=add_James,
+                                               redshift=stoo[0][0].cmFASTinfo.z_for_bt[slice], slice=slice,
+                                               )
 
     images = []
     for filename in filenames:
@@ -125,18 +122,20 @@ def make_bt_movie(stoo, k_values, Heff_range, T_vir_range, gifname, add_zreion=T
     imageio.mimsave(f'{gifname}.gif', images)
     return
 
-#zrcomp.plot_multiple_ion_hist(stoo,'zreion','ion_hist', T_vir_range, Heff_range)
-zrcomp.plot_variational_PS(stoo,'cmFAST','P_k_zre', T_vir_range, Heff_range, add_zreion=True, add_James = True, delta2=True)
-make_bt_movie(stoo, np.logspace(np.log10(0.08570025), np.log10(7.64144032), 19, endpoint = True),Heff_range, T_vir_range, 'all3test_100boxbt', add_James=True)
-#zrcomp.plot_multiple_ion_hist(stoo,'zreion','ion_hist', T_vir_range, Heff_range)
+
+# zrcomp.plot_multiple_ion_hist(stoo,'zreion','ion_hist', T_vir_range, Heff_range)
+#zrcomp.plot_variational_PS(stoo, 'cmFAST', 'P_k_zre', T_vir_range, Heff_range, add_zreion=True, add_James=True,delta2=True)
+make_bt_movie(stoo, np.logspace(np.log10(0.08570025), np.log10(7.64144032), 19, endpoint=True), Heff_range, T_vir_range,
+              'FINAL_bt_power_spectrum_3models', add_James=True)
+
+
+# zrcomp.plot_multiple_ion_hist(stoo,'zreion','ion_hist', T_vir_range, Heff_range)
 
 # zrcomp.plot_variational_ion_hist(stoo, 'cmFAST', 'ion_hist', T_vir_range, Heff_range, add_zreion = True, plot_diff=True, xaxis=np.linspace(5,18,60))
 # zrcomp.plot_variational_ion_hist(stoo, 'cmFAST', 'ion_hist', T_vir_range, Heff_range, add_zreion = True, xaxis=np.linspace(5,18,60))
 # p_k_zre, kbins_zre = pbox.get_power(stoo[0][0].cmFASTinfo.P_k_zre,143)
 #
 #
-
-
 
 
 # zre_mean = [6.8,7.0,7.2,7.4,7.6,7.8,8.0]
@@ -161,7 +160,7 @@ def compute_several_21cmFASt_fields(zre_mean, box_dim, box_len, astro_params={"N
     :return: saved fields under the name :
     '''
 
-    #run the loop through random seed and redshifts
+    # run the loop through random seed and redshifts
     for count1, Heff in enumerate(tqdm(random_seed)):
         for count2, Tvir in enumerate(tqdm(zre_mean)):
             user_params = {"HII_DIM": box_dim, "BOX_LEN": box_len, "DIM": box_dim}
@@ -355,7 +354,7 @@ def parameter_2Dspace_run(name_input1, range1, name_input2, range2, file_name, r
                           find_bubble_algorithm=int(2), flag_options={"USE_MASS_DEPENDENT_ZETA": False}, SIGMA_8=0.8,
                           hlittle=0.7, OMm=0.27, OMb=0.045, POWER_INDEX=0.9665,
                           include_zreion=True,
-                          comp_brightness_temp = True,
+                          comp_brightness_temp=True,
                           ):
     '''
     This function computes the 2dimensional variational space for 2 21cmFAST inputshhyhyuj
@@ -383,7 +382,7 @@ def parameter_2Dspace_run(name_input1, range1, name_input2, range2, file_name, r
     # initialize the storing array
     storing_array = np.empty((10, 10), dtype=object)
 
-    #loop through both varying variabbles
+    # loop through both varying variabbles
     for count1, Heff in enumerate(tqdm(range1)):
         for count2, Tvir in enumerate(tqdm(range2)):
 
@@ -426,7 +425,7 @@ def parameter_2Dspace_run(name_input1, range1, name_input2, range2, file_name, r
                     redshifts, initial_conditions, box_dim, box_len, astro_params, flag_options, data_dict=data_dict,
                     comp_zre_PP=True, logbins=True, comp_ion_hist=True,
                     comp_bt=False)
-                #initialize the object
+                # initialize the object
                 obj = zrcomp.input_info_field()
                 if include_zreion:
                     zre_zreion = zr.apply_zreion(density_field, data_dict['Z_re'][0], data_dict["a50"][0],
@@ -453,7 +452,7 @@ def parameter_2Dspace_run(name_input1, range1, name_input2, range2, file_name, r
                 bt_std_zreion = []
                 filenames = []
 
-                #If True, compute the brughtness temperature for z-reion and 21cmFAST
+                # If True, compute the brughtness temperature for z-reion and 21cmFAST
                 for z in redshifts:
                     ion2, brightness_temp_cmFAST2 = zrcomp.get_21cm_fields(z, cmFast_zre, density_field)
                     if include_zreion:
@@ -485,7 +484,7 @@ def parameter_2Dspace_run(name_input1, range1, name_input2, range2, file_name, r
                 obj.cmFASTinfo.add_brightness_temp_mean(bt_mean_cmFAST, bt_std_cmFAST)
                 obj.zreioninfo.add_brightness_temp_mean(bt_mean_zreion, bt_std_zreion)
 
-                #create a little gif looping through brightness temperature for a single plot
+                # create a little gif looping through brightness temperature for a single plot
                 # images = []
                 # for filename in filenames:
                 #     images.append(imageio.imread(filename))
@@ -505,7 +504,7 @@ def parameter_2Dspace_run(name_input1, range1, name_input2, range2, file_name, r
     np.save(file_name, storing_array)
     return
 
-Heff_range = np.linspace(66, 30,10, endpoint=True)
-T_vir_range = np.linspace(4.0,4.9,10, endpoint=True)
-#parameter_2Dspace_run('HII_EFF_FACTOR', Heff_range, 'ION_Tvir_MIN', T_vir_range, '2D_parameter_space_study_HEFF_25to52_Tvir_40to49_with_mean')
 
+Heff_range = np.linspace(66, 30, 10, endpoint=True)
+T_vir_range = np.linspace(4.0, 4.9, 10, endpoint=True)
+# parameter_2Dspace_run('HII_EFF_FACTOR', Heff_range, 'ION_Tvir_MIN', T_vir_range, '2D_parameter_space_study_HEFF_25to52_Tvir_40to49_with_mean')

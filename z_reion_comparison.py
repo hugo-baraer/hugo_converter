@@ -313,7 +313,7 @@ def add_James_bt(object, redshifts, Xrange, Yrange, initial_conditions):
                 b_temp_mean.append(np.mean(brightness_temp))
                 b_temp_std.append(np.std(brightness_temp))
             object[i][j].Jamesinfo.add_brightness_temp(b_temp_ps, redshifts)
-            object[i][j].Jamesinfo.add_brightness_temp_mean(b_temp_mean,b_temp_std)
+            object[i][j].Jamesinfo.add_brightness_temp_mean(b_temp_mean, b_temp_std)
     return object
 
 
@@ -425,7 +425,8 @@ def analyze_float_value(obj, model, observable, Xrange, Yrange,
         return obj_field
 
 
-def analyze_frac_diff(obj, model1, model2, observable, Xrange, Yrange, field_names=[r'Virial temperature [$log_{10}(K)$]', 'Ionizing efficiency'], redshift_bt = None):
+def analyze_frac_diff(obj, model1, model2, observable, Xrange, Yrange,
+                      field_names=[r'Virial temperature [$log_{10}(K)$]', 'Ionizing efficiency'], redshift_bt=None):
     '''
     This function lookat the fractional difference between the observable of 2  models. It works for the TAU parameter and the brightness temeprature means or stds. (Model1- Model2 / Model1) You can make it work for other params if you take out the [redshfit_bt] from the else function
     :param obj: [arr] 2D, the object array filled with info of 21cmFAST and zreion
@@ -461,8 +462,7 @@ def analyze_frac_diff(obj, model1, model2, observable, Xrange, Yrange, field_nam
                 diff_TAU = cmFAST_TAU - zreion_TAU
                 print(diff_TAU)
                 obj_field[i][j] = diff_TAU / cmFAST_TAU
-                #if obj_field[i][j] < -0.4 : obj_field[i][j] = -0.4
-
+                # if obj_field[i][j] < -0.4 : obj_field[i][j] = -0.4
 
     fig, ax = plt.subplots()
     if observable == 'ion_hist':
@@ -472,15 +472,18 @@ def analyze_frac_diff(obj, model1, model2, observable, Xrange, Yrange, field_nam
         levels = np.linspace(obj_field.min(), obj_field.max(), 3000)
         absolute_big = max(obj_field.max(), abs(obj_field.min()))
         if absolute_big > 1: absolute_big = 1
-        cntr = plt.contourf(X, Y, obj_field,  levels = levels, vmin=-absolute_big, vmax=absolute_big, cmap='RdBu')
-    #plt.clim(-0.06, 0.06)
+        cntr = plt.contourf(X, Y, obj_field, levels=levels, vmin=-absolute_big, vmax=absolute_big, cmap='RdBu')
+    # plt.clim(-0.06, 0.06)
     plt.colorbar(cntr, ax=ax)
     ax.set_xlabel(field_names[0])
     ax.set_ylabel(field_names[1])
     if model1 == 'zreion': model1 = 'Hugo converter'
     if model2 == 'zreion': model2 = 'Hugo converter'
-    if observable == 'ion_hist': plt.title(f'TAU variational range for ({model1} - {model2}) / {model1}')
-    else: plt.title(f'{observable} variational range for ({model1} - {model2}) / {model1} at a redshfit z = {obj[0][0].cmFASTinfo.z_for_bt[redshift_bt]}' )
+    if observable == 'ion_hist':
+        plt.title(f'TAU variational range for ({model1} - {model2}) / {model1}')
+    else:
+        plt.title(
+            f'{observable} variational range for ({model1} - {model2}) / {model1} at a redshfit z = {obj[0][0].cmFASTinfo.z_for_bt[redshift_bt]}')
     plt.show()
 
 
@@ -633,7 +636,9 @@ def plot_variational_bright_temp(obj, model, observable, redshift, slice, Xrange
 
 def plot_variational_PS(obj, model, observable, Xrange, Yrange, redshift=None, slice=None,
                         xaxis=np.logspace(np.log10(0.08570025), np.log10(7.64144032), 19), add_zreion=False,
-                        add_James=False, delta2=False, field_names=[r'Virial temperature [$log_{10}(K)$]', 'Ionizing efficiency'], log_scale=True, savefig=False,
+                        add_James=False, delta2=False,
+                        field_names=[r'Virial temperature [$log_{10}(K)$]', 'Ionizing efficiency'], log_scale=True,
+                        savefig=False,
                         filenames=[]):
     '''
     This function plots the power spectrum over the 2D variational range of input parameters. If you want to plot the 2 mdoels togheter, use cmFASt as model with the option add zreion
@@ -720,7 +725,9 @@ def plot_variational_PS(obj, model, observable, Xrange, Yrange, redshift=None, s
 
 
 def plot_variational_ion_hist(obj, model, observable, Xrange, Yrange, xaxis='redshifts', add_zreion=False,
-                              add_James=False, plot_diff=False, field_names=[r'Virial temperature [$log_{10}(K)$]', 'Ionizing efficiency'], log_scale=False):
+                              add_James=False, plot_diff=False,
+                              field_names=[r'Virial temperature [$log_{10}(K)$]', 'Ionizing efficiency'],
+                              log_scale=False):
     '''
     This function plots the ionization histories over the 2D variational range of input parameters.
     :param obj: [arr] 2D, the object array filled with info of 21cmFAST and zreion
