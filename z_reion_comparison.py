@@ -373,7 +373,7 @@ def add_James_ion_hist(object, Xrange, Yrange, initial_conditions, redshifts=np.
 
 
 def analyze_float_value(obj, model, observable, Xrange, Yrange,
-                        field_names=['Virial temperature [log_10(K)]', 'Ionizing effiency'], redshit_bt=15,
+                        field_names=[r'Virial temperature [$log_{10}(K)$]', 'Ionizing efficiency'], redshit_bt=15,
                         savefig=False, filenames=[]):
     '''
     This function look at the 2D variational range of a given parameter given an 2D array filled with objects
@@ -425,9 +425,9 @@ def analyze_float_value(obj, model, observable, Xrange, Yrange,
         return obj_field
 
 
-def analyze_Tau_diff(obj, model1, model2, observable, Xrange, Yrange, field_names=['Tvir', 'Heff']):
+def analyze_frac_diff(obj, model1, model2, observable, Xrange, Yrange, field_names=[r'Virial temperature [$log_{10}(K)$]', 'Ionizing efficiency'], redshift_bt = None):
     '''
-    This function look at the 2D variational range of a given parameter given an 2D array filled with objects
+    This function lookat the fractional difference between the observable of 2  models. It works for the TAU parameter and the brightness temeprature means or stds. (Model1- Model2 / Model1) You can make it work for other params if you take out the [redshfit_bt] from the else function
     :param obj: [arr] 2D, the object array filled with info of 21cmFAST and zreion
     :param model1: [string] the name of the analyzed model (21cmFAST, James or zreion)
     :param model2: [string] the name of the analyzed model (21cmFAST, James or zreion)
@@ -435,7 +435,8 @@ def analyze_Tau_diff(obj, model1, model2, observable, Xrange, Yrange, field_name
     :param Xrange: [arr] the 1D array of the Xrange
     :param Yrange: [arr] the 1D array of the Yrange
     :param field names: [list] the 2 element list of field names (default Heff and Tvir)
-    :return: a 2D contour plot of the given field
+    :param redshift_bt: [int] the slice of brightness temperature corresponding to the desired redshift
+    :return: a 2D contour plot of the fractional difference for the given field
     '''
     X, Y = np.meshgrid(Xrange, Yrange)
     obj_field = np.ones((len(Xrange), len(Yrange)))
@@ -450,19 +451,36 @@ def analyze_Tau_diff(obj, model1, model2, observable, Xrange, Yrange, field_name
                                             redshifts=np.linspace(5, 18,
                                                                   len(getattr(getattr(obj[i][j], f'{model1}info'),
                                                                               observable))))
-            if  observable == 'brightness temperature mean':
-                obj_field[i][j] = getattr(getattr(obj[i][j], f'{model}info'), 'bt_mean')[redshit_bt]
-            diff_TAU = cmFAST_TAU - zreion_TAU
-            obj_field[i][j] = diff_TAU / cmFAST_TAU
-            if obj_field[i][j] > 0.08: obj_field[i][j] = 0.08
+                diff_TAU = cmFAST_TAU - zreion_TAU
+
+                obj_field[i][j] = diff_TAU / cmFAST_TAU
+                if obj_field[i][j] > 0.08: obj_field[i][j] = 0.08
+            else:
+                cmFAST_TAU = getattr(getattr(obj[i][j], f'{model1}info'), observable)[redshift_bt]
+                zreion_TAU = getattr(getattr(obj[i][j], f'{model2}info'), observable)[redshift_bt]
+                diff_TAU = cmFAST_TAU - zreion_TAU
+                print(diff_TAU)
+                obj_field[i][j] = diff_TAU / cmFAST_TAU
+                #if obj_field[i][j] < -0.4 : obj_field[i][j] = -0.4
+
+
     fig, ax = plt.subplots()
-    levels = np.linspace(obj_field.min(), 0.08, 3000)
-    cntr = plt.contourf(X, Y, obj_field, levels=levels, vmin=-0.06, vmax=0.06, cmap='RdBu')
-    plt.clim(-0.06, 0.06)
+    if observable == 'ion_hist':
+        levels = np.linspace(obj_field.min(), 0.08, 3000)
+        cntr = plt.contourf(X, Y, obj_field, levels=levels, vmin=-0.06, vmax=0.06, cmap='RdBu')
+    else:
+        levels = np.linspace(obj_field.min(), obj_field.max(), 3000)
+        absolute_big = max(obj_field.max(), abs(obj_field.min()))
+        if absolute_big > 1: absolute_big = 1
+        cntr = plt.contourf(X, Y, obj_field,  levels = levels, vmin=-absolute_big, vmax=absolute_big, cmap='RdBu')
+    #plt.clim(-0.06, 0.06)
     plt.colorbar(cntr, ax=ax)
-    ax.set_xlabel(r'Virial temperature [$log_{10}(K)$]')
-    ax.set_ylabel('Ionizing efficiency')
-    plt.title(f'TAU variational range for ({model1} - {model2}) / {model1}')
+    ax.set_xlabel(field_names[0])
+    ax.set_ylabel(field_names[1])
+    if model1 == 'zreion': model1 = 'Hugo converter'
+    if model2 == 'zreion': model2 = 'Hugo converter'
+    if observable == 'ion_hist': plt.title(f'TAU variational range for ({model1} - {model2}) / {model1}')
+    else: plt.title(f'{observable} variational range for ({model1} - {model2}) / {model1} at a redshfit z = {obj[0][0].cmFASTinfo.z_for_bt[redshift_bt]}' )
     plt.show()
 
 
@@ -581,27 +599,27 @@ def plot_variational_bright_temp(obj, model, observable, redshift, slice, Xrange
     Yrange = [round(item, 2) for item in Yrange]
     Xrange = [round(item, 2) for item in Xrange]
     fig.text(0.5, 0.032
-             , f'                 {Yrange[0]}'
-               f'                              {Yrange[1]}'
-               f'                            {Yrange[2]}'
-               f'                            {Yrange[3]}'
-               f'                            {Yrange[4]}'
-               f'                            {Yrange[5]}'
-               f'                            {Yrange[6]}'
-               f'                            {Yrange[7]}'
-               f'                            {Yrange[8]}'
-               f'                            {Yrange[9]}', ha='center')
+             , f'                 {Xrange[0]}'
+               f'                              {Xrange[1]}'
+               f'                            {Xrange[2]}'
+               f'                            {Xrange[3]}'
+               f'                            {Xrange[4]}'
+               f'                            {Xrange[5]}'
+               f'                            {Xrange[6]}'
+               f'                            {Xrange[7]}'
+               f'                            {Xrange[8]}'
+               f'                            {Xrange[9]}', ha='center')
     fig.text(0.04, 0.5, 'Ionizing efficiency', va='center', rotation='vertical')
-    fig.text(0.06, 0.5, f'{Xrange[0]}'
-                        f'             {Xrange[1]}'
-                        f'             {Xrange[2]}'
-                        f'             {Xrange[3]}'
-                        f'             {Xrange[4]}'
-                        f'             {Xrange[5]}'
-                        f'             {Xrange[6]}'
-                        f'             {Xrange[7]}'
-                        f'             {Xrange[8]}'
-                        f'             {Xrange[9]}', va='center', rotation='vertical')
+    fig.text(0.06, 0.5, f'{Yrange[0]}'
+                        f'             {Yrange[1]}'
+                        f'             {Yrange[2]}'
+                        f'             {Yrange[3]}'
+                        f'             {Yrange[4]}'
+                        f'             {Yrange[5]}'
+                        f'             {Yrange[6]}'
+                        f'             {Yrange[7]}'
+                        f'             {Yrange[8]}'
+                        f'             {Yrange[9]}', va='center', rotation='vertical')
     if savefig:
         manager = plt.get_current_fig_manager()
         manager.full_screen_toggle()
@@ -615,7 +633,7 @@ def plot_variational_bright_temp(obj, model, observable, redshift, slice, Xrange
 
 def plot_variational_PS(obj, model, observable, Xrange, Yrange, redshift=None, slice=None,
                         xaxis=np.logspace(np.log10(0.08570025), np.log10(7.64144032), 19), add_zreion=False,
-                        add_James=False, delta2=False, field_names=['Tvir', 'Heff'], log_scale=True, savefig=False,
+                        add_James=False, delta2=False, field_names=[r'Virial temperature [$log_{10}(K)$]', 'Ionizing efficiency'], log_scale=True, savefig=False,
                         filenames=[]):
     '''
     This function plots the power spectrum over the 2D variational range of input parameters. If you want to plot the 2 mdoels togheter, use cmFASt as model with the option add zreion
@@ -664,30 +682,30 @@ def plot_variational_PS(obj, model, observable, Xrange, Yrange, redshift=None, s
         fig.text(0.45, 0.9, f'Power spectrum of the redshift of reionization field', size='large')
     # plt.title('The Power spectrum of the redshfit of reioniozation fields as a function of heff and Tvir')
     fig.text(0.5, 0.02, field_names[0], ha='center')
-    Yrange = [round(item, 2) for item in Yrange]
+    Yrange = [int(item) for item in Yrange]
     Xrange = [round(item, 2) for item in Xrange]
     fig.text(0.5, 0.032
-             , f'                 {Yrange[0]}'
-               f'                              {Yrange[1]}'
-               f'                            {Yrange[2]}'
-               f'                            {Yrange[3]}'
-               f'                            {Yrange[4]}'
-               f'                            {Yrange[5]}'
-               f'                            {Yrange[6]}'
-               f'                            {Yrange[7]}'
-               f'                            {Yrange[8]}'
-               f'                            {Yrange[9]}', ha='center')
+             , f'                 {Xrange[0]}'
+               f'                              {Xrange[1]}'
+               f'                            {Xrange[2]}'
+               f'                            {Xrange[3]}'
+               f'                            {Xrange[4]}'
+               f'                            {Xrange[5]}'
+               f'                            {Xrange[6]}'
+               f'                            {Xrange[7]}'
+               f'                            {Xrange[8]}'
+               f'                            {Xrange[9]}', ha='center')
     fig.text(0.04, 0.5, 'Ionizing efficiency', va='center', rotation='vertical')
-    fig.text(0.06, 0.5, f'{Xrange[0]}'
-                        f'             {Xrange[1]}'
-                        f'             {Xrange[2]}'
-                        f'             {Xrange[3]}'
-                        f'             {Xrange[4]}'
-                        f'             {Xrange[5]}'
-                        f'             {Xrange[6]}'
-                        f'             {Xrange[7]}'
-                        f'             {Xrange[8]}'
-                        f'             {Xrange[9]}', va='center', rotation='vertical')
+    fig.text(0.06, 0.5, f'{Yrange[9]}'
+                        f'             {Yrange[8]}'
+                        f'             {Yrange[7]}'
+                        f'             {Yrange[6]}'
+                        f'             {Yrange[5]}'
+                        f'             {Yrange[4]}'
+                        f'             {Yrange[3]}'
+                        f'             {Yrange[2]}'
+                        f'             {Yrange[1]}'
+                        f'             {Yrange[0]}', va='center', rotation='vertical')
 
     if log_scale: plt.loglog()
     if savefig:
@@ -702,19 +720,20 @@ def plot_variational_PS(obj, model, observable, Xrange, Yrange, redshift=None, s
 
 
 def plot_variational_ion_hist(obj, model, observable, Xrange, Yrange, xaxis='redshifts', add_zreion=False,
-                              add_James=False, plot_diff=False, field_names=['Tvir', 'Heff'], log_scale=False):
+                              add_James=False, plot_diff=False, field_names=[r'Virial temperature [$log_{10}(K)$]', 'Ionizing efficiency'], log_scale=False):
     '''
-    This function plots the ionization hsitories over the 2D variational range of input parameters.
+    This function plots the ionization histories over the 2D variational range of input parameters.
     :param obj: [arr] 2D, the object array filled with info of 21cmFAST and zreion
     :param observable: [string] the name of the field to analyze
     :param Xrange: [arr] the 1D array of the Xrange
     :param Yrange: [arr] the 1D array of the Yrange
     :param xaxis: [arr] the x axis array (default is k range for 143³ box)
-    :param add_zreion: [bool] add the zreion bias if True
+    :param add_zreion: [bool] add the zreion histories if True
+    :param add_James: [bool] add the james histories if True
     :param log_scale: [bool] return log scale if True
     :param plot_diff: [bool] plot the differences in the ioniozation history from the 2 models instead of the 2 individuals ioniozation histories.
     :param field names: [list] the 2 element list of field names (default Heff and Tvir)
-    :return: a 2D contour plot of the given field
+    :return: a 2D 10x10 grid plot of the ionization histories
     '''
 
     fig, ax = plt.subplots(10, 10, sharex=True, sharey=True)
@@ -745,32 +764,30 @@ def plot_variational_ion_hist(obj, model, observable, Xrange, Yrange, xaxis='red
     if log_scale: plt.loglog()
     fig.text(0.5, 0.01, r'Virial temperature [$log_{10}(K)$]', ha='center')
 
-    Yrange = [round(item, 2) for item in Yrange]
+    Yrange = [int(item) for item in Yrange]
     Xrange = [round(item, 2) for item in Xrange]
     fig.text(0.5, 0.032
-             , f'                 {Yrange[0]}'
-               f'                              {Yrange[1]}'
-               f'                            {Yrange[2]}'
-               f'                            {Yrange[3]}'
-               f'                            {Yrange[4]}'
-               f'                            {Yrange[5]}'
-               f'                            {Yrange[6]}'
-               f'                            {Yrange[7]}'
-               f'                            {Yrange[8]}'
-               f'                            {Yrange[9]}', ha='center')
+             , f'                 {Xrange[0]}'
+               f'                              {Xrange[1]}'
+               f'                            {Xrange[2]}'
+               f'                            {Xrange[3]}'
+               f'                            {Xrange[4]}'
+               f'                            {Xrange[5]}'
+               f'                            {Xrange[6]}'
+               f'                            {Xrange[7]}'
+               f'                            {Xrange[8]}'
+               f'                            {Xrange[9]}', ha='center')
     fig.text(0.04, 0.5, 'Ionizing efficiency', va='center', rotation='vertical')
-    fig.text(0.06, 0.5, f'{Xrange[0]}'
-                        f'             {Xrange[1]}'
-                        f'             {Xrange[2]}'
-                        f'             {Xrange[3]}'
-                        f'             {Xrange[4]}'
-                        f'             {Xrange[5]}'
-                        f'             {Xrange[6]}'
-                        f'             {Xrange[7]}'
-                        f'             {Xrange[8]}'
-                        f'             {Xrange[9]}', va='center', rotation='vertical')
-
-
+    fig.text(0.06, 0.5, f'{Yrange[9]}'
+                        f'             {Yrange[8]}'
+                        f'             {Yrange[7]}'
+                        f'             {Yrange[6]}'
+                        f'             {Yrange[5]}'
+                        f'             {Yrange[4]}'
+                        f'             {Yrange[3]}'
+                        f'             {Yrange[2]}'
+                        f'             {Yrange[1]}'
+                        f'             {Yrange[0]}', va='center', rotation='vertical')
     plt.show()
 
 

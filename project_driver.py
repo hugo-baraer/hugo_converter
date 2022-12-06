@@ -75,9 +75,15 @@ stoo = np.load('Heff30to66_Tvir40to49_withJamesall_100box.npy', allow_pickle=Tru
 
 
 #Plot the main observables
+zrcomp.plot_variational_ion_hist(stoo, 'cmFAST', 'ion_hist', T_vir_range, Heff_range, add_zreion = True, add_James=True, xaxis=np.linspace(5,18,60))
+#zrcomp.plot_variational_PS(stoo,'cmFAST','P_k_zre', T_vir_range, Heff_range, add_zreion=True, add_James = True, delta2= True)
+slice = 15
+print(stoo[0][0].cmFASTinfo.z_for_bt[slice])
+zrcomp.analyze_frac_diff(stoo, 'cmFAST','zreion', 'ion_hist',T_vir_range, Heff_range, redshift_bt=slice)
+zrcomp.analyze_frac_diff(stoo, 'cmFAST','James', 'ion_hist',T_vir_range, Heff_range, redshift_bt=slice)
+zrcomp.analyze_frac_diff(stoo, 'zreion','James', 'ion_hist',T_vir_range, Heff_range, redshift_bt=slice)
 
-zrcomp.plot_variational_PS(stoo,'cmFAST','P_k_zre', T_vir_range, Heff_range, add_zreion=True, add_James = True)
-#
+
 cmFAST_mean = zrcomp.analyze_float_value(stoo, 'cmFAST' , 'brightness temperature mean', T_vir_range, Heff_range)
 cmFAST_std = zrcomp.analyze_float_value(stoo, 'cmFAST' , 'brightness temperature std', T_vir_range, Heff_range)
 zreion_mean = zrcomp.analyze_float_value(stoo, 'zreion' , 'brightness temperature mean', T_vir_range, Heff_range)
