@@ -1,4 +1,4 @@
-#Figures directory content
+# Figures directory content
 
 This directory contains all the important figures created by Hugo during
 his project. It is seperated in three directories. 
@@ -18,7 +18,7 @@ in parameter space for all 3 models (see GIF in folder).
 This subdirectory contains all the other plots that were judged useful to 
 keep, but doesn't fit the criteria upward mentioned
 
-##GIF_observables 
+## GIF_observables 
 
 This contains all the made GIF that are judged useful to visualization. There
 are many, because I have a weird passion for them. 
