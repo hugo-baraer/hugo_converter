@@ -1,0 +1,11 @@
+astropy
+astropy-healpix
+corner
+emcee
+imageio
+matplotlib
+numpy
+pyfftw
+powerbox
+scipy
+tqdm
