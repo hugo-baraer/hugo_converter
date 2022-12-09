@@ -58,6 +58,24 @@
 # np.save('d_field_for_Sabrina_128Mpclen_1Mpcres', density_field)
 
 
+"""This section was at the end of the 2D function"""
+
+# create a little gif looping through brightness temperature for a single plot
+# images = []
+# for filename in filenames:
+#     images.append(imageio.imread(filename))
+# imageio.mimsave('bt_fct_redshift_singleplot.gif', images)
+
+# plot ioniozation histories ofr Testing purposes
+# fig, ax = plt.subplots()
+# plt.scatter(redshifts,cmFAST_hist, label ='21cmFAST')
+# plt.scatter(redshifts, zreion_hist, label = 'z-reion')
+# plt.loglog()
+# #plt.scatter(kvalues, zreion_zre_PP2)
+# plt.legend()
+# plt.show()
+
+
 """This whole section represent tested things at the beggining of the driver"""
 # print(stoo[0][0].zreioninfo.alpha)
 # print(stoo[0][1].zreioninfo.alpha)

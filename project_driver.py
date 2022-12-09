@@ -23,7 +23,7 @@ import powerbox as pbox
 import z_re_field as zre
 import statistical_analysis as sa
 import plot_params as pp
-import statistics
+#import statistics
 from numpy import array
 # import pyfftw
 import zreion as zr
@@ -38,6 +38,8 @@ Heff_range = np.linspace(66, 30, 10, endpoint=True)
 T_vir_range = np.linspace(4.0, 4.9, 10, endpoint=True)
 stoo = np.load('Heff30to66_Tvir40to49_withJamesall_100box.npy',
                allow_pickle=True)  # loaded with 143, can load 100 for comparison (r even uncorrected 100
+
+
 # stoo = np.load('Heff30to66_Tvir40to49_withJamesall.npy', allow_pickle=True)
 # stoo = np.load('Heff30to66_Tvir40to49_withJamesion_hist_withpkzre2_100box_not_corrected.npy', allow_pickle=True)
 
@@ -124,7 +126,7 @@ def make_bt_movie(stoo, k_values, Heff_range, T_vir_range, gifname, add_zreion=T
 
 
 # zrcomp.plot_multiple_ion_hist(stoo,'zreion','ion_hist', T_vir_range, Heff_range)
-#zrcomp.plot_variational_PS(stoo, 'cmFAST', 'P_k_zre', T_vir_range, Heff_range, add_zreion=True, add_James=True,delta2=True)
+# zrcomp.plot_variational_PS(stoo, 'cmFAST', 'P_k_zre', T_vir_range, Heff_range, add_zreion=True, add_James=True,delta2=True)
 make_bt_movie(stoo, np.logspace(np.log10(0.08570025), np.log10(7.64144032), 19, endpoint=True), Heff_range, T_vir_range,
               'FINAL_bt_power_spectrum_3models', add_James=True)
 
@@ -483,21 +485,6 @@ def parameter_2Dspace_run(name_input1, range1, name_input2, range2, file_name, r
 
                 obj.cmFASTinfo.add_brightness_temp_mean(bt_mean_cmFAST, bt_std_cmFAST)
                 obj.zreioninfo.add_brightness_temp_mean(bt_mean_zreion, bt_std_zreion)
-
-                # create a little gif looping through brightness temperature for a single plot
-                # images = []
-                # for filename in filenames:
-                #     images.append(imageio.imread(filename))
-                # imageio.mimsave('bt_fct_redshift_singleplot.gif', images)
-
-                # plot ioniozation histories ofr Testing purposes
-                # fig, ax = plt.subplots()
-                # plt.scatter(redshifts,cmFAST_hist, label ='21cmFAST')
-                # plt.scatter(redshifts, zreion_hist, label = 'z-reion')
-                # plt.loglog()
-                # #plt.scatter(kvalues, zreion_zre_PP2)
-                # plt.legend()
-                # plt.show()
 
                 storing_array[count1][count2] = obj
 
