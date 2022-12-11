@@ -25,12 +25,14 @@ from . import z_re_field as zre
 from . import statistical_analysis as sa
 from . import plot_params as pp
 from . import z_reion_comparison as zrcomp
+
+
 # For testing purposes, these two modules can be installed:
 # import Gaussian_testing as gauss
 # import FFT
 
 
-#Uncomment the following lines to import and show observables of the object
+# Uncomment the following lines to import and show observables of the object
 # Heff_range = np.linspace(66, 30, 10, endpoint=True)
 # T_vir_range = np.linspace(4.0, 4.9, 10, endpoint=True)
 # stoo = np.load('Heff30to66_Tvir40to49_withJamesall_100box.npy',
@@ -120,8 +122,8 @@ def make_bt_movie(stoo, k_values, Heff_range, T_vir_range, gifname, add_zreion=T
 
 # zrcomp.plot_multiple_ion_hist(stoo,'zreion','ion_hist', T_vir_range, Heff_range)
 # zrcomp.plot_variational_PS(stoo, 'cmFAST', 'P_k_zre', T_vir_range, Heff_range, add_zreion=True, add_James=True,delta2=True)
-#make_bt_movie(stoo, np.logspace(np.log10(0.08570025), np.log10(7.64144032), 19, endpoint=True), Heff_range, T_vir_range,
-              #'FINAL_bt_power_spectrum_3models', add_James=True)
+# make_bt_movie(stoo, np.logspace(np.log10(0.08570025), np.log10(7.64144032), 19, endpoint=True), Heff_range, T_vir_range,
+# 'FINAL_bt_power_spectrum_3models', add_James=True)
 
 
 # zrcomp.plot_multiple_ion_hist(stoo,'zreion','ion_hist', T_vir_range, Heff_range)

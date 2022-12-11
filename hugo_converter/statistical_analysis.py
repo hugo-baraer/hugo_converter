@@ -19,10 +19,11 @@ from scipy.optimize import curve_fit
 import emcee
 import corner
 import powerbox as pbox
-#import the submodules
+# import the submodules
 from . import z_re_field as zre
 from . import plot_params as pp
 from . import z_reion_comparison as zrcomp
+
 
 # import pymks
 def average_overk(box_dim, field, nb_bins, logbins=False):
@@ -644,7 +645,8 @@ def generate_bias(zre_range, initial_conditions, box_dim, box_len, astro_params,
 
     # print(ionization_rates)
 
-def compute_bt(zre_field, redshift, density_field, comp_power_spectrum = True, plot = False):
+
+def compute_bt(zre_field, redshift, density_field, comp_power_spectrum=True, plot=False):
     '''
     This function computes the brightness temperature from a density field and redshfit of reionization field (also works with a ionization map)
     :param zre_field: [3D array] the redshift of reionization field (or ionization map)

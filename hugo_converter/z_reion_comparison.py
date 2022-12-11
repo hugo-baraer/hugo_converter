@@ -460,7 +460,6 @@ def analyze_frac_diff(obj, model1, model2, observable, Xrange, Yrange,
                 cmFAST_TAU = getattr(getattr(obj[i][j], f'{model1}info'), observable)[redshift_bt]
                 zreion_TAU = getattr(getattr(obj[i][j], f'{model2}info'), observable)[redshift_bt]
                 diff_TAU = cmFAST_TAU - zreion_TAU
-                print(diff_TAU)
                 obj_field[i][j] = diff_TAU / cmFAST_TAU
                 # if obj_field[i][j] < -0.4 : obj_field[i][j] = -0.4
 
@@ -504,7 +503,7 @@ def plot_variational_bias(obj, model, observable, Xrange, Yrange,
     :return: a 2D contour plot of the given field
     '''
 
-    fig, ax = plt.subplots(10, 10, sharex=True, sharey=True)
+    fig, ax = plt.subplots(10, 10, sharex=True, sharey=True, figsize=(19, 9.5))
     for i in range(len(Xrange)):
         for j in range(len(Yrange)):
             ax[i, j].plot(xaxis, getattr(getattr(obj[i][j], f'{model}info'), observable), label='21cmFAST')
@@ -639,7 +638,7 @@ def plot_variational_PS(obj, model, observable, Xrange, Yrange, redshift=None, s
                         add_James=False, delta2=False,
                         field_names=[r'Virial temperature [$log_{10}(K)$]', 'Ionizing efficiency'], log_scale=True,
                         savefig=False,
-                        filenames=[]):
+                        filenames=[], fix_bt_ylim=True):
     '''
     This function plots the power spectrum over the 2D variational range of input parameters. If you want to plot the 2 mdoels togheter, use cmFASt as model with the option add zreion
     :param obj: [arr] 2D, the object array filled with info of 21cmFAST and zreion
@@ -651,6 +650,7 @@ def plot_variational_PS(obj, model, observable, Xrange, Yrange, redshift=None, s
     :param log_scale: [bool] return log scale if True
     :param delta2: [bool] compute the delta square instead of regular powe spectrum if True (P(k)*k³ / (2*pi²))
     :param field names: [list] the 2 element list of field names (default Heff and Tvir)
+    :param fix_bt_ylim: [bool] fixes the bt powerspectrum ylim if True (default True)
     :return: a 2D contour plot of the given field
     '''
 
@@ -683,6 +683,7 @@ def plot_variational_PS(obj, model, observable, Xrange, Yrange, redshift=None, s
     fig.legend(lines[:3], labels[:3])
     if observable == 'brightnesstemp':
         fig.text(0.4, 0.9, f'Power spectrum of the Brightness temperature at redshift z = {redshift} ', size='large')
+        if fix_bt_ylim: plt.ylim([1198742.8859540655, 9818689819.912655])
     else:
         fig.text(0.45, 0.9, f'Power spectrum of the redshift of reionization field', size='large')
     # plt.title('The Power spectrum of the redshfit of reioniozation fields as a function of heff and Tvir')
@@ -743,7 +744,7 @@ def plot_variational_ion_hist(obj, model, observable, Xrange, Yrange, xaxis='red
     :return: a 2D 10x10 grid plot of the ionization histories
     '''
 
-    fig, ax = plt.subplots(10, 10, sharex=True, sharey=True)
+    fig, ax = plt.subplots(10, 10, sharex=True, sharey=True, figsize=(19, 9.5))
     for i in range(len(Xrange)):
         for j in range(len(Yrange)):
             # if xaxis == 'redshifts': xaxis = np.linspace(5, 15,len(getattr(getattr(obj[i][j], f'{model}info'), observable)))
