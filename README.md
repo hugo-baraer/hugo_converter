@@ -1,4 +1,4 @@
-# Baraer's converter
+# Hugo Converter
 
 #### Find z-reion's linear bias free parameters value based on 21cmFAST physical parameters inputs or density fields.
 
@@ -6,19 +6,6 @@
 This repository and its content is credited to Hugo Baraer [@hugo-baraer](https://github.com/hugo-baraer) and his research with the cosmic dawn group at McGill University, supervised by prof. Adrian Liu [@acliu](https://github.com/acliu). 
 
 It is the results of one an a half year of work : 3 undergraduate physics research classes, and a SURA summer internship. 
-
-## explanation
-
-The `z-reion` model provides a statistical linear bias linking density fields to redshift of reionization fields. The above equation represent the role of the linear bias (b_mz) in linking the fluctuations of the two fields in momentum space.
-
-![Screenshot from 2022-06-16 22-48-35](https://user-images.githubusercontent.com/59851566/200427369-d2d822ad-3a91-4672-b56f-593a929a1064.png)
-
-The linear bias in it's simpliest form is expressable as: 
-
-![Screenshot from 2022-06-16 22-50-42](https://user-images.githubusercontent.com/59851566/200427950-3221477b-d322-41c2-a602-e76f3a96064c.png)
-
-Using z-reion allows for a computationnaly quick generation of a redshfit of reionization field. However, since z-reion is a semi-analytical model relying on a statistical term, it has no physical parameters' inputs (astrophyscial, cosmological, etc.). [21cmFAST](https://github.com/21cmfast/21cmFAST) provides a model with inputable physical parameters. Plugging in `21cmFAST` inputs, `Hugo's converter` can be used to fit for the values of z-reion's bias parameters. Plugged in Paul Laplante [z-reion](https://github.com/plaplant/zreion) python implementation (the model was originally designed and proposed by:  Battaglia and al. (2013)), redshfit of reionization fields can then be quickly generated from density fields. 
-
 
 ## Features
 
@@ -30,9 +17,65 @@ Using z-reion allows for a computationnaly quick generation of a redshfit of rei
 * Possibility to run parameter space studies (vary simultaneaously inputs and see it's effect on parameters or observables)
 * Easily generate and save 21cmFAST fields (density, ionization maps, and brightness temperature)
 
+## brief explanation
+
+The `z-reion` model provides a statistical linear bias linking density fields to redshift of reionization fields. The above equation represent the role of the linear bias (b_mz) in linking the fluctuations of the two fields in momentum space.
+
+![Screenshot from 2022-06-16 22-48-35](https://user-images.githubusercontent.com/59851566/200427369-d2d822ad-3a91-4672-b56f-593a929a1064.png)
+
+The linear bias in it's simpliest form is expressable as: 
+
+![Screenshot from 2022-06-16 22-50-42](https://user-images.githubusercontent.com/59851566/200427950-3221477b-d322-41c2-a602-e76f3a96064c.png)
+
+Using z-reion allows for a computationnaly quick generation of a redshfit of reionization field. However, since z-reion is a semi-analytical model relying on a statistical term, it has no physical parameters' inputs (astrophyscial, cosmological, etc.). [21cmFAST](https://github.com/21cmfast/21cmFAST) provides a model with inputable physical parameters. Plugging in `21cmFAST` inputs, `Hugo's converter` can be used to fit for the values of z-reion's bias parameters. Plugged in Paul Laplante [z-reion](https://github.com/plaplant/zreion) python implementation (the model was originally designed and proposed by:  Battaglia and al. (2013)), redshfit of reionization fields can then be quickly generated from density fields. 
+
+A more detailled explanation is provided in the folder `docs`
+
+
 ## Installation
 
+Installing the package can be done by cloning the repo, 
 
+'git clone https://github.com/hugo-baraer/EoR_research.git'
+
+Going into the repo, and then running:
+
+`pip install . `
+
+This will initialize the 'setup.py' file and intall the package under the name 'hugo_converter'
+Dependencies will be handled automatically by pip if not already installed. Here is a list of installed packages by the set up
+
+`astropy`
+`corner`
+`emcee`
+`imageio`
+`matplotlib`
+`numpy`
+`pyfftw`
+`powerbox`
+`scipy`
+`tqdm`
+
+#### Please Note!: 
+
+The packages [`21cmFAST'](https://github.com/21cmfast/21cmFAST) and [z-reion](https://github.com/plaplant/zreion) are not included in this instalation. However, z-rieon can be installed from this package
+
+### z-reion sub-installation
+
+To install `z-reion`, follow a similar process. from the EoR_research change directory to the z-reion subfolder loacted in the hugo_converter folder
+
+`cd ./hugo_converter/zreion/`
+
+Then, simply run again: 
+
+`pip install . `
+
+This will install the z-reion package. Its dependancies are covered by the hugo-converter installation
+
+You are now all set! to test you can test the most basic version of the Hugo converter: 
+
+'import hugo_converter as hc'
+'hc.get_params_value()'
 
 ## How those it work?
 
