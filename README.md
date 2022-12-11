@@ -1,6 +1,6 @@
 # Hugo Converter
 
-#### Find z-reion's linear bias free parameters value based on 21cmFAST physical parameters inputs or density fields.
+#### Find z-reion's linear bias free parameters value based on 21cmFAST physical parameters inputs, or from any density and redshfit of reionization fields.
 
 ## Author
 This repository and its content is credited to Hugo Baraer [@hugo-baraer](https://github.com/hugo-baraer) and his research with the cosmic dawn group at McGill University, supervised by prof. Adrian Liu [@acliu](https://github.com/acliu). 
@@ -12,9 +12,8 @@ It is the results of one an a half year of work : 3 undergraduate physics resear
 * Computes the best-fit value of the three free parameters of the linear bias, as well as their confidence interval (68% of the prosterior distribution)
 * Works with any 21cmFAST inputs (different inputs available [here](https://21cmfast.readthedocs.io/en/latest/_modules/py21cmfast/inputs.html) )
 * Option to use your own density and/or redshfit of reionization fields to compute the parameters values.
-* Contains all the necessary analysis functions including plotting and the computation of several obsevables)
-* Can analyse several observables (power spectrums, ionization histories, brightness temperatures, TAU parameters, etc.)
-* Possibility to run parameter space studies (vary simultaneaously inputs and see it's effect on parameters or observables)
+* Contains all the necessary analysis functions including plotting and the computation of several obsevables (power spectrums, ionization histories, brightness temperatures, TAU parameters, etc.)
+* Possibility to run parameter space studies (vary simultaneaously inputs and see it's effect on parameters or observables) in 1D and 2D
 * Easily generate and save 21cmFAST fields (density, ionization maps, and brightness temperature)
 
 ## brief explanation
@@ -43,7 +42,7 @@ Going into the repo, and then running:
 `pip install . `
 
 This will initialize the 'setup.py' file and intall the package under the name 'hugo_converter'
-Dependencies will be handled automatically by pip if not already installed. Here is a list of installed packages by the set up
+Dependencies will be handled automatically by pip if not already installed. Here is a list of packages installed by the set up
 
 `astropy`
 `corner`
@@ -55,6 +54,8 @@ Dependencies will be handled automatically by pip if not already installed. Here
 `powerbox`
 `scipy`
 `tqdm`
+
+This full list of dependencies can be found in the setup.cfg file
 
 #### Please Note!: 
 
@@ -74,8 +75,9 @@ This will install the z-reion package. Its dependancies are covered by the hugo-
 
 You are now all set! to test you can test the most basic version of the Hugo converter: 
 
-'import hugo_converter as hc'
-'hc.get_params_value()'
+`import hugo_converter as hc`
+
+`hc.get_params_value()`
 
 ## How those it work?
 
@@ -95,33 +97,54 @@ For more information, internship reports from research classes present here furt
 h versus h_bar. The parameters will have units of which you choose
 
 ## directory content
+In the main directory, installation files and gitignore file are present. In addition, there is four subfolder. Another repo exists called `hugo_converter_figures` contains all the important figures along with a jupyter notebook to generate them again from data. 
+
+### docs
+
+This directory contains ...
+
+### data
+
+This al
+
+### hugo_converter
 
 The algorithm has functions seperated in different modules. Having more than 85 different functions, here is a brief decription of the repartition.  
 
-### z_re_field.py
+#### z_re_field.py
 
 This module computes the redshift of reionization field (as well as the overredshift of rieonization)with 21cmFAST data
 
-### statistical_analysis.py
+#### statistical_analysis.py
 
 This module computes the MCMC algorithm necessary to generate posterior distributions of the wanted parameters, as well as the shell average to transform the 3D field into 1D field
 
-### z_reion_comp.py
+#### z_reion_comp.py
 
-### plot_params.py
+This module contains all the necessary analysis functions for comparison of observable (like ionazation history of brightness temperature)
 
-### project_driver 
+#### plot_params.py
 
-### FTT.py
+
+
+#### project_driver 
+
+In this driver file, all the different components of the project are launched. This file contains the two main functions: 
+
+get_params_values()
+
+parameter_2Dspace_run
+
+### testing modules 
+
+two modules to test power spectrum computation are also included :
+#### FTT.py
 
 This module takes the Fourrier transforms of both fields, and contains the necesseray functions for plotting and computing.
 
-### Gaussian_testing.py
+#### Gaussian_testing.py
 
 This module is made for testing the fft process with 3D gaussian testing
-
-
-This file is the driver to run to execute the different modules. In this driver file, all the different components of the project are launched. 
 
 
 Reionization is the period of the universe following the dark ages, where the hydrogen composing the intergalactic medium reionized, following the birth of the first start. This period plays a crucial role in our understanding of the structure of our universe. Before a model proposed by Battaglia et al. in 2013, direct simulations of the evolution of the ionization field in large volumes ( approximately bigger than (Gpch^-1)^3) were not attainable. Using previous precise short-scale models (Trac and Pen 2004) (Trac and Chen 2007), they quantify the correlation between reionization redshift and density using two points statistics in Fourier space. This way, an N-body simulation can be converted into statistical parameters. Therefore, the model can compute the evolution of the 3D ionization field in large volumes with a low computational time. On the downside, the parameters computed in this model are purely statistical, with initial values that are not well defined. 
