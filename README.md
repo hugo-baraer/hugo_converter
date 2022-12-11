@@ -35,7 +35,7 @@ A more detailled explanation is provided in the folder `docs`
 
 Installing the package can be done by cloning the repo, 
 
-'git clone https://github.com/hugo-baraer/EoR_research.git'
+'git clone https://github.com/hugo-baraer/hugo_converter.git'
 
 Going into the repo, and then running:
 
