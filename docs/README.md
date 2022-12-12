@@ -96,4 +96,4 @@ def parameter_2Dspace_run(name_input1, range1, name_input2, range2, file_name, r
     :param comp_brightness_temp: [bool] will compute the brightness temeperature and add it to the model if True
     :return: [2D array] an array containing objects for each of the varying variable run. Each object contains information about 21cmFAST and z-reion. The object structure and attribute can be found on the repo
     '''
-</code>
+<\code>
