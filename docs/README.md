@@ -30,7 +30,7 @@ h versus h_bar. The parameters will have units of which you choose
 
 Every functions contains a detailed documentation explaining the main and inputable parameters. For simplicity purposes, here is the code's list of available options for the main function: `get_params_value`
 
-`
+
 def get_params_values(box_len=143, box_dim=143, include_confidencerange=False, redshift_range=np.linspace(5, 18, 60),
                       nb_bins=20, density_field=None, zre_field=None, plot_best_fit=False, plot_corner=False,
                       return_zre_field=False, return_density=False, return_power_spectrum=False,
@@ -40,7 +40,7 @@ def get_params_values(box_len=143, box_dim=143, include_confidencerange=False, r
     This function computes the linear bias free parameter values of z-reion
     :param box_len: [int] the spatial length of the desired box in Mpc (default is 143 Mpc which is equivalent to 100 Mpc/h)
     :param box_dim: [int] the dimension of the box (number of points per field) (default is 143 for a spatial voxel resolution of (1 Mpc/h)³
-    :param include_confidencerange: [bool] return the confidence range (upper and lower limit) of the parameters. This corresponds to 68% of the posterior distribution of each parameter
+    :param include_confidencerange: [bool] return the confidence range (upper and lower limit) of the parameters. This corresponds to 68% of the       posterior distribution of each parameter
     :param redshift_range: [1D array] this is the redshift range used for the computation of the redshift of reionization. The more precise the range (the more element in the array), the more precise/accurate the values of the parameter are, but the more computational time it takes
     :param nb_bins: [int] the number of data points for the power spectrums and the bias (default 20). More can increase precision but reduce accuracy. Past work shows sweet point being the default 20
     :param density_field: [3D array] The density field used for the bias computation. None computes and uses 21cmFAST density field (default None)
@@ -63,7 +63,7 @@ def get_params_values(box_len=143, box_dim=143, include_confidencerange=False, r
 `
 
 and for the function parameter_2Dspace_run:
-`
+
 def parameter_2Dspace_run(name_input1, range1, name_input2, range2, file_name, redshift_range=np.linspace(5, 18, 60),
                           box_dim=143,
                           box_len=143, other_astro_params={"NU_X_THRESH": 500},
@@ -95,4 +95,4 @@ def parameter_2Dspace_run(name_input1, range1, name_input2, range2, file_name, r
     :param comp_brightness_temp: [bool] will compute the brightness temeperature and add it to the model if True
     :return: [2D array] an array containing objects for each of the varying variable run. Each object contains information about 21cmFAST and z-reion. The object structure and attribute can be found on the repo
     '''
-`
+
