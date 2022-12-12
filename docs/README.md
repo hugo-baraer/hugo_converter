@@ -30,7 +30,7 @@ h versus h_bar. The parameters will have units of which you choose
 
 Every functions contains a detailed documentation explaining the main and inputable parameters. For simplicity purposes, here is the code's list of available options for the main function: `get_params_value`
 
-<code>
+```{python}
 def get_params_values(box_len=143, box_dim=143, include_confidencerange=False, redshift_range=np.linspace(5, 18, 60),
                       nb_bins=20, density_field=None, zre_field=None, plot_best_fit=False, plot_corner=False,
                       return_zre_field=False, return_density=False, return_power_spectrum=False,
@@ -60,7 +60,7 @@ def get_params_values(box_len=143, box_dim=143, include_confidencerange=False, r
     :param find_bubble_algorithm: [int] what method to use when finding the bubbles (default = 2)
     :return: [int or list] the values for the best-fitted free parameters alpha, b_0 and k_0, plus all other optional observable (the results gives a list if confidence interval are included)
     '''
-<\code>`
+```
 
 and for the function parameter_2Dspace_run:
 
