@@ -40,31 +40,41 @@ def get_params_values(box_len=143, box_dim=143, include_confidencerange=False, r
     This function computes the linear bias free parameter values of z-reion
     :param box_len: [int] the spatial length of the desired box in Mpc (default is 143 Mpc which is equivalent to 100 Mpc/h)
     :param box_dim: [int] the dimension of the box (number of points per field) (default is 143 for a spatial voxel resolution of (1 Mpc/h)³
-    :param include_confidencerange: [bool] return the confidence range (upper and lower limit) of the parameters. This corresponds to 68% of the       posterior distribution of each parameter
-    :param redshift_range: [1D array] this is the redshift range used for the computation of the redshift of reionization. The more precise the range (the more element in the array), the more precise/accurate the values of the parameter are, but the more computational time it takes
-    :param nb_bins: [int] the number of data points for the power spectrums and the bias (default 20). More can increase precision but reduce accuracy. Past work shows sweet point being the default 20
+    :param include_confidencerange: [bool] return the confidence range (upper and lower limit) of the parameters. This corresponds to 68% of the       
+                                           posterior distribution of each parameter
+    :param redshift_range: [1D array] this is the redshift range used for the computation of the redshift of reionization. The more precise the range 
+                                      (the more element in the array), the more precise/accurate the values of the parameter are, but the more 
+                                      computational time it takes
+    :param nb_bins: [int] the number of data points for the power spectrums and the bias (default 20). More can increase precision but reduce accuracy. 
+                          Past work shows sweet point being the default 20
     :param density_field: [3D array] The density field used for the bias computation. None computes and uses 21cmFAST density field (default None)
-    :param zre_field: [3D array] The redshift of reionization field used for the bias computation. None computes and uses 21cmFAST density field (default None)
+    :param zre_field: [3D array] The redshift of reionization field used for the bias computation. None computes and uses 21cmFAST density field 
+                                 (default None)
     :param plot_best_fit: [bool] Will plot the best fitted paramters over the computed bias if True (default True)
     :param plot_corner: [bool] Will plot the posterior distribution of the best fitted parameters if True (default True)
     :param return_zre_field: [bool] will return the redshift of reionization field if True (defaut True)
     :param return_density: [bool] will return the density field if True (defaut True)
     :param return_power_spectrum: [bool] will return the power spectrums of the density field and redshift of reionization field if True (defaut True)
-    :param astro_params: [dict] a dictionnary of all the wanted non-default astrophysical parameters on the form { input_param : value, ...} An extensive list of the usable astro parameters can be find here : https://21cmfast.readthedocs.io/en/latest/_modules/py21cmfast/inputs.html
-    :param flag_options: [dict] a dictionnary of all the wanted non-default flag options parameters on the form { flag_option : value, ...}. This include the use-mass_dependant_zeta function for the usage of astro parameters such as the turnover mass. An extensive list of the usable flag options can be find here : https://21cmfast.readthedocs.io/en/latest/_modules/py21cmfast/inputs.html
+    :param astro_params: [dict] a dictionnary of all the wanted non-default astrophysical parameters on the form { input_param : value, ...} An 
+                                extensive list of the usable astro parameters can be find here :      
+                                https://21cmfast.readthedocs.io/en/latest/_modules/py21cmfast/inputs.html
+    :param flag_options: [dict] a dictionnary of all the wanted non-default flag options parameters on the form { flag_option : value, ...}. This 
+                                include the use-mass_dependant_zeta function for the usage of astro parameters such as the turnover mass. An extensive                                   list of the usable flag options can be find here :           
+                                https://21cmfast.readthedocs.io/en/latest/_modules/py21cmfast/inputs.html
     :param SIGMA_8: [float] the cosmological value (default 0.8 )
     :param hlittle: [float] the cosmological value (default 0.7)
     :param OMm: [float] the cosmological value (default 0.27)
     :param OMb: [float] the cosmological value (default 0.045)
     :param POWER_INDEX: [float] the cosmological value (default 0.9665 )
     :param find_bubble_algorithm: [int] what method to use when finding the bubbles (default = 2)
-    :return: [int or list] the values for the best-fitted free parameters alpha, b_0 and k_0, plus all other optional observable (the results gives a list if confidence interval are included)
+    :return: [int or list] the values for the best-fitted free parameters alpha, b_0 and k_0, plus all other optional observable (the results gives a 
+                           list if confidence interval are included)
     '''
 ```
 
 and for the function parameter_2Dspace_run:
 
-<code>
+```{python}
 def parameter_2Dspace_run(name_input1, range1, name_input2, range2, file_name, redshift_range=np.linspace(5, 18, 60),
                           box_dim=143,
                           box_len=143, other_astro_params={"NU_X_THRESH": 500},
@@ -75,8 +85,9 @@ def parameter_2Dspace_run(name_input1, range1, name_input2, range2, file_name, r
                           ):
     '''
     This function computes the 2dimensional variational space for 2 21cmFAST inputshhyhyuj
-    :param name_input1: [string] The name of the first changing astrophysical input (all the possible inputs can be found at : https://21cmfast.readthedocs.io/en/latest/_modules/py21cmfast/inputs.html)
-    Note! range1 must be in decreasing order for the object file to be like a normal cartesian plane
+    :param name_input1: [string] The name of the first changing astrophysical input (all the possible inputs can be found at : 
+                                  https://21cmfast.readthedocs.io/en/latest/_modules/py21cmfast/inputs.html)
+     Note! range1 must be in decreasing order for the object file to be like a normal cartesian plane
     :param range1: [list] the range of the desired first input values
     :param name_input2: [string] The name of the second changing astrophysical input (ex: HII_EFF_FACTOR for ionization efficiency (zeta))
     :param range2: [list] the range of the desired second input values
@@ -85,7 +96,10 @@ def parameter_2Dspace_run(name_input1, range1, name_input2, range2, file_name, r
     :param box_len: [int] the spatial length of the desired box in Mpc (default is 143 Mpc which is equivalent to 100 Mpc/h)
     :param box_dim: [int] the dimension of the box (number of points per field) (default is 143 for a spatial voxel resolution of (1 Mpc/h)³
     :param other_astro_params: [dict] if you want another astrophysical parameters to stay stable, but under a different value than the default one
-    :param flag_options: [dict] a dictionnary of all the wanted non-default flag options parameters on the form { flag_option : value, ...}. This include the use-mass_dependant_zeta function for the usage of astro parameters such as the turnover mass. An extensive list of the usable flag options can be find here : https://21cmfast.readthedocs.io/en/latest/_modules/py21cmfast/inputs.html
+    :param flag_options: [dict] a dictionnary of all the wanted non-default flag options parameters on the form { flag_option : value, ...}. This 
+                                include the use-mass_dependant_zeta function for the usage of astro parameters such as the turnover mass. An extensive 
+                                list of the usable flag options can be find here : 
+                                https://21cmfast.readthedocs.io/en/latest/_modules/py21cmfast/inputs.html
     :param SIGMA_8: [float] the cosmological value (default 0.8 )
     :param hlittle: [float] the cosmological value (default 0.7)
     :param OMm: [float] the cosmological value (default 0.27)
@@ -94,6 +108,7 @@ def parameter_2Dspace_run(name_input1, range1, name_input2, range2, file_name, r
     :param find_bubble_algorithm: [int] what method to use when finding the bubbles (default = 2)
     :param include_zreion: [bool] will include z-reion computation and observables if True
     :param comp_brightness_temp: [bool] will compute the brightness temeperature and add it to the model if True
-    :return: [2D array] an array containing objects for each of the varying variable run. Each object contains information about 21cmFAST and z-reion. The object structure and attribute can be found on the repo
+    :return: [2D array] an array containing objects for each of the varying variable run. Each object contains information about 21cmFAST and z-reion. 
+                        The object structure and attribute can be found on the repo
     '''
-<\code>
+```
